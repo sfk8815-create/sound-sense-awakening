@@ -91,6 +91,12 @@
         .recent-item:last-child { border-bottom: none; }
         .recent-item .name { color: var(--text-primary); }
         .recent-item .meta { color: var(--text-secondary); }
+        .home-footer {
+            margin: 24px 0 8px 0; padding-top: 14px;
+            border-top: 1px solid var(--surface-light);
+            font-size: 0.76rem; line-height: 1.9; color: var(--text-secondary); text-align: center;
+        }
+        .home-footer p { margin: 0; }
         .home-links {
             display: flex;
             flex-wrap: wrap;
@@ -341,6 +347,11 @@
             }
         })();
     </script>
+
+    <footer class="home-footer">
+        <p>© 西南大学·音乐声学实验室 · 西南大学·艺术人类学研究所 · 西南大学·中国音乐心理健康研究所</p>
+        <p>作者：马荣寰 · GitHub 开源项目</p>
+    </footer>
     <script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", function () {
