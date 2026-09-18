@@ -46,6 +46,8 @@ work/desktop-backup/
 *.inspect.ndjson
 
 # ---- 本地临时与渲染结果 ----
+outputs/chordz-cn/server.pid
+outputs/chordz-cn/.github/
 work/manual-render/
 work/qa-render/
 work/tmp-*.mjs
@@ -59,4 +61,3 @@ work/tmp-*.py
 .DS_Store
 Thumbs.db
 desktop.ini
-

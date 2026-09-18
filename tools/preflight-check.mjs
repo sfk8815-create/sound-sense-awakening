@@ -16,12 +16,12 @@ const TEXT_EXT = new Set([".html", ".js", ".mjs", ".css", ".json", ".md", ".txt"
 const MAX_MB = 5;
 
 const RULES = [
-  { name: "个人姓名", pattern: /马荣寰/, hint: "文档或页面里出现了作者真实姓名" },
-  { name: "学校名称", pattern: /西南大学/, hint: "文档或页面里出现了就读院校" },
   { name: "密钥", pattern: /(atr_|sk-)[A-Za-z0-9]{8,}/, hint: "疑似 API 密钥" },
   { name: "本地路径", pattern: /[A-Za-z]:\\\\?Users\\\\?|C:\/Users\//i, hint: "写死的本机绝对路径" },
   { name: "邮箱", pattern: /[\w.+-]+@[A-Za-z][\w-]*(?:\.[A-Za-z]{2,})+/, hint: "个人邮箱地址" },
   { name: "手机号", pattern: /(?<!\d)1[3-9]\d{9}(?!\d)/, hint: "手机号" },
+  { name: "赛事材料字样", pattern: /互联网\+|大创|申报书|项目申报|答辩稿|开题报告/, hint: "疑似竞赛或申报材料，不宜随源码公开" },
+  { name: "内部评审字样", pattern: /评审意见|未公开|内部资料|仅限内部/, hint: "疑似内部材料" },
 ];
 
 const BLOCKED_EXT = new Set([".docx", ".pptx", ".xlsx", ".pdf", ".zip", ".rar", ".7z", ".exe", ".msi"]);

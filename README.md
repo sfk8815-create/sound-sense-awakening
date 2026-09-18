@@ -127,6 +127,18 @@ node tools/preflight-check.mjs
 
 欢迎提交 Issue 与 Pull Request，具体要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。提交前请运行 `node tools/preflight-check.mjs`。
 
+## 版权与作者
+
+© 西南大学·音乐声学实验室 · 西南大学·艺术人类学研究所 · 西南大学·中国音乐心理健康研究所
+
+作者：马荣寰 —— 邮箱 / 社交媒体账号待补充
+
+### Copyright and authorship
+
+© Music Acoustics Laboratory, Southwest University · Institute of Artistic Anthropology, Southwest University · Institute of Chinese Music and Mental Health, Southwest University
+
+Author: Ma Ronghuan — email / social media account to be added
+
 ## 许可证与致谢
 
 本项目以 MIT 许可证开源，见 [LICENSE](LICENSE)。

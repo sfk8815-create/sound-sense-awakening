@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="音感觉醒">
+    <title>进行曲库 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+    <div class="container">
+            <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link active">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+
+        <header>
+            <div class="header-icon">📖</div>
+            <h1>进行曲库</h1>
+            <p class="subtitle">按情绪和调性查找和弦进行</p>
+        </header>
+
+        <div class="controls">
+            <div class="input-section">
+                <label for="note-selector" style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--text-primary);">主音：</label>
+                <select id="note-selector" style="width: 100%; padding: 12px; font-size: 1rem; background: var(--background); color: var(--text-primary); border: 2px solid var(--primary-color); border-radius: 8px; cursor: pointer; height: 48px; box-sizing: border-box;">
+                    <option value="all">全部调性</option>
+                    <option value="C">C</option>
+                    <option value="C#">C# / Db</option>
+                    <option value="D">D</option>
+                    <option value="D#">D# / Eb</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="F#">F# / Gb</option>
+                    <option value="G">G</option>
+                    <option value="G#">G# / Ab</option>
+                    <option value="A">A</option>
+                    <option value="A#">A# / Bb</option>
+                    <option value="B">B</option>
+                </select>
+            </div>
+
+            <div class="filter-section">
+                <div class="mood-filters">
+                    <button class="mood-filter active" data-filter="all">全部</button>
+                    <button class="mood-filter" data-filter="starred" data-type="starred">⭐ 已收藏</button>
+                    <button class="mood-filter" data-filter="major" data-type="scale">大调</button>
+                    <button class="mood-filter" data-filter="minor" data-type="scale">小调</button>
+                    <button class="mood-filter" data-filter="borrowed" data-type="borrowed">借用和弦</button>
+                    <button class="mood-filter" data-filter="happy" data-type="mood">欢快</button>
+                    <button class="mood-filter" data-filter="uplifting" data-type="mood">振奋</button>
+                    <button class="mood-filter" data-filter="sad" data-type="mood">悲伤</button>
+                    <button class="mood-filter" data-filter="melancholic" data-type="mood">忧郁</button>
+                    <button class="mood-filter" data-filter="dreamy" data-type="mood">梦幻</button>
+                    <button class="mood-filter" data-filter="unsettling" data-type="mood">不安</button>
+                    <button class="mood-filter" data-filter="uncomfortable" data-type="mood">紧张</button>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="random-chord-btn" style="padding: 14px 32px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(99, 102, 241, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(99, 102, 241, 0.3)'">
+                    🎲 随机和弦进行
+                </button>
+            </div>
+        </div>
+
+        <div id="results" class="results">
+            <!-- Chord progression cards will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script src="music-theory.js"></script>
+    <script src="chord-data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

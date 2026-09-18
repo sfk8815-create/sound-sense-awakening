@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>上手引导 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+    <div class="guide-container">
+        <header style="text-align: center; margin-bottom: 26px;">
+            <div class="header-icon" style="font-size: 2.2rem;">🧭</div>
+            <h1 style="margin: 0 0 8px 0; font-size: 1.7rem;">上手引导</h1>
+            <p class="subtitle" style="margin: 0;">第一次使用音感觉醒，按这个顺序走一遍就够了</p>
+        </header>
+        <section class="guide-section">
+            <h2>这个软件能做什么</h2>
+            <p>音感觉醒把音乐训练中经常用到的几件事放在一起：跟节拍练节奏、听辨音高与音阶、认识和弦与和弦进行、随时查乐理知识。</p>
+            <p>它在本机运行，不需要联网，也不需要注册账号；练习成绩保存在你自己的电脑上。</p>
+        </section>
+        <section class="guide-section">
+            <h2>界面结构</h2>
+            <p>左侧导航分为三组，点击即可切换；右下角有“模式”和“全屏”两个按钮。</p>
+            <ul class="step-list">
+                <li>练习：节奏闯关、和弦练习（含转位、速弹、和弦弹奏、调内和弦四个子练习）</li>
+                <li>工具：节拍基准、进行曲库、音高识别、音阶识别、和弦推演</li>
+                <li>知识：乐理手册</li>
+            </ul>
+        </section>
+        <section class="guide-section">
+            <h2>建议的使用顺序</h2>
+            <ul class="step-list">
+                <li>第一步：打开“节拍基准”，把速度调到 60 到 80，跟着节拍器拍手，先感受稳定的拍子。</li>
+                <li>第二步：进入“节奏闯关”，选择四分音符，允许麦克风后跟着敲击，看自己的准确率和偏差。</li>
+                <li>第三步：到“和弦练习”里做几轮转位或速弹，熟悉琴键位置。</li>
+                <li>第四步：用“音高识别”和“音阶识别”做听辨练习，用“和弦推演”理解和弦是怎么来的。</li>
+                <li>第五步：遇到不懂的概念，随时打开“乐理手册”查阅。</li>
+            </ul>
+        </section>
+        <section class="guide-section">
+            <h2>课堂投影怎么用</h2>
+            <p>点击右下角“模式”，可以同时打开浅色模式和大屏模式，适合明亮的教室；再点“全屏”，画面就没有浏览器边框了。</p>
+            <p>如果希望切换模块时保持全屏，请用桌面上的“音感觉醒（全屏）”图标启动。</p>
+        </section>
+        <section class="guide-section">
+            <h2>练习数据</h2>
+            <p>节奏闯关会记录每次练习的时间、速度、拍号、节奏型、准确率与平均偏差，最多保留三十条。</p>
+            <p>点击“导出 CSV”可以把记录保存成表格文件，用 Excel 打开后即可做统计，适合课堂前后测的数据分析。</p>
+        </section>
+        <section class="guide-section">
+            <div class="tip-box"><strong>提示：</strong>戴耳机练习可以让节拍声不被麦克风收进去，判定会更准确；使用蓝牙耳机时，记得用“延迟校准”抵消延迟。</div>
+        </section>
+        <div class="back-nav" style="margin-top: 30px;">
+            <a href="wiki.html" class="back-link">← 返回乐理手册</a>
+        </div>
+    </div>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

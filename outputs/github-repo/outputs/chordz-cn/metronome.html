@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="音感觉醒">
+    <title>节拍基准 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link active">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+
+    <div class="guide-container">
+        <header style="text-align: center; margin-bottom: 20px;">
+            <div class="header-icon" style="font-size: 2rem; margin-bottom: 3px;">⏱️</div>
+            <h1 style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0 0 3px 0; font-size: 1.5rem;">节拍基准</h1>
+            <p class="subtitle" style="margin: 0; font-size: 0.85rem;">保持稳定的节奏</p>
+        </header>
+
+        <div class="guide-section" style="max-width: 450px; margin: 0 auto;">
+            <!-- Visual Indicator -->
+            <div id="beat-indicator" style="margin-bottom: 20px; text-align: center;">
+                <div id="beat-circle" style="width: 80px; height: 80px; border-radius: 50%; background: var(--surface); border: 3px solid var(--surface); margin: 0 auto; display: flex; align-items: center; justify-content: center; transition: all 0.1s ease;">
+                    <div id="beat-number" style="font-size: 2rem; font-weight: bold; color: var(--text-secondary); font-family: 'Courier New', monospace;">-</div>
+                </div>
+            </div>
+
+            <!-- BPM Control -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary); text-align: center; font-size: 0.9rem;">
+                    速度
+                </label>
+                <div style="position: relative; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 2px solid var(--primary-color); border-radius: 10px; padding: 15px 20px;">
+                    <button id="bpm-decrease" style="position: absolute; left: 15px; background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 5px 10px; opacity: 0.4; transition: opacity 0.2s;">▼</button>
+                    <div id="bpm-display-container" style="text-align: center; cursor: pointer; touch-action: none;">
+                        <div id="bpm-display" style="color: var(--primary-color); font-size: 2.5rem; font-weight: bold; font-family: 'Courier New', monospace; line-height: 1;">120</div>
+                        <input type="number" id="bpm-input" min="40" max="240" value="120" style="display: none; width: 100px; color: var(--primary-color); font-size: 2.5rem; font-weight: bold; font-family: 'Courier New', monospace; line-height: 1; text-align: center; background: transparent; border: none; outline: none; -moz-appearance: textfield;">
+                        <div style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 2px;">BPM</div>
+                    </div>
+                    <button id="bpm-increase" style="position: absolute; right: 15px; background: none; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer; padding: 5px 10px; opacity: 0.4; transition: opacity 0.2s;">▲</button>
+                </div>
+            </div>
+
+            <!-- 拍号 and Sound in Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <!-- 拍号 -->
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary); font-size: 0.85rem;">
+                        拍号
+                    </label>
+                    <select id="beats-per-measure" data-segmented style="width: 100%; padding: 8px; font-size: 0.9rem; background: var(--background); color: var(--text-primary); border: 2px solid var(--primary-color); border-radius: 8px; cursor: pointer;">
+                        <option value="2">2/4</option>
+                        <option value="3">3/4</option>
+                        <option value="4" selected>4/4</option>
+                        <option value="5">5/4</option>
+                        <option value="6">6/8</option>
+                        <option value="7">7/8</option>
+                    </select>
+                </div>
+
+                <!-- Sound Selection -->
+                <div>
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary); font-size: 0.85rem;">
+                        音色
+                    </label>
+                    <select id="sound-select" data-segmented style="width: 100%; padding: 8px; font-size: 0.9rem; background: var(--background); color: var(--text-primary); border: 2px solid var(--primary-color); border-radius: 8px; cursor: pointer;">
+                        <option value="click">电子咔哒</option>
+                        <option value="woodblock">木鱼</option>
+                        <option value="beep">电子音</option>
+                        <option value="cowbell">牛铃</option>
+                    </select>
+                </div>
+
+                <!-- 音量 -->
+                <div style="grid-column: 1 / -1;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary); font-size: 0.85rem;">
+                        音量：<span id="volume-value">100%</span>
+                    </label>
+                    <input type="range" id="volume-range" min="0" max="100" step="5" value="100" style="width: 100%; accent-color: var(--primary-color);">
+                </div>
+            </div>
+
+            <!-- Start/Stop Button -->
+            <button id="start-stop-btn" style="width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
+                ▶️ 开始
+            </button>
+
+            <!-- Tap Tempo -->
+            <button id="tap-tempo-btn" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 600; background: var(--surface); color: var(--text-primary); border: 2px solid var(--primary-color); border-radius: 8px; cursor: pointer;">
+                👆 点击定速
+            </button>
+        </div>
+    </div>
+
+    <style>
+        #bpm-increase:hover,
+        #bpm-decrease:hover {
+            opacity: 1 !important;
+        }
+
+        #bpm-increase:active,
+        #bpm-decrease:active {
+            opacity: 0.6 !important;
+        }
+
+        /* Hide number input spinners */
+        #bpm-input::-webkit-outer-spin-button,
+        #bpm-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #start-stop-btn:hover {
+            opacity: 0.9;
+        }
+
+        #tap-tempo-btn:hover {
+            background: var(--surface-light);
+        }
+    </style>
+
+    <script src="vendor/Tone.js"></script>
+    <script>
+        const STORAGE_KEY = 'chordz-metronome-settings';
+
+        class Metronome {
+            constructor() {
+                this.isPlaying = false;
+                this.bpm = 120;
+                this.beatsPerMeasure = 4;
+                this.currentBeat = 0;
+                this.soundType = 'click';
+                this.volume = 1;
+                this.noiseBuffer = null;
+                this.nextNoteTime = 0;
+                this.scheduleAheadTime = 0.1; // Schedule notes 100ms ahead
+                this.timerID = null;
+                this.audioContext = null;
+
+                // Tap tempo
+                this.tapTimes = [];
+                this.tapTimeoutId = null;
+
+                // Touch drag
+                this.touchStartY = null;
+                this.touchStartBpm = null;
+                this.isDragging = false;
+
+                this.loadSettings();
+                this.init();
+            }
+
+            init() {
+                // BPM buttons
+                document.getElementById('bpm-increase').addEventListener('click', () => {
+                    if (this.bpm < 240) {
+                        this.bpm++;
+                        document.getElementById('bpm-display').textContent = this.bpm;
+                        document.getElementById('bpm-input').value = this.bpm;
+                        this.saveSettings();
+                    }
+                });
+
+                document.getElementById('bpm-decrease').addEventListener('click', () => {
+                    if (this.bpm > 40) {
+                        this.bpm--;
+                        document.getElementById('bpm-display').textContent = this.bpm;
+                        document.getElementById('bpm-input').value = this.bpm;
+                        this.saveSettings();
+                    }
+                });
+
+                // BPM display click to edit
+                document.getElementById('bpm-display-container').addEventListener('click', (e) => {
+                    // Don't trigger edit mode if user was dragging
+                    if (this.isDragging) return;
+
+                    const display = document.getElementById('bpm-display');
+                    const input = document.getElementById('bpm-input');
+
+                    display.style.display = 'none';
+                    input.style.display = 'block';
+                    input.value = this.bpm;
+                    input.focus();
+                    input.select();
+                });
+
+                // BPM display touch drag to change
+                const container = document.getElementById('bpm-display-container');
+
+                container.addEventListener('touchstart', (e) => {
+                    this.touchStartY = e.touches[0].clientY;
+                    this.touchStartBpm = this.bpm;
+                    this.isDragging = false;
+                }, { passive: true });
+
+                container.addEventListener('touchmove', (e) => {
+                    if (this.touchStartY === null) return;
+
+                    e.preventDefault(); // Prevent scrolling
+
+                    const currentY = e.touches[0].clientY;
+                    const deltaY = this.touchStartY - currentY; // Inverted: up = positive
+                    const sensitivity = 2; // Pixels per BPM
+
+                    const bpmChange = Math.round(deltaY / sensitivity);
+
+                    if (Math.abs(bpmChange) > 0) {
+                        this.isDragging = true;
+
+                        let newBpm = this.touchStartBpm + bpmChange;
+
+                        // Clamp to valid range
+                        if (newBpm < 40) newBpm = 40;
+                        if (newBpm > 240) newBpm = 240;
+
+                        if (newBpm !== this.bpm) {
+                            this.bpm = newBpm;
+                            document.getElementById('bpm-display').textContent = this.bpm;
+                            document.getElementById('bpm-input').value = this.bpm;
+                        }
+                    }
+                });
+
+                container.addEventListener('touchend', () => {
+                    if (this.touchStartY !== null) {
+                        this.saveSettings();
+                        this.touchStartY = null;
+                        this.touchStartBpm = null;
+
+                        // Reset isDragging after a short delay to prevent click from firing
+                        setTimeout(() => {
+                            this.isDragging = false;
+                        }, 100);
+                    }
+                });
+
+                // BPM input handlers
+                const saveBpmInput = () => {
+                    const input = document.getElementById('bpm-input');
+                    const display = document.getElementById('bpm-display');
+
+                    let value = parseInt(input.value);
+
+                    // Validate
+                    if (isNaN(value) || value < 40) value = 40;
+                    if (value > 240) value = 240;
+
+                    this.bpm = value;
+                    display.textContent = this.bpm;
+                    input.value = this.bpm;
+
+                    // Switch back to display
+                    input.style.display = 'none';
+                    display.style.display = 'block';
+
+                    this.saveSettings();
+                };
+
+                document.getElementById('bpm-input').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        saveBpmInput();
+                    } else if (e.key === 'Escape') {
+                        // Cancel editing
+                        const input = document.getElementById('bpm-input');
+                        const display = document.getElementById('bpm-display');
+                        input.style.display = 'none';
+                        display.style.display = 'block';
+                    }
+                });
+
+                document.getElementById('bpm-input').addEventListener('blur', () => {
+                    saveBpmInput();
+                });
+
+                // Beats per measure
+                document.getElementById('beats-per-measure').addEventListener('change', (e) => {
+                    this.beatsPerMeasure = parseInt(e.target.value);
+                    this.currentBeat = 0;
+                    this.updateBeatDisplay();
+                    this.saveSettings();
+                });
+
+                // Sound selection
+                document.getElementById('volume-range').addEventListener('input', (e) => {
+                    this.volume = Number(e.target.value) / 100;
+                    document.getElementById('volume-value').textContent = e.target.value + '%';
+                    this.saveSettings();
+                });
+
+                document.getElementById('sound-select').addEventListener('change', (e) => {
+                    this.soundType = e.target.value;
+                    this.saveSettings();
+                });
+
+                // Start/Stop button
+                document.getElementById('start-stop-btn').addEventListener('click', () => {
+                    if (this.isPlaying) {
+                        this.stop();
+                    } else {
+                        this.start();
+                    }
+                });
+
+                // Tap tempo
+                document.getElementById('tap-tempo-btn').addEventListener('click', () => {
+                    this.handleTap();
+                });
+
+                // Set initial values
+                document.getElementById('bpm-display').textContent = this.bpm;
+                document.getElementById('bpm-input').value = this.bpm;
+                document.getElementById('beats-per-measure').value = this.beatsPerMeasure;
+                document.getElementById('sound-select').value = this.soundType;
+                document.getElementById('volume-range').value = Math.round(this.volume * 100);
+                document.getElementById('volume-value').textContent = Math.round(this.volume * 100) + '%';
+            }
+
+            async start() {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+
+                if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                    await Tone.start();
+                }
+
+                this.isPlaying = true;
+                this.currentBeat = 0;
+                this.nextNoteTime = this.audioContext.currentTime;
+                this.scheduler();
+
+                document.getElementById('start-stop-btn').innerHTML = '⏸️ 停止';
+                document.getElementById('start-stop-btn').style.background = '#ef4444';
+            }
+
+            stop() {
+                this.isPlaying = false;
+                if (this.timerID) {
+                    clearTimeout(this.timerID);
+                }
+
+                this.currentBeat = 0;
+                this.updateBeatDisplay();
+                document.getElementById('beat-circle').style.background = 'var(--surface)';
+                document.getElementById('beat-circle').style.borderColor = 'var(--surface)';
+                document.getElementById('beat-number').textContent = '-';
+
+                document.getElementById('start-stop-btn').innerHTML = '▶️ 开始';
+                document.getElementById('start-stop-btn').style.background = 'var(--primary-color)';
+            }
+
+            scheduler() {
+                while (this.nextNoteTime < this.audioContext.currentTime + this.scheduleAheadTime) {
+                    this.scheduleNote(this.currentBeat, this.nextNoteTime);
+                    this.nextNote();
+                }
+
+                if (this.isPlaying) {
+                    this.timerID = setTimeout(() => this.scheduler(), 25);
+                }
+            }
+
+            nextNote() {
+                const secondsPerBeat = 60.0 / this.bpm;
+                this.nextNoteTime += secondsPerBeat;
+
+                this.currentBeat++;
+                if (this.currentBeat >= this.beatsPerMeasure) {
+                    this.currentBeat = 0;
+                }
+            }
+
+            scheduleNote(beatNumber, time) {
+                const isFirstBeat = (beatNumber === 0);
+                this.playSound(isFirstBeat, time);
+
+                // Schedule visual update
+                const delay = (time - this.audioContext.currentTime) * 1000;
+                setTimeout(() => {
+                    if (this.isPlaying) {
+                        this.updateBeatDisplay(beatNumber, isFirstBeat);
+                    }
+                }, delay);
+            }
+
+            playSound(isFirstBeat, time) {
+                const ctx = this.audioContext;
+                const volume = typeof this.volume === 'number' ? this.volume : 1;
+
+                // 生成一次噪声缓冲，用作每拍的敲击音头
+                if (!this.noiseBuffer) {
+                    const length = Math.max(1, Math.floor(ctx.sampleRate * 0.05));
+                    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < length; i++) {
+                        data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+                    }
+                    this.noiseBuffer = buffer;
+                }
+
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                switch (this.soundType) {
+                    case 'click':
+                        osc.frequency.value = isFirstBeat ? 1400 : 950;
+                        osc.type = 'sine';
+                        break;
+
+                    case 'woodblock':
+                        osc.frequency.value = isFirstBeat ? 1700 : 1150;
+                        osc.type = 'triangle';
+                        break;
+
+                    case 'beep':
+                        osc.frequency.value = isFirstBeat ? 1000 : 620;
+                        osc.type = 'square';
+                        break;
+
+                    case 'cowbell':
+                        osc.frequency.value = isFirstBeat ? 900 : 620;
+                        osc.type = 'square';
+                        break;
+                }
+
+                const peak = Math.max(0.0002, (isFirstBeat ? 0.9 : 0.65) * volume);
+                gainNode.gain.setValueAtTime(0.0001, time);
+                gainNode.gain.exponentialRampToValueAtTime(peak, time + 0.003);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
+
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                osc.start(time);
+                osc.stop(time + 0.14);
+
+                const noise = ctx.createBufferSource();
+                noise.buffer = this.noiseBuffer;
+                const noiseGain = ctx.createGain();
+                const noisePeak = Math.max(0.0002, (isFirstBeat ? 0.55 : 0.38) * volume);
+                noiseGain.gain.setValueAtTime(0.0001, time);
+                noiseGain.gain.exponentialRampToValueAtTime(noisePeak, time + 0.002);
+                noiseGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
+                noise.connect(noiseGain);
+                noiseGain.connect(ctx.destination);
+                noise.start(time);
+                noise.stop(time + 0.07);
+            }
+
+            updateBeatDisplay(beatNumber = null, isFirstBeat = false) {
+                const circle = document.getElementById('beat-circle');
+                const numberEl = document.getElementById('beat-number');
+
+                if (beatNumber !== null) {
+                    numberEl.textContent = beatNumber + 1;
+
+                    if (isFirstBeat) {
+                        circle.style.background = 'var(--primary-color)';
+                        circle.style.borderColor = 'var(--primary-color)';
+                        numberEl.style.color = 'white';
+                    } else {
+                        circle.style.background = 'var(--secondary-color)';
+                        circle.style.borderColor = 'var(--secondary-color)';
+                        numberEl.style.color = 'white';
+                    }
+
+                    // Reset after flash
+                    setTimeout(() => {
+                        circle.style.background = 'var(--surface)';
+                        circle.style.borderColor = 'var(--surface)';
+                        numberEl.style.color = 'var(--text-secondary)';
+                    }, 100);
+                }
+            }
+
+            handleTap() {
+                const now = Date.now();
+                this.tapTimes.push(now);
+
+                // Clear old taps (older than 3 seconds)
+                this.tapTimes = this.tapTimes.filter(time => now - time < 3000);
+
+                // Calculate BPM from taps
+                if (this.tapTimes.length >= 2) {
+                    const intervals = [];
+                    for (let i = 1; i < this.tapTimes.length; i++) {
+                        intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
+                    }
+                    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+                    const calculatedBpm = Math.round(60000 / avgInterval);
+
+                    if (calculatedBpm >= 40 && calculatedBpm <= 240) {
+                        this.bpm = calculatedBpm;
+                        document.getElementById('bpm-display').textContent = this.bpm;
+                        this.saveSettings();
+                    }
+                }
+
+                // Reset tap times after 3 seconds of inactivity
+                clearTimeout(this.tapTimeoutId);
+                this.tapTimeoutId = setTimeout(() => {
+                    this.tapTimes = [];
+                }, 3000);
+
+                // Visual feedback
+                const btn = document.getElementById('tap-tempo-btn');
+                btn.style.background = 'var(--primary-color)';
+                btn.style.color = 'white';
+                setTimeout(() => {
+                    btn.style.background = 'var(--surface)';
+                    btn.style.color = 'var(--text-primary)';
+                }, 100);
+            }
+
+            saveSettings() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        bpm: this.bpm,
+                        beatsPerMeasure: this.beatsPerMeasure,
+                        soundType: this.soundType,
+                        volume: this.volume
+                    }));
+                } catch (e) {
+                    console.error('Failed to save settings:', e);
+                }
+            }
+
+            loadSettings() {
+                try {
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        const settings = JSON.parse(stored);
+                        this.bpm = settings.bpm || 120;
+                        this.beatsPerMeasure = settings.beatsPerMeasure || 4;
+                        this.soundType = settings.soundType || 'click';
+                        this.volume = typeof settings.volume === 'number' ? settings.volume : 1;
+                    }
+                } catch (e) {
+                    console.error('Failed to load settings:', e);
+                }
+            }
+        }
+
+        const metronome = new Metronome();
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

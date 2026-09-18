@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="音感觉醒">
+    <title>和弦弹奏 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+    <script src="virtual-keyboard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link active">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+
+    <div class="guide-container">
+        <div class="back-nav">
+            <a href="training.html" class="back-link">← 返回训练</a>
+        </div>
+
+        <div class="guide-section" style="max-width: 600px; margin: 0 auto; padding: 10px 20px 20px 20px;">
+            <header style="text-align: center; margin-bottom: 15px;">
+                <div style="font-size: 2rem; margin-bottom: 5px;">🎹</div>
+                <h1 style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0 0 5px 0; font-size: 1.5rem;">和弦弹奏</h1>
+                <p class="subtitle" style="font-size: 0.85rem; margin: 0;">弹出所示和弦的全部三个音</p>
+            </header>
+
+            <!-- Best Score Display -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--primary-color); border-radius: 6px; margin-bottom: 12px; font-size: 0.85rem; gap: 15px;">
+                <div>
+                    <span style="color: var(--text-secondary);">🏆 最佳：</span>
+                    <strong id="best-score-value" style="color: var(--primary-color); margin-left: 8px;">-</strong>
+                    <span style="color: var(--text-secondary); margin-left: 8px; font-size: 0.8rem;" id="best-score-date">暂无记录</span>
+                </div>
+            </div>
+
+            <button id="start-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: 600; background: var(--primary-color); color: white; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
+                🎤 开始训练
+            </button>
+
+            <button id="stop-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: 600; background: #ef4444; color: white; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 15px; display: none;">
+                ⏹ 停止训练
+            </button>
+
+            <!-- Stats Display -->
+            <div id="stats-display" style="display: none; margin-bottom: 12px; padding: 12px; background: var(--surface); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">剩余时间</div>
+                        <div id="time-left" style="font-size: 1.4rem; font-weight: bold; color: var(--primary-color); font-family: 'Courier New', monospace;">60</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">得分</div>
+                        <div id="score" style="font-size: 1.4rem; font-weight: bold; color: var(--accent-happy); font-family: 'Courier New', monospace;">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chord Display -->
+            <div id="chord-display" style="display: none; margin-bottom: 20px; padding: 40px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2)); border-radius: 15px; text-align: center; border: 3px solid var(--primary-color);">
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px;">请弹奏这个和弦：</div>
+                <div id="current-chord" style="font-size: 4rem; font-weight: bold; color: var(--primary-color); font-family: 'Georgia', serif;">C</div>
+            </div>
+
+            <!-- Detected Notes -->
+            <div id="detected-notes-display" style="display: none; margin-bottom: 20px; padding: 15px; background: var(--surface-light); border-radius: 10px;">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; text-align: center;">检测到的音：</div>
+                <div id="detected-notes-list" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 40px;">
+                    <!-- Will be filled with detected note badges -->
+                </div>
+            </div>
+
+            <div id="success-message" style="display: none; text-align: center; padding: 30px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); border-radius: 15px; border: 3px solid var(--accent-happy); margin-top: 30px;">
+                <div style="font-size: 4rem; margin-bottom: 15px;">🎉</div>
+                <h2 style="color: var(--accent-happy); margin: 0 0 10px 0;">时间到！</h2>
+                <p id="final-score" style="font-size: 1.5rem; color: var(--text-primary); margin: 10px 0;"></p>
+                <p id="new-record" style="font-size: 1.2rem; color: var(--accent-happy); margin: 10px 0; display: none;">🏆 新纪录！</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/Tone.js"></script>
+    <script src="pitch-detector.js"></script>
+    <script src="music-theory.js"></script>
+    <script>
+        const TRAINING_DURATION = 60; // seconds
+
+        // All possible chords (major, minor, diminished)
+        const ALL_CHORDS = [
+            'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+            'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m', 'Bm',
+            'Cdim', 'C#dim', 'Ddim', 'D#dim', 'Edim', 'Fdim', 'F#dim', 'Gdim', 'G#dim', 'Adim', 'A#dim', 'Bdim'
+        ];
+
+        // Base class for shared pitch detection logic
+        class BaseTrainer {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.mediaStream = null;
+                this.isRunning = false;
+                this.lastDetectedNote = null;
+                this.detectionCooldown = false;
+                this.lastFrequency = null;
+                this.stableCount = 0;
+                this.wakeLock = null;
+            }
+
+            detect() {
+                if (!this.isRunning) return;
+
+                const buffer = new Float32Array(this.analyser.fftSize);
+                this.analyser.getFloatTimeDomainData(buffer);
+
+                const result = this.detectPitch(buffer);
+
+                if (result && result.frequency) {
+                    const note = this.frequencyToNote(result.frequency);
+                    if (note) {
+                        this.handleDetectedNote(note);
+                    }
+                }
+
+                requestAnimationFrame(() => this.detect());
+            }
+
+            detectPitch(buffer) {
+                const rms = PitchDetector.calculateRMS(buffer);
+                if (rms < 0.005) return null;
+
+                const autocorrelation = PitchDetector.autoCorrelate(buffer, this.audioContext.sampleRate);
+                if (!autocorrelation) return null;
+
+                let { frequency, confidence } = autocorrelation;
+
+                if (frequency < 80 || frequency > 1200 || confidence < 0.80) return null;
+
+                // Temporal smoothing
+                if (this.lastFrequency) {
+                    const freqDiff = Math.abs(frequency - this.lastFrequency);
+                    const tolerance = this.lastFrequency * 0.03;
+
+                    if (freqDiff < tolerance) {
+                        this.stableCount++;
+                        frequency = (frequency + this.lastFrequency) / 2;
+                    } else {
+                        this.stableCount = 0;
+                    }
+                }
+
+                this.lastFrequency = frequency;
+
+                if (this.stableCount < 1) return null;
+
+                return { frequency, confidence };
+            }
+
+            frequencyToNote(frequency) {
+                return PitchDetector.frequencyToNote(frequency);
+            }
+
+            async requestWakeLock() {
+                if (!('wakeLock' in navigator)) {
+                    console.warn('Screen Wake Lock API not supported');
+                    return;
+                }
+
+                try {
+                    this.wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.error('Wake Lock request failed:', err);
+                }
+            }
+
+            async releaseWakeLock() {
+                if (this.wakeLock !== null) {
+                    try {
+                        await this.wakeLock.release();
+                        this.wakeLock = null;
+                    } catch (err) {
+                        console.error('Wake Lock release failed:', err);
+                    }
+                }
+            }
+
+            handleDetectedNote(note) {
+                throw new Error('handleDetectedNote must be implemented by child class');
+            }
+        }
+
+        class PlayChordTrainer extends BaseTrainer {
+            constructor() {
+                super();
+                this.score = 0;
+                this.timeLeft = TRAINING_DURATION;
+                this.timerInterval = null;
+                this.currentChord = null;
+                this.requiredNotes = [];
+                this.detectedNotes = new Set();
+
+                this.init();
+            }
+
+            init() {
+                const startBtn = document.getElementById('start-btn');
+                const stopBtn = document.getElementById('stop-btn');
+
+                startBtn.addEventListener('click', () => this.start());
+                stopBtn.addEventListener('click', () => this.stop());
+
+                this.displayBestScore();
+            }
+
+            displayBestScore() {
+                const records = this.loadRecords();
+                if (records && records.length > 0) {
+                    const best = records[0];
+                    const date = new Date(best.date);
+                    const dateStr = date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+
+                    document.getElementById('best-score-value').textContent = best.score;
+                    document.getElementById('best-score-date').textContent = `on ${dateStr}`;
+                } else {
+                    document.getElementById('best-score-value').textContent = '-';
+                    document.getElementById('best-score-date').textContent = '暂无记录';
+                }
+            }
+
+            loadRecords() {
+                try {
+                    const stored = localStorage.getItem('chordz-play-chord-records');
+                    return stored ? JSON.parse(stored) : [];
+                } catch (e) {
+                    console.error('Failed to load records:', e);
+                    return [];
+                }
+            }
+
+            saveRecord(score) {
+                const records = this.loadRecords();
+                records.push({
+                    score: score,
+                    date: new Date().toISOString()
+                });
+
+                records.sort((a, b) => b.score - a.score);
+                const topRecords = records.slice(0, 10);
+
+                try {
+                    localStorage.setItem('chordz-play-chord-records', JSON.stringify(topRecords));
+                    this.displayBestScore();
+                    return topRecords[0].score === score;
+                } catch (e) {
+                    console.error('Failed to save records:', e);
+                    return false;
+                }
+            }
+
+            pickRandomChord() {
+                this.currentChord = ALL_CHORDS[Math.floor(Math.random() * ALL_CHORDS.length)];
+                this.requiredNotes = getChordNotes(this.currentChord);
+                this.detectedNotes.clear();
+
+                document.getElementById('current-chord').textContent = this.currentChord;
+                this.updateDetectedNotesDisplay();
+            }
+
+            updateDetectedNotesDisplay() {
+                const container = document.getElementById('detected-notes-list');
+                container.innerHTML = '';
+
+                // Only show notes that have been detected
+                this.detectedNotes.forEach(noteBase => {
+                    const badge = document.createElement('div');
+                    badge.style.cssText = `
+                        padding: 8px 16px;
+                        border-radius: 8px;
+                        font-weight: bold;
+                        font-size: 1.1rem;
+                        background: var(--accent-happy);
+                        color: white;
+                        transition: all 0.3s ease;
+                    `;
+                    badge.textContent = noteBase;
+                    container.appendChild(badge);
+                });
+            }
+
+            async start() {
+                try {
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 2048;
+                    this.microphone = this.audioContext.createMediaStreamSource(this.mediaStream);
+                    this.microphone.connect(this.analyser);
+
+                    if (typeof Tone !== 'undefined') {
+                        await Tone.start();
+                    }
+
+                    await this.requestWakeLock();
+
+                    this.score = 0;
+                    this.timeLeft = TRAINING_DURATION;
+                    this.isRunning = true;
+
+                    document.getElementById('start-btn').style.display = 'none';
+                    document.getElementById('stop-btn').style.display = 'block';
+                    document.getElementById('stats-display').style.display = 'block';
+                    document.getElementById('chord-display').style.display = 'block';
+                    document.getElementById('detected-notes-display').style.display = 'block';
+                    document.getElementById('success-message').style.display = 'none';
+
+                    this.updateDisplay();
+                    this.pickRandomChord();
+
+                    // Scroll to chord display
+                    setTimeout(() => {
+                        document.getElementById('chord-display').scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 100);
+
+                    this.timerInterval = setInterval(() => {
+                        this.timeLeft--;
+                        this.updateDisplay();
+
+                        if (this.timeLeft <= 0) {
+                            this.finish();
+                        }
+                    }, 1000);
+
+                    this.detect();
+
+                } catch (error) {
+                    alert('Error accessing microphone: ' + error.message);
+                }
+            }
+
+            async stop() {
+                this.isRunning = false;
+
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+
+                if (this.microphone) {
+                    this.microphone.disconnect();
+                    this.microphone = null;
+                }
+
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                    this.mediaStream = null;
+                }
+
+                if (this.audioContext && this.audioContext.state !== 'closed') {
+                    await this.audioContext.close();
+                    this.audioContext = null;
+                }
+
+                if (this.analyser) {
+                    this.analyser = null;
+                }
+
+                await this.releaseWakeLock();
+
+                this.lastFrequency = null;
+                this.stableCount = 0;
+                this.detectionCooldown = false;
+
+                document.getElementById('start-btn').style.display = 'block';
+                document.getElementById('stop-btn').style.display = 'none';
+                document.getElementById('stats-display').style.display = 'none';
+                document.getElementById('chord-display').style.display = 'none';
+                document.getElementById('detected-notes-display').style.display = 'none';
+                document.getElementById('success-message').style.display = 'none';
+            }
+
+            async finish() {
+                this.isRunning = false;
+
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+
+                if (this.microphone) {
+                    this.microphone.disconnect();
+                    this.microphone = null;
+                }
+
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                    this.mediaStream = null;
+                }
+
+                if (this.audioContext && this.audioContext.state !== 'closed') {
+                    await this.audioContext.close();
+                    this.audioContext = null;
+                }
+
+                if (this.analyser) {
+                    this.analyser = null;
+                }
+
+                await this.releaseWakeLock();
+
+                this.lastFrequency = null;
+                this.stableCount = 0;
+                this.detectionCooldown = false;
+
+                const isNewRecord = this.saveRecord(this.score);
+
+                document.getElementById('stop-btn').style.display = 'none';
+                document.getElementById('stats-display').style.display = 'none';
+                document.getElementById('chord-display').style.display = 'none';
+                document.getElementById('detected-notes-display').style.display = 'none';
+                document.getElementById('success-message').style.display = 'block';
+                document.getElementById('final-score').textContent = `最终得分：${this.score}`;
+
+                if (isNewRecord) {
+                    document.getElementById('new-record').style.display = 'block';
+                }
+
+                setTimeout(() => {
+                    document.getElementById('start-btn').style.display = 'block';
+                    document.getElementById('success-message').style.display = 'none';
+                    document.getElementById('new-record').style.display = 'none';
+                }, 5000);
+            }
+
+            updateDisplay() {
+                document.getElementById('time-left').textContent = this.timeLeft;
+                document.getElementById('score').textContent = this.score;
+            }
+
+            handleDetectedNote(detectedNote) {
+                if (this.detectionCooldown) return;
+
+                const noteBase = detectedNote.replace(/[0-9]/g, '');
+                const requiredNoteBases = this.requiredNotes.map(n => n.replace(/[0-9]/g, ''));
+
+                if (requiredNoteBases.includes(noteBase) && !this.detectedNotes.has(noteBase)) {
+                    this.detectedNotes.add(noteBase);
+                    this.updateDetectedNotesDisplay();
+
+                    // Flash green
+                    document.getElementById('chord-display').style.borderColor = 'var(--accent-happy)';
+                    setTimeout(() => {
+                        document.getElementById('chord-display').style.borderColor = 'var(--primary-color)';
+                    }, 200);
+
+                    // Check if all notes detected
+                    if (this.detectedNotes.size === this.requiredNotes.length) {
+                        this.score++;
+                        this.updateDisplay();
+
+                        // Success feedback
+                        document.getElementById('chord-display').style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))';
+                        setTimeout(() => {
+                            document.getElementById('chord-display').style.background = 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))';
+                        }, 300);
+
+                        // Cooldown before next chord
+                        this.detectionCooldown = true;
+                        setTimeout(() => {
+                            this.detectionCooldown = false;
+                            this.pickRandomChord();
+                        }, 800);
+                    }
+                }
+            }
+        }
+
+        const trainer = new PlayChordTrainer();
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

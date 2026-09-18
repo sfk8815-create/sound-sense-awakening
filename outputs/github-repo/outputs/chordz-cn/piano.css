@@ -1,0 +1,490 @@
+/**
+ * Animated Piano Keyboard Styles
+ */
+
+.piano-container {
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    margin: 30px 0;
+    box-shadow: var(--shadow);
+}
+
+.piano-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.piano-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.piano-current-chord {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-happy);
+    font-family: 'Courier New', monospace;
+}
+
+.piano-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.piano-control-btn {
+    height: 36px;
+    padding: 0 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.piano-control-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.piano-control-btn.paused {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.piano-speed-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.piano-speed-select {
+    height: 36px;
+    padding: 0 12px;
+    background: var(--surface-light);
+    color: var(--text-primary);
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.piano-octave-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-light);
+    height: 36px;
+    padding: 0 8px;
+    border-radius: 6px;
+    border: 2px solid var(--primary-color);
+}
+
+.piano-octave-btn {
+    width: 24px;
+    height: 24px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.piano-octave-btn:hover {
+    background: var(--secondary-color);
+    transform: scale(1.1);
+}
+
+.piano-octave-btn:active {
+    transform: scale(0.95);
+}
+
+.piano-octave-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 50px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+}
+
+.piano-keyboard {
+    position: relative;
+    height: 200px;
+    background: var(--background);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.piano-octave {
+    position: relative;
+    display: flex;
+    height: 160px;
+}
+
+.piano-key {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.piano-key:active {
+    transform: translateY(2px);
+}
+
+.piano-key.white {
+    width: 40px;
+    height: 160px;
+    background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+    border: 2px solid #333;
+    border-radius: 0 0 4px 4px;
+    margin-right: -1px;
+    z-index: 1;
+}
+
+.piano-key.white:hover {
+    background: linear-gradient(to bottom, #f0f0f0 0%, #e0e0e0 100%);
+}
+
+.piano-key.white.active {
+    background: linear-gradient(to bottom, var(--primary-color) 0%, var(--secondary-color) 100%);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+    transform: translateY(2px);
+}
+
+.piano-key.black {
+    width: 28px;
+    height: 100px;
+    background: linear-gradient(to bottom, #1a1a1a 0%, #000000 100%);
+    border: 1px solid #000;
+    border-radius: 0 0 3px 3px;
+    position: absolute;
+    z-index: 2;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.piano-key.black:hover {
+    background: linear-gradient(to bottom, #333 0%, #111 100%);
+}
+
+.piano-key.black.active {
+    background: linear-gradient(to bottom, var(--primary-color) 0%, var(--secondary-color) 100%);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+    transform: translateY(2px);
+}
+
+/* Position black keys using data-key-index */
+/* Left octave keys (index 0-6) */
+.piano-octave .piano-key.black[data-key-index="0"] { left: 26px !important; }  /* C# */
+.piano-octave .piano-key.black[data-key-index="1"] { left: 66px !important; }  /* D# */
+.piano-octave .piano-key.black[data-key-index="3"] { left: 146px !important; } /* F# */
+.piano-octave .piano-key.black[data-key-index="4"] { left: 186px !important; } /* G# */
+.piano-octave .piano-key.black[data-key-index="5"] { left: 226px !important; } /* A# */
+
+/* Right octave keys (index 7-13) - offset by 273px */
+.piano-octave .piano-key.black[data-key-index="7"] { left: 299px !important; }  /* C# (273 + 26) */
+.piano-octave .piano-key.black[data-key-index="8"] { left: 339px !important; }  /* D# (273 + 66) */
+.piano-octave .piano-key.black[data-key-index="10"] { left: 419px !important; } /* F# (273 + 146) */
+.piano-octave .piano-key.black[data-key-index="11"] { left: 459px !important; } /* G# (273 + 186) */
+.piano-octave .piano-key.black[data-key-index="12"] { left: 499px !important; } /* A# (273 + 226) */
+
+.piano-key-label {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    pointer-events: none;
+}
+
+.piano-key.white .piano-key-label {
+    color: #666;
+}
+
+.piano-key.black .piano-key-label {
+    color: #999;
+    font-size: 0.65rem;
+}
+
+.piano-key.active .piano-key-label {
+    color: white;
+}
+
+.piano-notes-display {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--surface-light);
+    border-radius: 8px;
+}
+
+.piano-notes-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.piano-notes-list {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.piano-note-item {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--surface);
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.piano-note-item.active {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+    transform: scale(1.1);
+}
+
+.piano-note-item.clicked {
+    background: linear-gradient(135deg, var(--accent-happy) 0%, var(--primary-color) 100%);
+    color: white;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+    transform: scale(1.15);
+}
+
+.piano-note-separator {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* Responsive Design */
+@media (max-width: 1100px) {
+    /* Hide left octave on medium screens, show only right octave */
+    .piano-key[data-key-index="0"],
+    .piano-key[data-key-index="1"],
+    .piano-key[data-key-index="2"],
+    .piano-key[data-key-index="3"],
+    .piano-key[data-key-index="4"],
+    .piano-key[data-key-index="5"],
+    .piano-key[data-key-index="6"] {
+        display: none !important;
+    }
+
+    /* Reposition right octave black keys to start from left when left octave is hidden */
+    .piano-octave .piano-key.black[data-key-index="7"] { left: 26px !important; }  /* C# */
+    .piano-octave .piano-key.black[data-key-index="8"] { left: 66px !important; }  /* D# */
+    .piano-octave .piano-key.black[data-key-index="10"] { left: 146px !important; } /* F# */
+    .piano-octave .piano-key.black[data-key-index="11"] { left: 186px !important; } /* G# */
+    .piano-octave .piano-key.black[data-key-index="12"] { left: 226px !important; } /* A# */
+
+    /* Single octave width */
+    .piano-octave {
+        min-width: 320px; /* 8 white keys * 40px */
+    }
+}
+
+@media (max-width: 768px) {
+    .piano-keyboard {
+        padding: 10px;
+        overflow-x: auto;
+    }
+
+    .piano-octave {
+        min-width: 280px; /* 8 white keys * 35px = 280px */
+    }
+
+    .piano-key.white {
+        width: 35px;
+        height: 140px;
+    }
+
+    .piano-key.black {
+        width: 24px;
+        height: 90px;
+    }
+
+    /* Mobile - 35px per white key - Right octave only (left octave hidden) */
+    .piano-octave .piano-key.black[data-key-index="7"] { left: 23px !important; }  /* C# */
+    .piano-octave .piano-key.black[data-key-index="8"] { left: 58px !important; }  /* D# */
+    .piano-octave .piano-key.black[data-key-index="10"] { left: 128px !important; } /* F# */
+    .piano-octave .piano-key.black[data-key-index="11"] { left: 163px !important; } /* G# */
+    .piano-octave .piano-key.black[data-key-index="12"] { left: 198px !important; } /* A# */
+
+    .piano-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .piano-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .piano-control-btn {
+        height: 32px;
+        padding: 0 10px;
+        font-size: 0.8rem;
+    }
+
+    .piano-speed-label {
+        font-size: 0.8rem;
+    }
+
+    .piano-speed-select {
+        height: 32px;
+        padding: 0 8px;
+        font-size: 0.8rem;
+    }
+
+    .piano-title {
+        font-size: 1.1rem;
+    }
+
+    .piano-current-chord {
+        font-size: 1.2rem;
+    }
+
+    .piano-octave-controls {
+        height: 32px;
+        gap: 6px;
+        padding: 0 6px;
+    }
+
+    .piano-octave-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 1rem;
+    }
+
+    .piano-octave-label {
+        font-size: 0.75rem;
+        min-width: 45px;
+    }
+
+    .piano-note-item {
+        padding: 3px 10px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .piano-octave {
+        min-width: 240px; /* 8 white keys * 30px = 240px */
+    }
+
+    .piano-key.white {
+        width: 30px;
+        height: 120px;
+    }
+
+    .piano-key.black {
+        width: 20px;
+        height: 80px;
+    }
+
+    .piano-header {
+        gap: 8px;
+    }
+
+    .piano-controls {
+        gap: 4px;
+    }
+
+    .piano-control-btn {
+        height: 30px;
+        padding: 0 8px;
+        font-size: 0.75rem;
+    }
+
+    .piano-speed-label {
+        font-size: 0.75rem;
+        display: none; /* Hide "Speed:" label on very small screens */
+    }
+
+    .piano-speed-select {
+        height: 30px;
+        padding: 0 6px;
+        font-size: 0.75rem;
+    }
+
+    .piano-title {
+        font-size: 1rem;
+    }
+
+    .piano-current-chord {
+        font-size: 1.1rem;
+    }
+
+    .piano-container {
+        padding: 20px 15px;
+    }
+
+    .piano-octave-controls {
+        height: 30px;
+        gap: 4px;
+        padding: 0 4px;
+    }
+
+    .piano-octave-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 0.9rem;
+    }
+
+    .piano-octave-label {
+        font-size: 0.7rem;
+        min-width: 40px;
+    }
+
+    .piano-note-item {
+        padding: 2px 8px;
+        font-size: 0.9rem;
+    }
+
+    .piano-notes-label {
+        font-size: 0.75rem;
+    }
+
+    /* Small mobile - 30px per white key - Right octave only (left octave hidden) */
+    .piano-octave .piano-key.black[data-key-index="7"] { left: 20px !important; }  /* C# */
+    .piano-octave .piano-key.black[data-key-index="8"] { left: 50px !important; }  /* D# */
+    .piano-octave .piano-key.black[data-key-index="10"] { left: 110px !important; } /* F# */
+    .piano-octave .piano-key.black[data-key-index="11"] { left: 140px !important; } /* G# */
+    .piano-octave .piano-key.black[data-key-index="12"] { left: 170px !important; } /* A# */
+}

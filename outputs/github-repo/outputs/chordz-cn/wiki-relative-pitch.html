@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>相对音感 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link active">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+    <div class="guide-container">
+        <header style="text-align: center; margin-bottom: 26px;">
+            <div class="header-icon" style="font-size: 2.2rem;">🎯</div>
+            <h1 style="margin: 0 0 8px 0; font-size: 1.7rem;">相对音感</h1>
+            <p class="subtitle" style="margin: 0;">把音听成调里的角色，而不是孤立的音高</p>
+        </header>
+        <section class="guide-section">
+            <h2>什么是相对音感</h2>
+            <p>相对音感指在明确的调性中辨认每个音的功能，也就是听出一个音是 do、re 还是 mi，是稳定还是需要解决。</p>
+            <p>它和绝对音感不同：绝对音感要求直接说出音名，相对音感依赖参照音，绝大多数人都可以通过训练获得。</p>
+        </section>
+        <section class="guide-section">
+            <h2>为什么先练它</h2>
+            <ul class="step-list">
+                <li>实际演奏中，我们更多是在判断音与音之间的关系。</li>
+                <li>转调、听和弦、听旋律，依靠的都是相对音感。</li>
+                <li>训练路径清晰，进步可以被测量。</li>
+            </ul>
+        </section>
+        <section class="guide-section">
+            <h2>怎么练</h2>
+            <ul class="step-list">
+                <li>先建立主音：听一段 I-IV-V-I 的终止式，让耳朵记住这个调的中心。</li>
+                <li>判断音级：听一个音，先判断它与主音的关系。</li>
+                <li>唱出来再验证：把判断的音唱出来，用软件的“音高识别”对照。</li>
+                <li>逐步加难：从主音与三音、五音开始，再到完整音阶，最后加入变化音。</li>
+            </ul>
+            <div class="tip-box"><strong>提示：</strong>每天十分钟比周末练一小时更有效；错误要当场纠正，让耳朵建立正确印象。</div>
+        </section>
+        <div class="back-nav" style="margin-top: 30px;">
+            <a href="wiki.html" class="back-link">← 返回乐理手册</a>
+        </div>
+    </div>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

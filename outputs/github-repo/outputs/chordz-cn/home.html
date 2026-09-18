@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="音感觉醒">
+    <title>工作台 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <style>
+        .home-hero {
+            margin-bottom: 22px;
+            padding: 26px 24px;
+            border-radius: 18px;
+            border: 1px solid var(--surface-light);
+            background:
+                radial-gradient(700px 320px at 8% 0%, rgba(15, 118, 110, 0.45), transparent 62%),
+                radial-gradient(560px 280px at 100% 10%, rgba(245, 158, 11, 0.26), transparent 60%),
+                linear-gradient(180deg, #141c24, #0e141a);
+        }
+        .home-hero h1 { margin: 0 0 6px 0; font-size: 1.8rem; letter-spacing: 0.04em; }
+        .home-hero p { margin: 0 0 16px 0; color: var(--text-secondary); font-size: 0.95rem; }
+        .home-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        .home-btn {
+            display: inline-block;
+            padding: 11px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--text-primary);
+            background: var(--surface-light);
+            transition: transform 0.16s ease, filter 0.16s ease;
+        }
+        .home-btn.primary { background: linear-gradient(120deg, #0f766e, #14b8a6); color: #fff; }
+        .home-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        .home-group { margin-bottom: 20px; }
+        .home-group h2 { margin: 0 0 10px 0; font-size: 1rem; }
+        .home-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .home-card {
+            display: block;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--surface-light);
+            background: linear-gradient(180deg, var(--surface), rgba(20, 26, 33, 0.7));
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.16s ease, border-color 0.16s ease;
+        }
+        .home-card:hover { transform: translateY(-2px); border-color: rgba(45, 212, 191, 0.55); }
+        .home-card strong { display: block; font-size: 0.98rem; margin-bottom: 4px; }
+        .home-card small { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.5; }
+        .home-cards.main { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        .home-cards.main .home-card {
+            padding: 18px 18px;
+            border-color: rgba(45, 212, 191, 0.28);
+            background: linear-gradient(160deg, rgba(15, 118, 110, 0.22), rgba(20, 26, 33, 0.9));
+        }
+        .home-cards.main .home-card strong { font-size: 1.1rem; }
+        .home-cards.main .home-card small { font-size: 0.82rem; }
+        .home-card .home-tag {
+            display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+            font-size: 0.68rem; font-weight: 700; vertical-align: middle;
+            background: rgba(245, 158, 11, 0.18); color: #fbbf24;
+        }
+        .home-more {
+            border: 1px solid var(--surface-light); border-radius: 14px;
+            padding: 12px 16px; background: var(--surface);
+        }
+        .home-more summary { cursor: pointer; font-size: 0.95rem; font-weight: 700; }
+        .home-more .home-group { margin: 14px 0 0 0; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+        .stat-card {
+            padding: 14px 16px; border-radius: 12px; background: var(--surface);
+            border: 1px solid var(--surface-light); text-decoration: none; color: var(--text-primary); display: block;
+        }
+        .stat-card:hover { border-color: rgba(45, 212, 191, 0.55); }
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--secondary-color); line-height: 1.2; }
+        .stat-label { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
+        .stat-title { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
+        .recent-box { background: var(--surface); border: 1px solid var(--surface-light); border-radius: 12px; padding: 6px 14px; }
+        .recent-item { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .recent-item:last-child { border-bottom: none; }
+        .recent-item .name { color: var(--text-primary); }
+        .recent-item .meta { color: var(--text-secondary); }
+        .home-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .home-links a {
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--surface-light);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.86rem;
+        }
+        .home-links a:hover { border-color: rgba(45, 212, 191, 0.55); }
+    </style>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+
+    <section class="home-hero">
+        <h1>音感觉醒</h1>
+        <p>音乐能力训练与测评系统 · 数据留在本机</p>
+        <div class="home-actions">
+            <a class="home-btn primary" id="continue-btn" href="rhythm-training.html">▶ 继续练习</a>
+            <a class="home-btn" href="homework.html">📋 我的作业</a>
+        </div>
+    </section>
+
+    <section class="home-group">
+        <h2>当前进度</h2>
+        <div class="stat-grid" id="stat-grid"></div>
+    </section>
+
+    <section class="home-group">
+        <h2>最近练习</h2>
+        <div class="recent-box" id="recent-list"></div>
+    </section>
+
+    <section class="home-group">
+        <h2>核心训练</h2>
+        <div class="home-cards main">
+            <a class="home-card" href="rhythm-training.html">
+                <strong>🥁 节奏闯关<span class="home-tag">主打</span></strong>
+                <small>用麦克风听你击打，判断准、早、晚，给出准确率、偏差图与诊断建议</small>
+            </a>
+            <a class="home-card" href="theory-practice.html">
+                <strong>🎓 乐理考题</strong>
+                <small>音值组合、音程、和弦、调性等笔试常考题型，随机组卷并逐题讲解</small>
+            </a>
+            <a class="home-card" href="homework.html">
+                <strong>📋 我的作业</strong>
+                <small>看老师布置的任务与截止时间，练完自动判定是否达标，可直接去完成</small>
+            </a>
+        </div>
+    </section>
+
+    <script>
+        (function () {
+            function read(key, fallback) {
+                try {
+                    var value = JSON.parse(localStorage.getItem(key) || "null");
+                    return value === null ? fallback : value;
+                } catch (error) {
+                    return fallback;
+                }
+            }
+
+            function recordList(key) {
+                var list = read(key, []);
+                return Array.isArray(list) ? list : [];
+            }
+
+            function percent(value) {
+                var number = Number(value) || 0;
+                if (number <= 1) number = number * 100;
+                return Math.round(number) + "%";
+            }
+
+            function timeText(stamp) {
+                if (!stamp) return "";
+                var date = new Date(stamp);
+                if (isNaN(date.getTime())) return String(stamp);
+                var month = date.getMonth() + 1;
+                var day = date.getDate();
+                var hour = date.getHours();
+                var minute = date.getMinutes();
+                return (month < 10 ? "0" + month : month) + "-" + (day < 10 ? "0" + day : day) +
+                    " " + (hour < 10 ? "0" + hour : hour) + ":" + (minute < 10 ? "0" + minute : minute);
+            }
+
+            var levelState = read("rhythm-level-progress", {});
+            var level = levelState.current || 1;
+            var unlocked = levelState.unlocked || 1;
+            var passes = (levelState.passes || {})[level] || 0;
+            var theory = recordList("theory-records");
+            var rhythm = recordList("rhythm-training-records");
+            var score = recordList("score-records");
+            var homework = recordList("legong-homework");
+            var student = "";
+            try {
+                student = localStorage.getItem("rhythm-current-student") || "";
+            } catch (error) {
+                student = "";
+            }
+            var totalRuns = theory.length + rhythm.length + score.length;
+
+            function theoryStat() {
+                if (!theory.length) return { value: "—", label: "还没做过乐理题" };
+                var mine = student ? theory.filter(function (item) { return (item.student || "本人") === student; }) : theory;
+                var list = mine.length ? mine : theory;
+                var last = list[0] || theory[0];
+                var best = list.reduce(function (max, item) {
+                    var value = Number(item.accuracy) || 0;
+                    if (value <= 1) value = value * 100;
+                    return Math.max(max, value);
+                }, 0);
+                return {
+                    value: percent(last.accuracy),
+                    label: "最近一次正确率 · 最好 " + Math.round(best) + "% · 共 " + list.length + " 轮",
+                };
+            }
+
+            var cards = [
+                {
+                    href: "rhythm-training.html",
+                    title: "🥁 节奏闯关",
+                    value: "第 " + level + " 关",
+                    label: "本关已完成 " + Math.min(passes, 2) + "/2 · 已解锁 " + unlocked + " 关",
+                },
+                {
+                    href: "theory-practice.html",
+                    title: "🎓 乐理考题",
+                    value: theoryStat().value,
+                    label: theoryStat().label,
+                },
+                {
+                    href: "homework.html",
+                    title: "📋 我的作业",
+                    value: homework.length ? homework.length + " 项" : "暂无",
+                    label: homework.length ? "最近布置：" + (homework[0].title || "未命名") : "老师还没布置任务",
+                },
+                {
+                    href: "pretest-report.html",
+                    title: "📊 练习统计",
+                    value: totalRuns + " 次",
+                    label: "累积练习记录（含视奏 " + score.length + " 次）",
+                },
+            ];
+
+            document.getElementById("stat-grid").innerHTML = cards.map(function (card) {
+                return "<a class='stat-card' href='" + card.href + "'>" +
+                    "<div class='stat-title'>" + card.title + "</div>" +
+                    "<div class='stat-value'>" + card.value + "</div>" +
+                    "<div class='stat-label'>" + card.label + "</div></a>";
+            }).join("");
+
+            var recent = [];
+            theory.slice(0, 5).forEach(function (item) {
+                recent.push({
+                    at: new Date(item.at || 0).getTime() || 0,
+                    name: "🎓 乐理考题",
+                    detail: percent(item.accuracy) + " · " + (item.total || 0) + " 题" + (item.student ? " · " + item.student : ""),
+                });
+            });
+            rhythm.slice(0, 5).forEach(function (item) {
+                recent.push({
+                    at: Number(item.timestamp) || 0,
+                    name: "🥁 节奏闯关",
+                    detail: percent(item.accuracy) + " · " + (item.pattern || "") + (item.student ? " · " + item.student : ""),
+                });
+            });
+            score.slice(0, 5).forEach(function (item) {
+                recent.push({
+                    at: new Date(String(item.time || "").replace(/\//g, "-")).getTime() || 0,
+                    name: "🎼 视奏训练",
+                    detail: (item.score || 0) + " 分 · " + (item.name || "未命名乐谱"),
+                });
+            });
+            recent.sort(function (a, b) { return b.at - a.at; });
+            var box = document.getElementById("recent-list");
+            if (!recent.length) {
+                box.innerHTML = "<div class='recent-item'><span class='meta'>还没有练习记录，先做一轮节奏闯关或乐理考题吧。</span></div>";
+            } else {
+                box.innerHTML = recent.slice(0, 5).map(function (item) {
+                    return "<div class='recent-item'><span class='name'>" + item.name + "</span>" +
+                        "<span class='meta'>" + item.detail + " · " + timeText(item.at) + "</span></div>";
+                }).join("");
+            }
+
+            var newestTheory = theory.length ? new Date(theory[0].at || 0).getTime() : 0;
+            var newestRhythm = rhythm.length ? Number(rhythm[0].timestamp) || 0 : 0;
+            var button = document.getElementById("continue-btn");
+            if (newestTheory > newestRhythm && newestTheory) {
+                button.setAttribute("href", "theory-practice.html");
+                button.textContent = "▶ 继续做乐理题";
+            } else if (newestRhythm) {
+                button.textContent = "▶ 继续练节奏";
+            }
+        })();
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

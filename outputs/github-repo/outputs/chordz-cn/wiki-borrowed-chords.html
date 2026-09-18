@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>借用和弦 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link active">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+    <div class="guide-container">
+        <header style="text-align: center; margin-bottom: 26px;">
+            <div class="header-icon" style="font-size: 2.2rem;">🎨</div>
+            <h1 style="margin: 0 0 8px 0; font-size: 1.7rem;">借用和弦</h1>
+            <p class="subtitle" style="margin: 0;">从同主音小调借来的和弦，给音乐增加色彩</p>
+        </header>
+        <section class="guide-section">
+            <h2>什么是借用和弦</h2>
+            <p>借用和弦指不属于当前调的自然和弦，通常是从同主音的小调（或大调）中借来的，因此也叫调式交替和弦。</p>
+        </section>
+        <section class="guide-section">
+            <h2>常见的几个</h2>
+            <ul class="step-list">
+                <li>bVII：在 C 大调中是 Bb 和弦，常用于摇滚与流行。</li>
+                <li>bVI：Ab 和弦，色彩柔和。</li>
+                <li>iv：把原来的 IV 换成小三和弦，情绪立刻变得忧郁。</li>
+                <li>bIII：Eb 和弦，常用于转调。</li>
+            </ul>
+        </section>
+        <section class="guide-section">
+            <h2>怎么弹</h2>
+            <p>借用和弦的构成音不在原调音阶内，所以不能再用“隔一个取一个”的方法，需要按音程公式计算，例如大三和弦是 4 + 3 个半音。</p>
+            <div class="tip-box"><strong>提示：</strong>在“和弦推演”里输入包含借用和弦的进行，程序会用橙色标出并说明它的构成方式。</div>
+        </section>
+        <div class="back-nav" style="margin-top: 30px;">
+            <a href="wiki.html" class="back-link">← 返回乐理手册</a>
+        </div>
+    </div>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>
