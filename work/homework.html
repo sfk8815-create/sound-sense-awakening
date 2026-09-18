@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-title" content="乐感工坊">
+    <title>作业布置 - 乐感工坊</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <style>
+        .hw-wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+        .hw-panel { background: var(--surface); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+        .hw-panel h2 { margin: 0 0 12px 0; font-size: 1.05rem; color: var(--secondary-color); }
+        .hw-hint { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; margin: 8px 0 0 0; }
+        .hw-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .hw-input, .hw-select, .hw-textarea {
+            padding: 9px 12px; font-size: 0.9rem; font-family: inherit;
+            background: var(--background); color: var(--text-primary);
+            border: 1px solid var(--surface-light); border-radius: 10px;
+        }
+        .hw-input { flex: 1 1 220px; }
+        .hw-textarea { width: 100%; min-height: 66px; resize: vertical; }
+        .hw-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .hw-tab {
+            padding: 9px 18px; border-radius: 999px; cursor: pointer; font-size: 0.9rem;
+            background: var(--background); color: var(--text-secondary); border: 1px solid var(--surface-light);
+        }
+        .hw-tab.on { background: rgba(45, 212, 191, 0.16); color: var(--secondary-color); border-color: rgba(45, 212, 191, 0.6); }
+        .hw-card { border: 1px solid var(--surface-light); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+        .hw-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+        .hw-meta { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.8; }
+        .hw-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.74rem; margin-right: 6px; }
+        .hw-tag.ok { background: rgba(52, 211, 153, 0.16); color: #34d399; }
+        .hw-tag.wait { background: rgba(250, 204, 21, 0.16); color: #facc15; }
+        .hw-tag.late { background: rgba(239, 68, 68, 0.16); color: #ef4444; }
+        table.hw-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 10px; }
+        table.hw-table th, table.hw-table td { padding: 7px 9px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left; }
+        table.hw-table th { color: var(--secondary-color); }
+        .hw-empty { color: var(--text-secondary); font-size: 0.86rem; padding: 8px 0; }
+        .hw-del { border: 1px solid var(--surface-light); background: var(--surface); color: var(--text-secondary);
+            border-radius: 8px; padding: 4px 10px; font-size: 0.76rem; cursor: pointer; }
+        .hw-del:hover { border-color: rgba(239, 68, 68, 0.7); color: #ef4444; }
+        .hw-names { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .hw-name { font-size: 0.84rem; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+            background: var(--background); border: 1px solid var(--surface-light); color: var(--text-secondary); }
+        .hw-name.on { background: rgba(45, 212, 191, 0.16); color: var(--secondary-color); border-color: rgba(45, 212, 191, 0.6); }
+        .hide { display: none; }
+    </style>
+</head>
+<body>
+    <nav class="main-nav"></nav>
+
+    <div class="hw-wrap">
+        <header style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 2.2rem;">📝</div>
+            <h1 style="margin: 0 0 4px 0; font-size: 1.7rem;">作业布置</h1>
+            <p class="hw-hint" style="margin: 0;">老师布置任务，学生练完系统自动判定是否达标，不用手工统计。</p>
+        </header>
+
+        <div class="hw-tabs">
+            <button class="hw-tab on" id="tab-teacher">教师：布置与检查</button>
+            <button class="hw-tab" id="tab-student">学生：我的作业</button>
+        </div>
+
+        <section id="teacher-view">
+            <div class="hw-panel">
+                <h2>布置新作业</h2>
+                <div class="hw-row" style="margin-bottom: 10px;">
+                    <input class="hw-input" id="hw-title" placeholder="作业标题，例如：音程与和弦专项练习">
+                    <select class="hw-select" id="hw-kind">
+                        <option value="theory">乐理考题</option>
+                        <option value="rhythm">节奏闯关</option>
+                        <option value="free">自由练习（学生自己标记完成）</option>
+                    </select>
+                </div>
+                <div class="hw-row" style="margin-bottom: 10px;">
+                    <span class="hw-meta">达标正确率</span>
+                    <input class="hw-input" id="hw-rate" type="number" min="50" max="100" value="90" style="flex: 0 0 110px;">
+                    <span class="hw-meta">%</span>
+                    <span class="hw-meta" id="total-label">题量要求</span>
+                    <input class="hw-input" id="hw-total" type="number" min="0" max="100" value="20" style="flex: 0 0 110px;">
+                    <span class="hw-meta" id="total-unit">题（0 表示不限）</span>
+                    <span class="hw-meta">截止日期</span>
+                    <input class="hw-input" id="hw-due" type="date" style="flex: 0 0 170px;">
+                </div>
+                <textarea class="hw-textarea" id="hw-note" placeholder="给学生的提示，例如：重点复习音程转位与调号顺序"></textarea>
+                <div class="hw-row" style="margin-top: 10px;">
+                    <span class="hw-meta">布置对象：</span>
+                    <button class="hw-name on" id="all-btn">全班</button>
+                    <span class="hw-hint" style="margin: 0;">点名字可单独勾选</span>
+                </div>
+                <div class="hw-names" id="name-list"></div>
+                <div class="hw-row" style="margin-top: 12px;">
+                    <button class="btn" id="create-btn">布置作业</button>
+                    <span class="hw-hint" id="create-msg" style="margin: 0;"></span>
+                </div>
+            </div>
+
+            <div class="hw-panel">
+                <h2>作业清单与完成情况</h2>
+                <div id="teacher-list"></div>
+            </div>
+        </section>
+
+        <section id="student-view" class="hide">
+            <div class="hw-panel">
+                <h2>我是谁</h2>
+                <div class="hw-row">
+                    <select class="hw-select" id="who-select"></select>
+                    <input class="hw-input" id="who-input" placeholder="名单里没有你的名字？直接输入">
+                    <button class="btn ghost" id="who-save">确定</button>
+                </div>
+                <p class="hw-hint">选好名字后，系统会自动比对你的练习记录，判断作业是否达标。</p>
+            </div>
+            <div class="hw-panel">
+                <h2>我的作业</h2>
+                <div id="student-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (function () {
+            var HW_KEY = "legong-homework";
+            var ROSTER_KEY = "legong-class-roster";
+            var THEORY_KEY = "theory-records";
+            var RHYTHM_KEY = "rhythm-training-records";
+            var STUDENT_KEY = "rhythm-current-student";
+
+            var KIND_LABEL = { theory: "乐理考题", rhythm: "节奏闯关", free: "自由练习" };
+            var KIND_PAGE = { theory: "theory-practice.html", rhythm: "rhythm-training.html", free: "" };
+            var selected = [];
+            var allSelected = true;
+            var currentWho = "";
+
+            function el(id) { return document.getElementById(id); }
+
+            function read(key, fallback) {
+                try {
+                    var value = JSON.parse(localStorage.getItem(key) || "null");
+                    return value === null ? fallback : value;
+                } catch (error) {
+                    return fallback;
+                }
+            }
+
+            function write(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (error) {
+                    /* 存储不可用时忽略 */
+                }
+            }
+
+            function loadHw() {
+                var list = read(HW_KEY, []);
+                return Array.isArray(list) ? list : [];
+            }
+
+            function loadRoster() {
+                var list = read(ROSTER_KEY, []);
+                return Array.isArray(list) ? list.filter(function (name) { return typeof name === "string" && name.trim(); }) : [];
+            }
+
+            function recordsOf(key) {
+                var list = read(key, []);
+                return Array.isArray(list) ? list : [];
+            }
+
+            function rateOf(value) {
+                var number = Number(value) || 0;
+                return number > 1 ? number / 100 : number;
+            }
+
+            function targetNames(hw) {
+                if (hw.names && hw.names.length) return hw.names;
+                var roster = loadRoster();
+                return roster.length ? roster : ["本人"];
+            }
+
+            function deadlineText(hw) {
+                if (!hw.due) return "不限截止";
+                var left = Math.ceil((new Date(hw.due + "T23:59:59").getTime() - Date.now()) / 86400000);
+                if (left < 0) return "已截止（" + hw.due + "）";
+                if (left === 0) return "今天截止";
+                return "还剩 " + left + " 天（" + hw.due + "）";
+            }
+
+            function evaluate(hw, name) {
+                var minRate = rateOf(hw.minRate);
+                if (hw.kind === "free") {
+                    var marked = hw.done && hw.done[name];
+                    return marked ? { ok: true, text: "已标记完成", at: marked.at } : { ok: false, text: "待完成" };
+                }
+                if (hw.kind === "theory") {
+                    var mine = recordsOf(THEORY_KEY).filter(function (item) {
+                        return (item.student || "本人") === name && new Date(item.at || 0).getTime() >= hw.createdAtMs;
+                    });
+                    var best = null;
+                    mine.forEach(function (item) {
+                        var passed = rateOf(item.accuracy) >= minRate && (Number(item.total) || 0) >= (Number(hw.minTotal) || 0);
+                        if (passed && (!best || rateOf(item.accuracy) > rateOf(best.accuracy))) best = item;
+                    });
+                    if (best) return { ok: true, text: "达标 " + Math.round(rateOf(best.accuracy) * 100) + "%（" + best.total + " 题）", at: best.at };
+                    return { ok: false, text: mine.length ? "已练 " + mine.length + " 次，未达标" : "未开始" };
+                }
+                var rhythm = recordsOf(RHYTHM_KEY).filter(function (item) {
+                    return (item.student || "本人") === name && (Number(item.timestamp) || 0) >= hw.createdAtMs;
+                });
+                var hit = null;
+                rhythm.forEach(function (item) {
+                    if (rateOf(item.accuracy) >= minRate && (!hit || rateOf(item.accuracy) > rateOf(hit.accuracy))) hit = item;
+                });
+                if (hit) return { ok: true, text: "达标 " + Math.round(rateOf(hit.accuracy) * 100) + "%", at: hit.time };
+                return { ok: false, text: rhythm.length ? "已练 " + rhythm.length + " 次，未达标" : "未开始" };
+            }
+
+            function renderNames() {
+                var roster = loadRoster();
+                var box = el("name-list");
+                if (!roster.length) {
+                    box.innerHTML = "<span class='hw-hint' style='margin:0;'>还没有学生名单，先到「班级管理」添加，或在这里留空表示全班。</span>";
+                    return;
+                }
+                box.innerHTML = roster.map(function (name) {
+                    var on = !allSelected && selected.indexOf(name) !== -1;
+                    return "<button class='hw-name" + (on ? " on" : "") + "' data-name='" + name + "'>" + name + "</button>";
+                }).join("");
+            }
+
+            function renderTeacher() {
+                var list = loadHw();
+                var box = el("teacher-list");
+                if (!list.length) {
+                    box.innerHTML = "<div class='hw-empty'>还没有布置作业。</div>";
+                    return;
+                }
+                box.innerHTML = list.map(function (hw) {
+                    var names = targetNames(hw);
+                    var done = names.filter(function (name) { return evaluate(hw, name).ok; }).length;
+                    var rows = names.map(function (name) {
+                        var result = evaluate(hw, name);
+                        return "<tr><td>" + name + "</td><td>" + (result.ok ? "达标" : "未达标") +
+                            "</td><td>" + result.text + "</td></tr>";
+                    }).join("");
+                    return "<div class='hw-card'>" +
+                        "<div class='hw-title'>" + hw.title + "</div>" +
+                        "<div class='hw-meta'>" +
+                        "<span class='hw-tag " + (done === names.length ? "ok" : "wait") + "'>" + KIND_LABEL[hw.kind] + "</span>" +
+                        "达标线 " + Math.round(rateOf(hw.minRate) * 100) + "%" +
+                        (hw.kind === "theory" && hw.minTotal ? "、不少于 " + hw.minTotal + " 题" : "") +
+                        " · " + deadlineText(hw) + " · 完成 " + done + "/" + names.length +
+                        "</div>" +
+                        (hw.note ? "<div class='hw-meta'>提示：" + hw.note + "</div>" : "") +
+                        "<div class='hw-row' style='margin-top:8px;'>" +
+                        "<button class='btn ghost hw-toggle' data-id='" + hw.id + "'>查看名单</button>" +
+                        "<button class='btn ghost hw-export' data-id='" + hw.id + "'>导出成绩</button>" +
+                        "<button class='hw-del hw-remove' data-id='" + hw.id + "'>删除</button>" +
+                        "</div>" +
+                        "<div class='hide' id='detail-" + hw.id + "'>" +
+                        "<table class='hw-table'><thead><tr><th>学生</th><th>状态</th><th>成绩</th></tr></thead><tbody>" +
+                        rows + "</tbody></table></div>" +
+                        "</div>";
+                }).join("");
+            }
+
+            function renderStudent() {
+                if (!currentWho) {
+                    el("student-list").innerHTML = "<div class='hw-empty'>先在上面选择或输入你的名字。</div>";
+                    return;
+                }
+                var list = loadHw().filter(function (hw) {
+                    if (!hw.names || !hw.names.length) return true;
+                    return hw.names.indexOf(currentWho) !== -1;
+                });
+                if (!list.length) {
+                    el("student-list").innerHTML = "<div class='hw-empty'>暂时没有布置给你的作业。</div>";
+                    return;
+                }
+                el("student-list").innerHTML = list.map(function (hw) {
+                    var result = evaluate(hw, currentWho);
+                    var expired = hw.due && new Date(hw.due + "T23:59:59").getTime() < Date.now();
+                    var tagClass = result.ok ? "ok" : (expired ? "late" : "wait");
+                    var tagText = result.ok ? "已完成" : (expired ? "已逾期" : "待完成");
+                    var page = KIND_PAGE[hw.kind];
+                    return "<div class='hw-card'>" +
+                        "<div class='hw-title'>" + hw.title + "</div>" +
+                        "<div class='hw-meta'><span class='hw-tag " + tagClass + "'>" + tagText + "</span>" +
+                        KIND_LABEL[hw.kind] + " · 达标线 " + Math.round(rateOf(hw.minRate) * 100) + "%" +
+                        (hw.kind === "theory" && hw.minTotal ? "、不少于 " + hw.minTotal + " 题" : "") +
+                        " · " + deadlineText(hw) + "</div>" +
+                        (hw.note ? "<div class='hw-meta'>老师提示：" + hw.note + "</div>" : "") +
+                        "<div class='hw-meta'>当前状态：" + result.text + "</div>" +
+                        "<div class='hw-row' style='margin-top:8px;'>" +
+                        (page ? "<button class='btn hw-go' data-page='" + page + "'>去完成</button>" : "") +
+                        (hw.kind === "free" && !result.ok ? "<button class='btn hw-done' data-id='" + hw.id + "'>标记完成</button>" : "") +
+                        "</div></div>";
+                }).join("");
+            }
+
+            function createHomework() {
+                var title = el("hw-title").value.trim();
+                var msg = el("create-msg");
+                if (!title) {
+                    msg.textContent = "请先填写作业标题。";
+                    return;
+                }
+                var kind = el("hw-kind").value;
+                var hw = {
+                    id: "hw-" + Date.now(),
+                    title: title,
+                    kind: kind,
+                    minRate: Math.min(100, Math.max(50, Number(el("hw-rate").value) || 90)) / 100,
+                    minTotal: kind === "theory" ? (Number(el("hw-total").value) || 0) : 0,
+                    due: el("hw-due").value || "",
+                    note: el("hw-note").value.trim(),
+                    names: allSelected ? [] : selected.slice(),
+                    createdAt: new Date().toISOString(),
+                    createdAtMs: Date.now(),
+                    done: {},
+                };
+                var list = loadHw();
+                list.unshift(hw);
+                write(HW_KEY, list);
+                el("hw-title").value = "";
+                el("hw-note").value = "";
+                msg.textContent = "已布置给 " + (hw.names.length ? hw.names.length + " 名学生" : "全班") + "。";
+                renderTeacher();
+            }
+
+            function exportCsv(hw) {
+                var names = targetNames(hw);
+                var lines = ["作业,学生,是否达标,成绩"];
+                names.forEach(function (name) {
+                    var result = evaluate(hw, name);
+                    lines.push("\"" + hw.title + "\",\"" + name + "\",\"" + (result.ok ? "达标" : "未达标") + "\",\"" + result.text + "\"");
+                });
+                var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement("a");
+                link.href = url;
+                link.download = hw.title + "-完成情况.csv";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+            }
+
+            function fillWhoOptions() {
+                var roster = loadRoster();
+                var options = ['<option value="">请选择姓名</option>'];
+                roster.forEach(function (name) {
+                    options.push("<option value='" + name + "'>" + name + "</option>");
+                });
+                el("who-select").innerHTML = options.join("");
+                try {
+                    var saved = localStorage.getItem(STUDENT_KEY) || "";
+                    if (saved) {
+                        currentWho = saved;
+                        el("who-select").value = roster.indexOf(saved) === -1 ? "" : saved;
+                        el("who-input").value = roster.indexOf(saved) === -1 ? saved : "";
+                    }
+                } catch (error) {
+                    /* 忽略 */
+                }
+            }
+
+            el("tab-teacher").addEventListener("click", function () {
+                el("tab-teacher").classList.add("on");
+                el("tab-student").classList.remove("on");
+                el("teacher-view").classList.remove("hide");
+                el("student-view").classList.add("hide");
+            });
+
+            el("tab-student").addEventListener("click", function () {
+                el("tab-student").classList.add("on");
+                el("tab-teacher").classList.remove("on");
+                el("student-view").classList.remove("hide");
+                el("teacher-view").classList.add("hide");
+                fillWhoOptions();
+                renderStudent();
+            });
+
+            el("all-btn").addEventListener("click", function () {
+                allSelected = !allSelected;
+                selected = [];
+                el("all-btn").classList.toggle("on", allSelected);
+                renderNames();
+            });
+
+            el("name-list").addEventListener("click", function (event) {
+                var name = event.target.getAttribute("data-name");
+                if (!name) return;
+                allSelected = false;
+                el("all-btn").classList.remove("on");
+                var index = selected.indexOf(name);
+                if (index === -1) selected.push(name);
+                else selected.splice(index, 1);
+                renderNames();
+            });
+
+            el("hw-kind").addEventListener("change", function () {
+                var isTheory = el("hw-kind").value === "theory";
+                el("total-label").textContent = isTheory ? "题量要求" : "题量要求（本类型不适用）";
+                el("hw-total").disabled = !isTheory;
+            });
+
+            el("create-btn").addEventListener("click", createHomework);
+
+            el("teacher-list").addEventListener("click", function (event) {
+                var id = event.target.getAttribute("data-id");
+                if (!id) return;
+                var list = loadHw();
+                if (event.target.classList.contains("hw-toggle")) {
+                    el("detail-" + id).classList.toggle("hide");
+                } else if (event.target.classList.contains("hw-export")) {
+                    var target = list.filter(function (hw) { return hw.id === id; })[0];
+                    if (target) exportCsv(target);
+                } else if (event.target.classList.contains("hw-remove")) {
+                    write(HW_KEY, list.filter(function (hw) { return hw.id !== id; }));
+                    renderTeacher();
+                }
+            });
+
+            el("who-save").addEventListener("click", function () {
+                var value = el("who-select").value || el("who-input").value.trim();
+                if (!value) return;
+                currentWho = value;
+                try {
+                    localStorage.setItem(STUDENT_KEY, value);
+                } catch (error) {
+                    /* 忽略 */
+                }
+                renderStudent();
+            });
+
+            el("student-list").addEventListener("click", function (event) {
+                var page = event.target.getAttribute("data-page");
+                if (page) {
+                    window.location.href = page;
+                    return;
+                }
+                var id = event.target.getAttribute("data-id");
+                if (!id) return;
+                var list = loadHw();
+                list.forEach(function (hw) {
+                    if (hw.id !== id) return;
+                    hw.done = hw.done || {};
+                    hw.done[currentWho] = { at: new Date().toLocaleString("zh-CN"), manual: true };
+                });
+                write(HW_KEY, list);
+                renderStudent();
+                renderTeacher();
+            });
+
+            renderNames();
+            renderTeacher();
+        })();
+    </script>
+</body>
+</html>

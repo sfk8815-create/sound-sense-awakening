@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="音感觉醒">
+    <title>调内和弦挑战 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <script src="music-theory.js"></script>
+    <style>
+        /* Keyboard styles (from piano.css) */
+        .kb-key {
+            position: relative;
+            cursor: default;
+            user-select: none;
+        }
+
+        .kb-key.white {
+            width: 50px;
+            height: 200px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+            border: 2px solid #333;
+            border-radius: 0 0 5px 5px;
+            margin-right: -1px;
+            z-index: 1;
+        }
+
+        .kb-key.black {
+            width: 35px;
+            height: 120px;
+            background: linear-gradient(to bottom, #1a1a1a 0%, #000000 100%);
+            border: 1px solid #000;
+            border-radius: 0 0 4px 4px;
+            position: absolute;
+            z-index: 2;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Position black keys using data-key-index - scaled up from 40px to 50px white keys */
+        #keyboard .kb-key.black[data-key-index="0"] { left: 32px; }  /* C# */
+        #keyboard .kb-key.black[data-key-index="1"] { left: 82px; }  /* D# */
+        #keyboard .kb-key.black[data-key-index="3"] { left: 182px; } /* F# */
+        #keyboard .kb-key.black[data-key-index="4"] { left: 232px; } /* G# */
+        #keyboard .kb-key.black[data-key-index="5"] { left: 282px; } /* A# */
+    </style>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link active">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+
+    <div class="guide-container">
+        <div class="back-nav">
+            <a href="training.html" class="back-link">← 返回训练</a>
+        </div>
+
+        <div class="guide-section" style="max-width: 900px; margin: 0 auto; padding: 10px 20px 20px 20px;">
+            <header style="text-align: center; margin-bottom: 15px;">
+                <div style="font-size: 2rem; margin-bottom: 5px;">🎹</div>
+                <h1 style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0 0 5px 0; font-size: 1.5rem;">调内和弦挑战</h1>
+                <p class="subtitle" style="font-size: 0.85rem; margin: 0;">在指定调性中构建全部 7 个自然和弦</p>
+            </header>
+
+            <button id="start-btn" style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: 600; background: var(--primary-color); color: white; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 15px;">
+                🎲 开始新挑战
+            </button>
+
+            <!-- Challenge Display -->
+            <div id="challenge-display" style="display: none; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2)); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid var(--primary-color);">
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px;">找出该调的全部和弦：</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">
+                        <span id="root-note"></span> <span id="mode"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyboard Reference -->
+            <div id="keyboard-container" style="display: none; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">参考键盘</div>
+                    <button id="keyboard-toggle" style="padding: 5px 12px; background: var(--surface); color: var(--text-primary); border: 2px solid var(--primary-color); border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">
+                        <span id="keyboard-toggle-icon">▼</span> <span id="keyboard-toggle-text">隐藏</span>
+                    </button>
+                </div>
+                <div id="keyboard-content" style="background: var(--background); padding: 30px; border-radius: 12px; overflow-x: auto;">
+                    <div style="display: flex; justify-content: center;">
+                        <div id="keyboard" style="position: relative; display: flex; height: 200px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Answer Table -->
+            <div id="answer-table" style="display: none; margin-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--surface-light);">
+                            <th style="padding: 12px; text-align: left; border: 1px solid var(--surface);">级数</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid var(--surface);">
+                                <div>和弦</div>
+                                <div style="font-size: 0.7rem; font-weight: normal; color: var(--text-secondary); margin-top: 2px; opacity: 0.7;">例如：C、Dm、Bdim</div>
+                            </th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid var(--surface);">
+                                <div>罗马数字</div>
+                                <div style="font-size: 0.7rem; font-weight: normal; color: var(--text-secondary); margin-top: 2px; opacity: 0.7;">例如：I、ii、vii°</div>
+                            </th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid var(--surface);">
+                                <div>音</div>
+                                <div style="font-size: 0.7rem; font-weight: normal; color: var(--text-secondary); margin-top: 2px; opacity: 0.7;">例如：C-E-G、D-F-A、B-D-F</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="answer-rows">
+                        <!-- Will be filled by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="button-container" style="display: none; gap: 10px;">
+                <button id="check-btn" style="flex: 1; padding: 15px; font-size: 1.1rem; font-weight: 600; background: var(--accent-happy); color: white; border: none; border-radius: 10px; cursor: pointer;">
+                    ✓ 检查答案
+                </button>
+                <button id="show-answers-btn" style="flex: 1; padding: 15px; font-size: 1.1rem; font-weight: 600; background: var(--surface); color: var(--text-primary); border: 2px solid var(--primary-color); border-radius: 10px; cursor: pointer;">
+                    💡 显示答案
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div id="results" style="display: none; margin-top: 20px; padding: 20px; background: var(--surface-light); border-radius: 12px; text-align: center;">
+                <div id="score-display" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 10px;"></div>
+                <div id="feedback" style="color: var(--text-secondary);"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CHROMATIC_SCALE is defined in music-theory.js
+
+        const MAJOR_PATTERN = {
+            qualities: ['Major', 'minor', 'minor', 'Major', 'Major', 'minor', 'diminished'],
+            romans: ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°']
+        };
+
+        const MINOR_PATTERN = {
+            qualities: ['minor', 'diminished', 'Major', 'minor', 'minor', 'Major', 'Major'],
+            romans: ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII']
+        };
+
+        const KEYBOARD_COLLAPSED_KEY = 'chordz-find-chords-keyboard-collapsed';
+
+        let currentKey = null;
+        let currentMode = null;
+        let currentScale = null;
+        let correctAnswers = null;
+        let keyboardCollapsed = false;
+
+        // Draw keyboard (simplified version from piano.js)
+        function drawKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            keyboard.innerHTML = '';
+
+            // Render key group helper
+            const renderKeyGroup = (noteName, hasSharp, index) => {
+                // White key
+                const whiteKey = document.createElement('div');
+                whiteKey.className = 'kb-key white';
+                whiteKey.setAttribute('data-key-index', index);
+                keyboard.appendChild(whiteKey);
+
+                // Black key (if exists)
+                if (hasSharp) {
+                    const blackKey = document.createElement('div');
+                    blackKey.className = 'kb-key black';
+                    blackKey.setAttribute('data-key-index', index);
+                    keyboard.appendChild(blackKey);
+                }
+            };
+
+            let keyIndex = 0;
+            renderKeyGroup('C', true, keyIndex++);
+            renderKeyGroup('D', true, keyIndex++);
+            renderKeyGroup('E', false, keyIndex++);
+            renderKeyGroup('F', true, keyIndex++);
+            renderKeyGroup('G', true, keyIndex++);
+            renderKeyGroup('A', true, keyIndex++);
+            renderKeyGroup('B', false, keyIndex++);
+            renderKeyGroup('C', false, keyIndex);
+        }
+
+        // Build scale
+        function buildScale(root, mode) {
+            const pattern = mode === 'Major'
+                ? [2, 2, 1, 2, 2, 2, 1]  // W-W-H-W-W-W-H
+                : [2, 1, 2, 2, 1, 2, 2]; // W-H-W-W-H-W-W
+
+            const scale = [root];
+            let currentIndex = CHROMATIC_SCALE.indexOf(root);
+
+            for (let step of pattern) {
+                currentIndex = (currentIndex + step) % 12;
+                scale.push(CHROMATIC_SCALE[currentIndex]);
+            }
+
+            return scale.slice(0, 7); // Remove the octave
+        }
+
+        // Build chord from scale
+        function buildChordFromScale(scale, degree) {
+            const root = scale[degree];
+            const third = scale[(degree + 2) % 7];
+            const fifth = scale[(degree + 4) % 7];
+            return [root, third, fifth];
+        }
+
+        // Get chord name
+        function getChordName(notes, quality) {
+            const root = notes[0];
+            if (quality === 'Major') return root;
+            if (quality === 'minor') return root + 'm';
+            if (quality === 'diminished') return root + 'dim';
+            return root;
+        }
+
+        // Start new challenge
+        function startChallenge(specifiedRoot = null, specifiedMode = null) {
+            // Use specified values or random
+            currentKey = specifiedRoot || CHROMATIC_SCALE[Math.floor(Math.random() * CHROMATIC_SCALE.length)];
+            currentMode = specifiedMode || (Math.random() > 0.5 ? 'Major' : 'Minor');
+
+            // Update URL with current challenge
+            const url = new URL(window.location);
+            url.searchParams.set('root', currentKey);
+            url.searchParams.set('mode', currentMode);
+            window.history.pushState({}, '', url);
+
+            // Build scale
+            currentScale = buildScale(currentKey, currentMode);
+
+            // Build correct answers
+            const pattern = currentMode === 'Major' ? MAJOR_PATTERN : MINOR_PATTERN;
+            correctAnswers = [];
+
+            for (let i = 0; i < 7; i++) {
+                const notes = buildChordFromScale(currentScale, i);
+                const quality = pattern.qualities[i];
+                const roman = pattern.romans[i];
+                const chord = getChordName(notes, quality);
+
+                correctAnswers.push({
+                    degree: i + 1,
+                    chord: chord,
+                    roman: roman,
+                    notes: notes.join(' - ')
+                });
+            }
+
+            // Update UI
+            document.getElementById('root-note').textContent = currentKey;
+            document.getElementById('mode').textContent = currentMode;
+            document.getElementById('challenge-display').style.display = 'block';
+            document.getElementById('keyboard-container').style.display = 'block';
+            document.getElementById('answer-table').style.display = 'block';
+            document.getElementById('button-container').style.display = 'flex';
+            document.getElementById('results').style.display = 'none';
+
+            // Load keyboard collapsed state
+            loadKeyboardState();
+
+            // Clear all previous inputs and answers
+            document.querySelectorAll('.answer-input').forEach(input => {
+                input.value = '';
+                input.style.borderColor = '';
+                input.style.background = '';
+            });
+
+            // Hide any previously shown correct answers
+            document.querySelectorAll('.correct-answer').forEach(div => {
+                div.style.display = 'none';
+            });
+
+            // Draw keyboard
+            drawKeyboard();
+
+            // Build answer table
+            buildAnswerTable();
+        }
+
+        // Build answer table
+        function buildAnswerTable() {
+            const tbody = document.getElementById('answer-rows');
+            tbody.innerHTML = '';
+
+            const pattern = currentMode === 'Major' ? MAJOR_PATTERN : MINOR_PATTERN;
+
+            for (let i = 0; i < 7; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding: 10px; border: 1px solid var(--surface); font-weight: bold;">${i + 1}</td>
+                    <td style="padding: 10px; border: 1px solid var(--surface);">
+                        <input type="text"
+                               class="answer-input chord-input"
+                               data-row="${i}"
+                               placeholder=""
+                               style="width: 100%; padding: 8px; background: var(--background); color: var(--text-primary); border: 2px solid var(--surface); border-radius: 6px;">
+                        <div class="correct-answer" data-row="${i}" data-field="chord" style="display: none; margin-top: 5px; padding: 5px 8px; background: rgba(99, 102, 241, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--primary-color);"></div>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid var(--surface);">
+                        <input type="text"
+                               class="answer-input roman-input"
+                               data-row="${i}"
+                               placeholder=""
+                               style="width: 100%; padding: 8px; background: var(--background); color: var(--text-primary); border: 2px solid var(--surface); border-radius: 6px; font-family: monospace;">
+                        <div class="correct-answer" data-row="${i}" data-field="roman" style="display: none; margin-top: 5px; padding: 5px 8px; background: rgba(99, 102, 241, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--primary-color);"></div>
+                    </td>
+                    <td style="padding: 10px; border: 1px solid var(--surface);">
+                        <input type="text"
+                               class="answer-input notes-input"
+                               data-row="${i}"
+                               placeholder=""
+                               style="width: 100%; padding: 8px; background: var(--background); color: var(--text-primary); border: 2px solid var(--surface); border-radius: 6px;">
+                        <div class="correct-answer" data-row="${i}" data-field="notes" style="display: none; margin-top: 5px; padding: 5px 8px; background: rgba(99, 102, 241, 0.1); border-radius: 4px; font-size: 0.85rem; color: var(--primary-color);"></div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        // Normalize input for comparison
+        function normalizeInput(input) {
+            return input.trim().toLowerCase().replace(/\s+/g, '');
+        }
+
+        // Check answers
+        function checkAnswers() {
+            let correct = 0;
+            let total = 7 * 3; // 7 rows, 3 fields each (Chord, Roman, Notes)
+
+            // Hide correct answers if they were shown
+            document.querySelectorAll('.correct-answer').forEach(div => {
+                div.style.display = 'none';
+            });
+
+            document.querySelectorAll('.answer-input').forEach(input => {
+                const row = parseInt(input.dataset.row);
+                const correctAnswer = correctAnswers[row];
+
+                let userAnswer = input.value.trim();
+                let expectedAnswer = '';
+                let isCorrect = false;
+
+                if (input.classList.contains('roman-input')) {
+                    expectedAnswer = correctAnswer.roman;
+                    isCorrect = normalizeInput(userAnswer) === normalizeInput(expectedAnswer);
+                } else if (input.classList.contains('chord-input')) {
+                    expectedAnswer = correctAnswer.chord;
+                    isCorrect = normalizeInput(userAnswer) === normalizeInput(expectedAnswer);
+                } else if (input.classList.contains('notes-input')) {
+                    expectedAnswer = correctAnswer.notes;
+                    isCorrect = normalizeInput(userAnswer) === normalizeInput(expectedAnswer);
+                }
+
+                if (isCorrect) {
+                    correct++;
+                    input.style.borderColor = 'var(--accent-happy)';
+                    input.style.background = 'rgba(16, 185, 129, 0.1)';
+                } else {
+                    input.style.borderColor = '#ef4444';
+                    input.style.background = 'rgba(239, 68, 68, 0.1)';
+                }
+            });
+
+            // Show results
+            const percentage = Math.round((correct / total) * 100);
+            document.getElementById('score-display').textContent = `Score: ${correct}/${total} (${percentage}%)`;
+
+            let feedback = '';
+            if (percentage === 100) {
+                feedback = '🎉 Perfect! You got everything right!';
+            } else if (percentage >= 80) {
+                feedback = '🌟 Great job! Almost there!';
+            } else if (percentage >= 60) {
+                feedback = '👍 Good effort! Keep practicing!';
+            } else {
+                feedback = '💪 Keep going! Check the wiki for help with building chords.';
+            }
+
+            document.getElementById('feedback').textContent = feedback;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        // Show answers
+        function showAnswers() {
+            // Show all correct answer divs
+            document.querySelectorAll('.correct-answer').forEach(answerDiv => {
+                const row = parseInt(answerDiv.dataset.row);
+                const field = answerDiv.dataset.field;
+                const correctAnswer = correctAnswers[row];
+
+                if (field === 'chord') {
+                    answerDiv.textContent = `✓ ${correctAnswer.chord}`;
+                } else if (field === 'roman') {
+                    answerDiv.textContent = `✓ ${correctAnswer.roman}`;
+                } else if (field === 'notes') {
+                    answerDiv.textContent = `✓ ${correctAnswer.notes}`;
+                }
+
+                answerDiv.style.display = 'block';
+            });
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('score-display').textContent = 'Answers Shown';
+            document.getElementById('feedback').textContent = 'Compare your answers with the correct ones above and try a new challenge!';
+        }
+
+        // Toggle keyboard visibility
+        function toggleKeyboard() {
+            keyboardCollapsed = !keyboardCollapsed;
+            const content = document.getElementById('keyboard-content');
+            const icon = document.getElementById('keyboard-toggle-icon');
+            const text = document.getElementById('keyboard-toggle-text');
+
+            if (keyboardCollapsed) {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+                text.textContent = 'Show';
+            } else {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+                text.textContent = 'Hide';
+            }
+
+            // Save state to localStorage
+            try {
+                localStorage.setItem(KEYBOARD_COLLAPSED_KEY, keyboardCollapsed.toString());
+            } catch (e) {
+                console.error('Failed to save keyboard state:', e);
+            }
+        }
+
+        // Load keyboard state
+        function loadKeyboardState() {
+            try {
+                const saved = localStorage.getItem(KEYBOARD_COLLAPSED_KEY);
+                if (saved === 'true') {
+                    keyboardCollapsed = true;
+                    const content = document.getElementById('keyboard-content');
+                    const icon = document.getElementById('keyboard-toggle-icon');
+                    const text = document.getElementById('keyboard-toggle-text');
+
+                    content.style.display = 'none';
+                    icon.textContent = '▶';
+                    text.textContent = 'Show';
+                }
+            } catch (e) {
+                console.error('Failed to load keyboard state:', e);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('start-btn').addEventListener('click', () => startChallenge());
+        document.getElementById('check-btn').addEventListener('click', checkAnswers);
+        document.getElementById('show-answers-btn').addEventListener('click', showAnswers);
+        document.getElementById('keyboard-toggle').addEventListener('click', toggleKeyboard);
+
+        // Check for URL parameters and auto-start if present
+        (function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rootParam = urlParams.get('root');
+            const modeParam = urlParams.get('mode');
+
+            if (rootParam && modeParam) {
+                // Validate parameters
+                const validRoot = CHROMATIC_SCALE.includes(rootParam);
+                const validMode = modeParam === 'Major' || modeParam === 'Minor';
+
+                if (validRoot && validMode) {
+                    startChallenge(rootParam, modeParam);
+                }
+            }
+        })();
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>五度圈 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link active">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+    <div class="guide-container">
+        <header style="text-align: center; margin-bottom: 26px;">
+            <div class="header-icon" style="font-size: 2.2rem;">🔄</div>
+            <h1 style="margin: 0 0 8px 0; font-size: 1.7rem;">五度圈</h1>
+            <p class="subtitle" style="margin: 0;">把十二个调排成一个圆，调号与关系调一眼看清</p>
+        </header>
+        <section class="guide-section">
+            <h2>怎么排的</h2>
+            <p>从 C 出发，每次向上走纯五度，就得到升号方向的调；向下走纯五度，则得到降号方向的调。</p>
+            <div class="example-box"><strong>示例：</strong>升号方向：C → G → D → A → E → B → F#；降号方向：C → F → Bb → Eb → Ab → Db → Gb</div>
+        </section>
+        <section class="guide-section">
+            <h2>升号与降号的顺序</h2>
+            <ul class="step-list">
+                <li>升号顺序：F# → C# → G# → D# → A# → E# → B#</li>
+                <li>降号顺序：Bb → Eb → Ab → Db → Gb → Cb → Fb</li>
+                <li>调号里出现几个升号，就按顺序取前几个。</li>
+            </ul>
+        </section>
+        <section class="guide-section">
+            <h2>关系小调</h2>
+            <p>每个大调都有一个关系小调，它们使用相同的音与调号。小调主音就在大调主音的下方小三度，例如 C 大调与 a 小调。</p>
+        </section>
+        <section class="guide-section">
+            <h2>有什么用</h2>
+            <ul class="step-list">
+                <li>快速判断调号，不用逐个音去数。</li>
+                <li>理解和弦进行中为什么会用到某些和弦。</li>
+                <li>转调时，找相邻的调最容易自然衔接。</li>
+            </ul>
+        </section>
+        <div class="back-nav" style="margin-top: 30px;">
+            <a href="wiki.html" class="back-link">← 返回乐理手册</a>
+        </div>
+    </div>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="音感觉醒">
+    <title>听音辨调 - 音感觉醒</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <style>
+        .ear-wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .ear-panel {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .ear-question {
+            text-align: center;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+        .ear-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .ear-option {
+            min-width: 150px;
+            padding: 18px 20px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--surface-light);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+        }
+        .ear-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            border-color: rgba(45, 212, 191, 0.6);
+        }
+        .ear-option:disabled { cursor: default; }
+        .ear-option.correct {
+            background: linear-gradient(120deg, #0f766e, #14b8a6);
+            color: #fff;
+        }
+        .ear-option.wrong {
+            background: rgba(239, 68, 68, 0.85);
+            color: #fff;
+        }
+        .ear-feedback {
+            min-height: 1.6em;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        .ear-stats { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-around; }
+        .ear-stat { text-align: center; min-width: 92px; }
+        .ear-stat .num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+        }
+        .ear-stat .lbl { font-size: 0.75rem; color: var(--text-secondary); }
+        table.ear-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        table.ear-table th, table.ear-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+        .ear-hint { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; }
+    </style>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+                var root = document.documentElement;
+                if (saved.light) root.classList.add("lg-light");
+                if (saved.focus) root.classList.add("lg-focus");
+                if (saved.large) root.classList.add("lg-large");
+            } catch (error) {}
+        })();
+    </script>
+    <script src="modes.js" defer></script>
+    <script src="ui-controls.js" defer></script>
+    <script src="piano-tone.js"></script>
+    <script src="scroll-guard.js" defer></script>
+</head>
+<body>
+        <nav class="main-nav">
+        <a href="home.html" class="nav-brand">🎵 音感觉醒</a>
+        <div class="lg-cap">练习</div>
+        <a href="rhythm-training.html" class="nav-link">🥁 节奏闯关</a>
+        <a href="score-training.html" class="nav-link">🎼 视奏训练</a>
+        <a href="theory-practice.html" class="nav-link">🎓 乐理考题</a>
+        <a href="training.html" class="nav-link">🎹 和弦练习</a>
+        <div class="lg-cap">工具</div>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍基准</a>
+        <a href="chord-progressions.html" class="nav-link">🎼 进行曲库</a>
+        <a href="find-note.html" class="nav-link">🎤 音高识别</a>
+        <a href="find-scale.html" class="nav-link active">🪜 听音辨调</a>
+        <a href="calculate-chords.html" class="nav-link">🧮 和弦找音</a>
+        <div class="lg-cap">知识</div>
+        <a href="wiki.html" class="nav-link">📚 乐理手册</a>
+        <div class="lg-cap">教学</div>
+        <a href="class-manage.html" class="nav-link">👩‍🏫 班级管理</a>
+        <a href="homework.html" class="nav-link">📝 作业布置</a>
+        <a href="pretest-report.html" class="nav-link">📊 前后测报告</a>
+        <a href="data-backup.html" class="nav-link">🗄️ 数据备份</a>
+    </nav>
+    <script>
+        (function () {
+            try {
+                var nav = document.querySelector(".main-nav");
+                var saved = window.sessionStorage.getItem("lg-nav-scroll");
+                if (nav && saved !== null) nav.scrollTop = Number(saved) || 0;
+            } catch (error) {
+                /* 存储不可用时忽略 */
+            }
+        })();
+    </script>
+
+    <div class="ear-wrap">
+        <header style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 2.2rem;">🪜</div>
+            <h1 style="margin: 0 0 4px 0; font-size: 1.7rem;">听音辨调</h1>
+            <p class="ear-hint" style="margin: 0;">软件放一小段旋律，你来听它是什么调，答完立刻告诉你对错。</p>
+        </header>
+
+        <div class="ear-panel">
+            <div class="row" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <label class="lg-switch">
+                    <input type="checkbox" id="advanced-toggle">
+                    <span class="lg-switch-label">进阶模式（要连主音一起判断）</span>
+                </label>
+                <label class="lg-switch">
+                    <input type="checkbox" id="autoplay-toggle" checked>
+                    <span class="lg-switch-label">每道题自动播放</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="ear-panel">
+            <div class="ear-question" id="question">点下面的按钮开始第一题</div>
+            <div class="ear-options" id="options"></div>
+            <div class="ear-feedback" id="feedback"></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px;">
+                <button class="btn" id="start-btn">▶️ 开始练习</button>
+                <button class="btn ghost" id="replay-btn" disabled>🔁 再听一遍</button>
+                <button class="btn ghost" id="reveal-btn" disabled>🎼 听标准音阶</button>
+                <button class="btn ghost" id="next-btn" disabled>下一题 →</button>
+            </div>
+        </div>
+
+        <div class="ear-panel">
+            <div class="ear-stats">
+                <div class="ear-stat"><div class="num" id="stat-done">0</div><div class="lbl">已答题数</div></div>
+                <div class="ear-stat"><div class="num" id="stat-correct">0</div><div class="lbl">答对</div></div>
+                <div class="ear-stat"><div class="num" id="stat-rate">-</div><div class="lbl">正确率</div></div>
+                <div class="ear-stat"><div class="num" id="stat-streak">0</div><div class="lbl">当前连对</div></div>
+                <div class="ear-stat"><div class="num" id="stat-best">0</div><div class="lbl">最佳连对</div></div>
+            </div>
+        </div>
+
+        <div class="ear-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.9rem;">练习记录</strong>
+                <div>
+                    <button class="btn ghost" id="export-btn" style="padding: 6px 12px; font-size: 0.8rem;">导出 CSV</button>
+                    <button class="btn ghost" id="clear-btn" style="padding: 6px 12px; font-size: 0.8rem;">清空</button>
+                </div>
+            </div>
+            <table class="ear-table">
+                <thead>
+                    <tr><th>时间</th><th>模式</th><th>题数</th><th>正确</th><th>正确率</th></tr>
+                </thead>
+                <tbody id="records-body">
+                    <tr><td colspan="5" class="ear-hint">暂无记录</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "ear-training-records";
+        const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const SCALE_TYPES = {
+            major: { label: "大调", steps: [0, 2, 4, 5, 7, 9, 11] },
+            minor: { label: "小调", steps: [0, 2, 3, 5, 7, 8, 10] },
+            pentatonic: { label: "五声音阶", steps: [0, 2, 4, 7, 9] },
+        };
+        const ROOTS = [
+            { name: "C", midi: 60 },
+            { name: "D", midi: 62 },
+            { name: "E", midi: 64 },
+            { name: "F", midi: 65 },
+            { name: "G", midi: 67 },
+            { name: "A", midi: 69 },
+        ];
+
+        const state = {
+            audioContext: null,
+            current: null,
+            answered: false,
+            done: 0,
+            correct: 0,
+            streak: 0,
+            best: 0,
+        };
+
+        const el = (id) => document.getElementById(id);
+
+        function keyLabel(root, type) {
+            if (type === "minor") return `${root.name.toLowerCase()} ${SCALE_TYPES[type].label}`;
+            return `${root.name} ${SCALE_TYPES[type].label}`;
+        }
+
+        function playNote(midi, time, duration) {
+            const context = state.audioContext;
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            osc.type = "triangle";
+            osc.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
+            gain.gain.setValueAtTime(0.0001, time);
+            gain.gain.exponentialRampToValueAtTime(0.28, time + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+            osc.connect(gain);
+            gain.connect(context.destination);
+            osc.start(time);
+            osc.stop(time + duration + 0.05);
+        }
+
+        function ensureAudio() {
+            if (!state.audioContext) {
+                state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (state.audioContext.state === "suspended") state.audioContext.resume();
+        }
+
+        function makeQuestion() {
+            const advanced = el("advanced-toggle").checked;
+            const typeKeys = Object.keys(SCALE_TYPES);
+            const type = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+            const root = ROOTS[Math.floor(Math.random() * ROOTS.length)];
+            const steps = SCALE_TYPES[type].steps;
+
+            // 生成一小段旋律：从主音开始，随机取音阶内的音，最后回到主音
+            const melody = [];
+            const count = 6 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < count; i++) {
+                const degree = i === 0 || i === count - 1 ? 0 : Math.floor(Math.random() * steps.length);
+                const octave = i > 2 && steps[degree] < 5 && Math.random() < 0.35 ? 12 : 0;
+                melody.push(root.midi + steps[degree] + octave);
+            }
+
+            return { type, root, melody, advanced };
+        }
+
+        function playMelody() {
+            if (!state.current) return;
+            ensureAudio();
+            const beat = 0.52;
+            const start = state.audioContext.currentTime + 0.25;
+            state.current.melody.forEach((midi, index) => {
+                const duration = index % 3 === 2 ? beat * 1.4 : beat * 0.8;
+                playNote(midi, start + index * beat, duration);
+            });
+        }
+
+        function playScale() {
+            if (!state.current) return;
+            ensureAudio();
+            const steps = SCALE_TYPES[state.current.type].steps;
+            const start = state.audioContext.currentTime + 0.25;
+            steps.forEach((step, index) => {
+                playNote(state.current.root.midi + step, start + index * 0.36, 0.34);
+            });
+            playNote(state.current.root.midi + 12, start + steps.length * 0.36, 0.7);
+        }
+
+        function renderOptions() {
+            const box = el("options");
+            box.innerHTML = "";
+            const current = state.current;
+            if (!current) return;
+
+            let options;
+            if (current.advanced) {
+                const correct = { root: current.root, type: current.type };
+                options = [correct];
+                while (options.length < 6) {
+                    const type = Object.keys(SCALE_TYPES)[Math.floor(Math.random() * 3)];
+                    const root = ROOTS[Math.floor(Math.random() * ROOTS.length)];
+                    if (!options.some((item) => item.root.name === root.name && item.type === type)) {
+                        options.push({ root, type });
+                    }
+                }
+                options.sort(() => Math.random() - 0.5);
+            } else {
+                options = Object.keys(SCALE_TYPES).map((type) => ({ type, label: SCALE_TYPES[type].label }));
+            }
+
+            options.forEach((option) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "ear-option";
+                button.textContent = option.label || keyLabel(option.root, option.type);
+                button.dataset.type = option.type;
+                button.dataset.root = option.root ? option.root.name : "";
+                button.addEventListener("click", () => answer(button));
+                box.appendChild(button);
+            });
+        }
+
+        function answer(button) {
+            if (state.answered || !state.current) return;
+            state.answered = true;
+
+            const isRight = button.dataset.type === state.current.type &&
+                (!state.current.advanced || button.dataset.root === state.current.root.name);
+
+            const buttons = Array.from(el("options").querySelectorAll(".ear-option"));
+            buttons.forEach((item) => {
+                item.disabled = true;
+                const sameType = item.dataset.type === state.current.type;
+                const sameRoot = item.dataset.root === state.current.root.name;
+                const isCorrectOption = state.current.advanced ? sameType && sameRoot : sameType;
+                if (isCorrectOption) item.classList.add("correct");
+            });
+            if (!isRight) button.classList.add("wrong");
+
+            state.done += 1;
+            if (isRight) {
+                state.correct += 1;
+                state.streak += 1;
+                state.best = Math.max(state.best, state.streak);
+                el("feedback").textContent = `答对了，这是 ${keyLabel(state.current.root, state.current.type)}。`;
+                el("feedback").style.color = "var(--accent-happy, #10b981)";
+            } else {
+                state.streak = 0;
+                el("feedback").textContent = `答错了。正确答案是 ${keyLabel(state.current.root, state.current.type)}，点“听标准音阶”对比一下。`;
+                el("feedback").style.color = "var(--accent-tense, #ef4444)";
+            }
+
+            el("next-btn").disabled = false;
+            el("reveal-btn").disabled = false;
+            updateStats();
+        }
+
+        function updateStats() {
+            el("stat-done").textContent = String(state.done);
+            el("stat-correct").textContent = String(state.correct);
+            el("stat-rate").textContent = state.done ? `${Math.round((state.correct / state.done) * 100)}%` : "-";
+            el("stat-streak").textContent = String(state.streak);
+            el("stat-best").textContent = String(state.best);
+        }
+
+        function nextQuestion() {
+            state.current = makeQuestion();
+            state.answered = false;
+            el("question").textContent = state.current.advanced
+                ? "听这段旋律，它是什么调？（要连主音一起判断）"
+                : "听这段旋律，它属于哪种音阶？";
+            el("feedback").textContent = "";
+            el("next-btn").disabled = true;
+            el("reveal-btn").disabled = true;
+            el("replay-btn").disabled = false;
+            renderOptions();
+            if (el("autoplay-toggle").checked) {
+                window.setTimeout(playMelody, 200);
+            }
+        }
+
+        function finishRound() {
+            if (!state.done) return;
+            const records = loadRecords();
+            records.unshift({
+                time: new Date().toLocaleString("zh-CN"),
+                mode: el("advanced-toggle").checked ? "进阶" : "基础",
+                total: state.done,
+                correct: state.correct,
+                rate: Math.round((state.correct / state.done) * 100),
+            });
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0, 30)));
+            } catch (error) {
+                // 忽略
+            }
+            renderRecords();
+        }
+
+        function loadRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function renderRecords() {
+            const records = loadRecords();
+            const body = el("records-body");
+            if (!records.length) {
+                body.innerHTML = '<tr><td colspan="5" class="ear-hint">暂无记录</td></tr>';
+                return;
+            }
+            body.innerHTML = records
+                .slice(0, 10)
+                .map((record) =>
+                    `<tr><td>${record.time}</td><td>${record.mode}</td><td>${record.total}</td><td>${record.correct}</td><td>${record.rate}%</td></tr>`)
+                .join("");
+        }
+
+        el("start-btn").addEventListener("click", () => {
+            ensureAudio();
+            el("start-btn").textContent = "🔄 重新开始一轮";
+            nextQuestion();
+        });
+        el("replay-btn").addEventListener("click", playMelody);
+        el("reveal-btn").addEventListener("click", playScale);
+        el("next-btn").addEventListener("click", () => {
+            if (state.done > 0 && state.done % 10 === 0 && state.answered) {
+                finishRound();
+                el("feedback").textContent = "已完成 10 题，成绩已记录。可以继续下一题。";
+            }
+            nextQuestion();
+        });
+        el("advanced-toggle").addEventListener("change", () => {
+            state.done = 0;
+            state.correct = 0;
+            state.streak = 0;
+            state.best = 0;
+            updateStats();
+            state.current = null;
+            el("options").innerHTML = "";
+            el("question").textContent = "已切换模式，点“开始练习”重新开始";
+            el("feedback").textContent = "";
+            el("replay-btn").disabled = true;
+            el("reveal-btn").disabled = true;
+            el("next-btn").disabled = true;
+        });
+        el("export-btn").addEventListener("click", () => {
+            const records = loadRecords();
+            const header = "时间,模式,题数,正确数,正确率";
+            const rows = records.map((record) => `${record.time},${record.mode},${record.total},${record.correct},${record.rate}`);
+            const blob = new Blob(["\ufeff" + [header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "听音辨调记录.csv";
+            link.click();
+        });
+        el("clear-btn").addEventListener("click", () => {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                // 忽略
+            }
+            renderRecords();
+        });
+
+        renderRecords();
+        updateStats();
+    </script>
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", function () {
+                navigator.serviceWorker.register("sw.js").catch(function () {});
+            });
+        }
+    </script>
+</body>
+</html>

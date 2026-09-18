@@ -1,0 +1,62 @@
+# ---- 依赖与缓存 ----
+node_modules/
+.pnpm-store/
+.npm/
+.cache/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# ---- 打包产物与桌面版 ----
+dist/
+build/Release/
+release/
+out/
+*.exe
+*.msi
+*.dmg
+*.AppImage
+outputs/新版/
+outputs/*-win32-x64/
+work/legong-app/dist/
+work/legong-app/build/
+work/legong-app/node_modules/
+work/.electron-cache/
+work/.localappdata/
+work/.appdata/
+
+# ---- 第三方原始代码与下载缓存 ----
+work/chordz-extract/
+work/chordz.zip
+work/*.zip
+
+# ---- 个人与赛事材料（不上传） ----
+outputs/*.docx
+outputs/*.pptx
+outputs/*.xlsx
+outputs/*.pdf
+outputs/*.zip
+outputs/md/
+work/ppt-build/
+work/update-plan-md.mjs
+work/desktop-backup/
+.codex-finalizer/
+*.validation.json
+*.inspect.ndjson
+
+# ---- 本地临时与渲染结果 ----
+work/manual-render/
+work/qa-render/
+work/tmp-*.mjs
+work/tmp-*.js
+work/tmp-*.py
+*.tmp
+
+# ---- 编辑器与系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+

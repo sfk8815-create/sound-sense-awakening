@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="和弦训练室">
+    <title>节奏训练 - 和弦训练室</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <style>
+        .rhythm-wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .row { display: flex; flex-wrap: wrap; gap: 12px; }
+        .field { flex: 1 1 160px; }
+        .field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .field input[type="number"],
+        .field select {
+            width: 100%;
+            padding: 9px;
+            font-size: 0.95rem;
+            background: var(--background);
+            color: var(--text-primary);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+        }
+        .field input[type="range"] { width: 100%; }
+        .bpm-value {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+        }
+        .btn {
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn.stop { background: #ef4444; }
+        .btn.ghost {
+            background: var(--surface-light);
+            color: var(--text-primary);
+            border: 2px solid var(--primary-color);
+        }
+        .buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+        .buttons .btn { flex: 1 1 150px; }
+
+        #grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .bar-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .bar-label {
+            width: 42px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .beat-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 3px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .beat-label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+        .beat-cells {
+            display: flex;
+            gap: 3px;
+        }
+        .beat-group.accent { box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.5); }
+        .cell {
+            width: 26px;
+            height: 40px;
+            border-radius: 6px;
+            background: var(--surface-light);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            transition: background 0.08s linear, transform 0.08s linear;
+        }
+        .cell.expected { background: rgba(99, 102, 241, 0.35); border-color: var(--primary-color); }
+        .cell.now { transform: scale(1.08); background: rgba(255, 255, 255, 0.25); }
+        .cell.hit-good { background: var(--accent-happy, #10b981); }
+        .cell.hit-ok { background: #eab308; }
+        .cell.hit-bad { background: #ef4444; }
+        .cell.missed { background: rgba(239, 68, 68, 0.6); }
+
+        .pad {
+            width: 100%;
+            padding: 26px;
+            margin-top: 4px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: var(--surface-light);
+            border: 3px dashed var(--primary-color);
+            border-radius: 14px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .pad.active { background: rgba(99, 102, 241, 0.3); }
+
+        .stats { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-around; }
+        .stat { text-align: center; min-width: 92px; }
+        .stat .num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+        }
+        .stat .lbl { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .hint { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+        .status {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent-happy, #10b981);
+            min-height: 1.4em;
+            text-align: center;
+        }
+        table.records { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        table.records th, table.records td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+        .grade { font-size: 2.4rem; font-weight: 800; }
+
+        .level-path {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .level-chip {
+            min-width: 78px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--surface-light);
+            background: var(--surface-light);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            text-align: center;
+            cursor: pointer;
+            line-height: 1.35;
+        }
+        .level-chip .level-name { display: block; font-size: 0.72rem; margin-top: 2px; }
+        .level-chip.current {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
+            color: var(--text-primary);
+            background: var(--surface);
+        }
+        .level-chip.done {
+            background: rgba(16, 185, 129, 0.22);
+            border-color: var(--accent-happy, #10b981);
+            color: var(--text-primary);
+        }
+        .level-chip.locked { opacity: 0.45; cursor: not-allowed; }
+        #progress-chart { background: var(--surface-light); border-radius: 12px; }
+        #report-canvas { background: var(--surface-light); }
+
+        .custom-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .grid-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 12px 0 2px 0;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+        .grid-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .lg-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .lg-swatch.expected { background: rgba(99, 102, 241, 0.35); border-color: var(--primary-color); }
+        .lg-swatch.good { background: var(--accent-happy, #10b981); }
+        .lg-swatch.ok { background: #eab308; }
+        .lg-swatch.bad { background: #ef4444; }
+        .lg-swatch.missed { background: rgba(239, 68, 68, 0.6); }
+        .custom-beat {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .custom-cell {
+            width: 30px;
+            height: 34px;
+            border-radius: 6px;
+            background: var(--surface-light);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+        }
+        .custom-cell.on {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        #timeline-canvas { background: var(--surface-light); border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="training.html" class="nav-link">🎮 训练</a>
+        <a href="chord-progressions.html" class="nav-link">📖 和弦进行</a>
+        <a href="metronome.html" class="nav-link">⏱️ 节拍器</a>
+        <a href="rhythm-training.html" class="nav-link active">🥁 节奏训练</a>
+        <a href="find-note.html" class="nav-link">🎤 找音</a>
+        <a href="find-scale.html" class="nav-link">🎼 找音阶</a>
+        <a href="wiki.html" class="nav-link">📚 乐理百科</a>
+    </nav>
+
+    <div class="rhythm-wrap">
+        <header style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 2.2rem;">🥁</div>
+            <h1 style="margin: 0 0 4px 0; font-size: 1.7rem;">节奏训练</h1>
+            <p class="hint" style="margin: 0;">跟着节拍敲击，看看你的每一次击打是准、是早还是晚。</p>
+        </header>
+
+        <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+                <strong style="font-size: 0.95rem;">关卡进度</strong>
+                <span class="hint" id="level-summary">第 1 关 / 共 12 关</span>
+            </div>
+            <div id="level-path" class="level-path"></div>
+            <p class="hint" id="level-task" style="margin: 10px 0 0 0;"></p>
+        </div>
+
+        <div class="panel">
+            <div class="row">
+                <div class="field">
+                    <label>速度（BPM）：<span class="bpm-value" id="bpm-display">80</span></label>
+                    <input type="range" id="bpm-range" min="40" max="240" step="1" value="80">
+                    <input type="number" id="bpm-input" min="40" max="240" value="80" style="margin-top: 6px;">
+                </div>
+                <div class="field wide">
+                    <label>拍号</label>
+                    <select id="time-signature" data-segmented>
+                        <option value="4/4" selected>4/4 拍</option>
+                        <option value="3/4">3/4 拍</option>
+                        <option value="2/4">2/4 拍</option>
+                        <option value="6/8">6/8 拍</option>
+                        <option value="3/8">3/8 拍</option>
+                    </select>
+                </div>
+                <div class="field wide">
+                    <label>节奏型</label>
+                    <select id="pattern-select" data-segmented>
+                        <option value="quarter">四分音符（基础）</option>
+                        <option value="eighth">八分音符</option>
+                        <option value="mix">四分与八分交替</option>
+                        <option value="sixteenth">十六分音符</option>
+                        <option value="dotted">附点节奏</option>
+                        <option value="rests">含休止符</option>
+                        <option value="custom">自定义节奏型（自己画）</option>
+                    </select>
+                </div>
+                <div class="field wide">
+                    <label>练习小节数</label>
+                    <select id="bar-count" data-segmented>
+                        <option value="2" selected>2 小节</option>
+                        <option value="4">4 小节</option>
+                        <option value="8">8 小节</option>
+                    </select>
+                </div>
+                <div class="field wide">
+                    <label>节拍提示</label>
+                    <select id="cue-mode" data-segmented>
+                        <option value="full" selected>全程给节拍（跟拍练习）</option>
+                        <option value="alternate">隔一小节给一次（渐撤提示）</option>
+                        <option value="countin">只在预备拍给节拍（内化节拍）</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="custom-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                <strong style="font-size: 0.95rem;">自定义节奏型</strong>
+                <span>
+                    <button class="btn ghost" id="custom-clear-btn" style="padding: 6px 12px; font-size: 0.8rem;">清空</button>
+                    <button class="btn ghost" id="custom-reset-btn" style="padding: 6px 12px; font-size: 0.8rem;">恢复默认</button>
+                </span>
+            </div>
+            <div id="custom-grid" class="custom-grid"></div>
+            <p class="hint" style="margin: 10px 0 0 0;">
+                点击格子切换“有音/休止”，改动会自动保存，并按一小节循环。格子按 4/4 的一小节设计，每拍四个十六分位置。
+            </p>
+        </div>
+
+        <div class="panel">
+            <div class="buttons" style="margin-bottom: 12px;">
+                <button class="btn" id="start-btn">🎤 开始训练</button>
+                <button class="btn stop" id="stop-btn" disabled>⏹ 停止</button>
+                <button class="btn ghost" id="demo-btn">▶️ 听一遍示范</button>
+            </div>
+            <div class="row" style="margin-bottom: 4px;">
+                <label class="lg-switch">
+                    <input type="checkbox" id="mic-toggle" checked>
+                    <span class="lg-switch-label">🎤 麦克风（听拍手与敲击）</span>
+                </label>
+                <label class="lg-switch">
+                    <input type="checkbox" id="midi-toggle">
+                    <span class="lg-switch-label">🎹 MIDI 设备（电子鼓、电钢琴）</span>
+                </label>
+            </div>
+            <p class="hint" id="midi-status" style="margin-top: -4px;"></p>
+            <div class="row">
+                <div class="field">
+                    <label>麦克风灵敏度：<span id="sensitivity-display">中</span></label>
+                    <input type="range" id="sensitivity" min="1" max="10" step="1" value="5">
+                </div>
+                <div class="field">
+                    <label>击打延迟校准（毫秒）：<span id="offset-display">0</span></label>
+                    <input type="range" id="latency" min="-80" max="80" step="5" value="0">
+                </div>
+            </div>
+            <p class="hint" id="mic-hint">
+                提示：开始训练后会先数 4 拍。你可以拍手、敲桌面、打鼓垫，或者直接按空格键。
+                如果麦克风听不到，先把灵敏度调高一些。系统会自动补偿设备延迟；
+                如果结果里提示整体偏早或偏晚，再用下面的“击打延迟校准”微调。
+            </p>
+        </div>
+
+        <div class="panel">
+            <div class="status" id="status">准备就绪</div>
+            <div id="grid" style="margin-top: 10px;"></div>
+            <div class="grid-legend">
+                <span>每拍分 4 格（十六分音符位置）</span>
+                <span><i class="lg-swatch expected"></i>应当敲击</span>
+                <span><i class="lg-swatch good"></i>敲准了（±70 毫秒内）</span>
+                <span><i class="lg-swatch ok"></i>有点偏（70 至 150 毫秒）</span>
+                <span><i class="lg-swatch bad"></i>明显偏早或偏晚</span>
+                <span><i class="lg-swatch missed"></i>漏敲</span>
+            </div>
+            <button class="pad" id="pad">👆 点这里敲击（也可以按空格键）</button>
+        </div>
+
+        <div class="panel">
+            <div class="stats">
+                <div class="stat"><div class="num" id="stat-accuracy">-</div><div class="lbl">准确率</div></div>
+                <div class="stat"><div class="num" id="stat-offset">-</div><div class="lbl">平均偏差(ms)</div></div>
+                <div class="stat"><div class="num" id="stat-good">0</div><div class="lbl">准</div></div>
+                <div class="stat"><div class="num" id="stat-early">0</div><div class="lbl">偏早</div></div>
+                <div class="stat"><div class="num" id="stat-late">0</div><div class="lbl">偏晚</div></div>
+                <div class="stat"><div class="num" id="stat-missed">0</div><div class="lbl">漏敲</div></div>
+                <div class="stat"><div class="num" id="stat-extra">0</div><div class="lbl">多余敲击</div></div>
+                <div class="stat"><div class="num" id="stat-score">0</div><div class="lbl">得分</div></div>
+            </div>
+        </div>
+
+        <div class="panel" id="result-panel" style="display: none;">
+            <div style="text-align: center;">
+                <div class="grade" id="grade">-</div>
+                <div class="hint" id="grade-text"></div>
+            </div>
+        </div>
+
+        <div class="panel" id="report-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                <strong style="font-size: 0.95rem;">成绩单</strong>
+                <span>
+                    <button class="btn ghost" id="save-report-btn" style="padding: 6px 12px; font-size: 0.8rem;">保存成绩单图片</button>
+                    <button class="btn ghost" id="playback-btn" style="padding: 6px 12px; font-size: 0.8rem;">▶ 听一遍我的击打</button>
+                    <button class="btn ghost" id="next-level-btn" style="padding: 6px 12px; font-size: 0.8rem; display: none;">进入下一关</button>
+                </span>
+            </div>
+            <canvas id="report-canvas" width="700" height="420" style="width: 100%; max-width: 700px; display: block; margin: 0 auto; border-radius: 12px;"></canvas>
+            <p class="hint" id="diagnosis-text" style="margin-top: 10px;"></p>
+        </div>
+
+        <div class="panel" id="timeline-panel" style="display: none;">
+            <strong style="font-size: 0.95rem;">击打偏差图</strong>
+            <canvas id="timeline-canvas" width="900" height="240" style="width: 100%; max-width: 900px; display: block; margin: 10px auto 0 auto;"></canvas>
+            <p class="hint" style="margin-top: 8px;">
+                横轴是每一个应当敲击的音，纵轴是偏差毫秒数。中间绿色带内为“准”，越靠上表示越偏晚，越靠下表示越偏早。
+            </p>
+        </div>
+
+        <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                <strong style="font-size: 0.95rem;">练习周报</strong>
+                <span>
+                    <button class="btn ghost" id="weekly-btn" style="padding: 6px 12px; font-size: 0.8rem;">生成本周周报</button>
+                    <button class="btn ghost" id="weekly-save-btn" style="padding: 6px 12px; font-size: 0.8rem;">保存周报图片</button>
+                </span>
+            </div>
+            <canvas id="weekly-canvas" width="700" height="380" style="width: 100%; max-width: 700px; display: block; margin: 0 auto; border-radius: 12px; background: var(--surface-light);"></canvas>
+        </div>
+
+        <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.9rem;">练习记录</strong>
+                <div>
+                    <button class="btn ghost" id="export-btn" style="padding: 6px 10px; font-size: 0.8rem;">导出 CSV</button>
+                    <button class="btn ghost" id="clear-btn" style="padding: 6px 10px; font-size: 0.8rem;">清空</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                <label style="font-size: 0.82rem; color: var(--text-secondary);">练习者：</label>
+                <input id="student-name" list="student-list" placeholder="填写姓名"
+                       style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--surface-light); background: var(--background); color: var(--text-primary); font-size: 0.85rem;">
+                <datalist id="student-list"></datalist>
+                <span class="hint">用于按学生统计成绩；留空则记为“本人”。</span>
+            </div>
+            <div id="student-summary" style="margin-bottom: 12px;"></div>
+            <canvas id="progress-chart" width="900" height="220" style="width: 100%; max-width: 900px; display: block; margin: 0 auto 12px auto;"></canvas>
+            <table class="records">
+                <thead>
+                    <tr><th>练习者</th><th>时间</th><th>速度</th><th>拍号</th><th>节奏型</th><th>提示模式</th><th>准确率</th><th>平均偏差</th><th>得分</th></tr>
+                </thead>
+                <tbody id="records-body">
+                    <tr><td colspan="9" class="hint">暂无记录</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "rhythm-training-records";
+
+        const TIME_SIGNATURES = {
+            "4/4": { beats: 4, unit: 4 },
+            "3/4": { beats: 3, unit: 4 },
+            "2/4": { beats: 2, unit: 4 },
+            "6/8": { beats: 6, unit: 8 },
+            "3/8": { beats: 3, unit: 8 },
+        };
+
+        const STEPS_PER_BEAT = 4;
+
+        // 判定窗口（毫秒）：准 / 偏差。阈值集中在这里，方便按教学需要调整。
+        const GOOD_MS = 70;
+        const OK_MS = 150;
+        const GRADE_BANDS = [
+            ["S", 90],
+            ["A", 78],
+            ["B", 62],
+            ["C", 45],
+        ];
+
+        const PATTERNS = {
+            quarter: { label: "四分音符", cycle: 4, hits: [0] },
+            eighth: { label: "八分音符", cycle: 4, hits: [0, 2] },
+            mix: { label: "四分与八分交替", cycle: 8, hits: [0, 4, 6] },
+            sixteenth: { label: "十六分音符", cycle: 8, hits: [0, 1, 2, 3, 4, 5, 6, 7] },
+            dotted: { label: "附点节奏", cycle: 8, hits: [0, 3] },
+            rests: { label: "含休止符", cycle: 8, hits: [0, 2, 3, 6] },
+            custom: { label: "自定义节奏型", cycle: 16, hits: [0, 4, 8, 12] },
+        };
+
+        const state = {
+            running: false,
+            mode: "mic",
+            cueMode: "full",
+            bpm: 80,
+            beats: 4,
+            unit: 4,
+            stepDuration: 0,
+            totalSteps: 0,
+            expected: [],
+            expectedIndex: new Map(),
+            cells: [],
+            hits: [],
+            audioContext: null,
+            mediaStream: null,
+            analyser: null,
+            dataBuffer: null,
+            noiseFloor: 0.01,
+            lastOnset: 0,
+            startTime: 0,
+            nextStepTime: 0,
+            currentStep: -1,
+            schedulerTimer: null,
+            playbackTimer: null,
+            countInRemaining: 0,
+            totalNotes: 0,
+            matched: new Map(),
+            extras: 0,
+            started: false,
+            demoActive: false,
+            autoLatency: 0,
+            customHits: [0, 4, 8, 12],
+            student: "本人",
+        };
+
+        const el = (id) => document.getElementById(id);
+
+        function updateBpm(value) {
+            const bpm = Math.min(240, Math.max(40, Number(value) || 80));
+            state.bpm = bpm;
+            el("bpm-range").value = bpm;
+            el("bpm-input").value = bpm;
+            el("bpm-display").textContent = bpm;
+        }
+
+        function buildPattern() {
+            const signature = el("time-signature").value;
+            state.cueMode = el("cue-mode").value;
+            const config = TIME_SIGNATURES[signature];
+            const bars = Number(el("bar-count").value);
+            const patternKey = el("pattern-select").value;
+            const pattern = patternKey === "custom"
+                ? { label: "自定义节奏型", cycle: 16, hits: state.customHits }
+                : PATTERNS[patternKey];
+
+            state.beats = config.beats;
+            state.unit = config.unit;
+            state.totalSteps = bars * config.beats * STEPS_PER_BEAT;
+
+            const beatSeconds = 60 / state.bpm;
+            const unitFactor = state.unit === 8 ? 0.5 : 1;
+            state.stepDuration = (beatSeconds * unitFactor) / STEPS_PER_BEAT;
+
+            state.expected = [];
+            for (let step = 0; step < state.totalSteps; step++) {
+                if (pattern.hits.includes(step % pattern.cycle)) {
+                    state.expected.push(step);
+                }
+            }
+            state.totalNotes = state.expected.length;
+
+            renderGrid();
+            resetStats();
+            el("result-panel").style.display = "none";
+            el("status").textContent = `共 ${state.totalNotes} 个音，${bars} 小节`;
+        }
+
+        function renderGrid() {
+            const grid = el("grid");
+            grid.innerHTML = "";
+            state.cells = new Array(state.totalSteps).fill(null);
+
+            const stepsPerBar = state.beats * STEPS_PER_BEAT;
+            const bars = state.totalSteps / stepsPerBar;
+
+            for (let bar = 0; bar < bars; bar++) {
+                const row = document.createElement("div");
+                row.className = "bar-row";
+
+                const label = document.createElement("div");
+                label.className = "bar-label";
+                label.textContent = `第${bar + 1}小节`;
+                row.appendChild(label);
+
+                for (let beat = 0; beat < state.beats; beat++) {
+                    const group = document.createElement("div");
+                    group.className = "beat-group" + (beat === 0 ? " accent" : "");
+
+                    const beatLabel = document.createElement("div");
+                    beatLabel.className = "beat-label";
+                    beatLabel.textContent = `第${beat + 1}拍`;
+                    group.appendChild(beatLabel);
+
+                    const cells = document.createElement("div");
+                    cells.className = "beat-cells";
+
+                    for (let sub = 0; sub < STEPS_PER_BEAT; sub++) {
+                        const step = bar * stepsPerBar + beat * STEPS_PER_BEAT + sub;
+                        const cell = document.createElement("div");
+                        cell.className = "cell";
+                        if (state.expected.includes(step)) cell.classList.add("expected");
+                        cell.dataset.step = step;
+                        state.cells[step] = cell;
+                        cells.appendChild(cell);
+                    }
+                    group.appendChild(cells);
+                    row.appendChild(group);
+                }
+                grid.appendChild(row);
+            }
+        }
+
+        function resetStats() {
+            state.matched = new Map();
+            state.extras = 0;
+            el("stat-accuracy").textContent = "-";
+            el("stat-offset").textContent = "-";
+            el("stat-good").textContent = "0";
+            el("stat-early").textContent = "0";
+            el("stat-late").textContent = "0";
+            el("stat-missed").textContent = "0";
+            el("stat-extra").textContent = "0";
+            el("stat-score").textContent = "0";
+            if (state.cells) {
+                for (const cell of state.cells) {
+                    if (cell) cell.className = cell.classList.contains("expected") ? "cell expected" : "cell";
+                }
+            }
+        }
+
+        function playClick(time, accent, isPattern) {
+            const context = state.audioContext;
+            if (!context) return;
+
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+            const frequency = isPattern ? (accent ? 880 : 660) : accent ? 1400 : 950;
+
+            oscillator.frequency.value = frequency;
+            oscillator.type = "square";
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(isPattern ? 0.22 : 0.16, time + 0.002);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.07);
+
+            oscillator.connect(gain).connect(context.destination);
+            oscillator.start(time);
+            oscillator.stop(time + 0.08);
+        }
+
+        function scheduleStep(step, time) {
+            if (step < 0 || step >= state.totalSteps) return;
+            const stepInBar = step % (state.beats * STEPS_PER_BEAT);
+            const barIndex = Math.floor(step / (state.beats * STEPS_PER_BEAT));
+
+            // 提示强度：全程发声 / 隔小节发声 / 只保留预备拍
+            if (state.cueMode === "countin") return;
+            if (state.cueMode === "alternate" && barIndex % 2 === 1) return;
+
+            const isBeatStart = stepInBar % STEPS_PER_BEAT === 0;
+            if (isBeatStart) {
+                playClick(time, stepInBar === 0, false);
+            }
+        }
+
+        function scheduler() {
+            const context = state.audioContext;
+            while (state.nextStepTime < context.currentTime + 0.15) {
+                state.currentStep += 1;
+                if (state.currentStep >= state.totalSteps) {
+                    finishTraining();
+                    return;
+                }
+                scheduleStep(state.currentStep, state.nextStepTime);
+                state.nextStepTime += state.stepDuration;
+            }
+            state.schedulerTimer = window.setTimeout(scheduler, 25);
+        }
+
+        function startAudio() {
+            if (!state.audioContext) {
+                state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (state.audioContext.state === "suspended") {
+                state.audioContext.resume();
+            }
+        }
+
+        // 估算音频链路造成的固定延迟：设备输出延迟 + 麦克风缓冲 + 检测循环
+        function estimateAutoLatency() {
+            const context = state.audioContext;
+            if (!context) return 0;
+            const device = (context.baseLatency || 0) + (context.outputLatency || 0);
+            state.contextOutputLatency = device;
+            const bufferSize = state.analyser ? state.analyser.fftSize : 1024;
+            const bufferDelay = bufferSize / (context.sampleRate || 44100);
+            const frameDelay = 0.016;
+            // 起音位置已在检测时回溯校正，这里只补偿设备输出延迟与少量固定误差
+            const estimate = device + 0.01 + bufferDelay * 0.1 + frameDelay * 0.2;
+            return Math.min(0.15, Math.max(0, estimate));
+        }
+
+        // 中位数：用来判断整体偏早还是偏晚，并在评分时扣掉这部分系统偏差
+        function medianOf(values) {
+            if (!values.length) return 0;
+            const sorted = [...values].sort((a, b) => a - b);
+            const middle = Math.floor(sorted.length / 2);
+            return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+        }
+
+        async function startMic() {
+            if (state.mediaStream) return;
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false,
+                },
+            });
+            state.mediaStream = stream;
+            const source = state.audioContext.createMediaStreamSource(stream);
+            state.analyser = state.audioContext.createAnalyser();
+            state.analyser.fftSize = 1024;
+            state.dataBuffer = new Float32Array(state.analyser.fftSize);
+            source.connect(state.analyser);
+            detectLoop();
+        }
+
+        function detectLoop() {
+            if (!state.analyser) return;
+            const context = state.audioContext;
+            const buffer = state.dataBuffer;
+            state.analyser.getFloatTimeDomainData(buffer);
+
+            let sum = 0;
+            let peak = 0;
+            for (let i = 0; i < buffer.length; i++) {
+                const value = buffer[i];
+                sum += value * value;
+                const absolute = Math.abs(value);
+                if (absolute > peak) peak = absolute;
+            }
+            const rms = Math.sqrt(sum / buffer.length);
+
+            state.noiseFloor = Math.min(state.noiseFloor * 1.02 + 0.00001, Math.max(rms, 0.005));
+            const sensitivity = Number(el("sensitivity").value);
+            const threshold = Math.max(0.012, state.noiseFloor * (2.6 - sensitivity * 0.12));
+
+            const now = performance.now();
+            if (rms > threshold && now - state.lastOnset > 110 && context) {
+                state.lastOnset = now;
+
+                // 在缓冲区里回溯出真正的起音位置，把击打时间还原到声音开始的那一刻
+                const cut = Math.max(threshold * 0.5, peak * 0.25);
+                let onsetIndex = 0;
+                for (let i = 0; i < buffer.length; i++) {
+                    if (Math.abs(buffer[i]) >= cut) {
+                        onsetIndex = i;
+                        break;
+                    }
+                }
+                const sampleRate = context.sampleRate || 44100;
+                const onsetTime = context.currentTime - buffer.length / sampleRate + onsetIndex / sampleRate;
+                registerHitAt(onsetTime, "mic");
+            }
+
+            if (state.running) {
+                window.requestAnimationFrame(detectLoop);
+            }
+        }
+
+        function registerHit(source) {
+            if (!state.running || !state.started) return;
+            const context = state.audioContext;
+            registerHitAt(context.currentTime, "acoustic");
+        }
+
+        function registerHitAt(rawTime, source) {
+            if (!state.running || !state.started) return;
+            const manualLatency = Number(el("latency").value) / 1000;
+            // MIDI 信号没有麦克风采集那段延迟，只需补偿设备输出延迟
+            const deviceLatency = source === "midi"
+                ? (state.contextOutputLatency || 0)
+                : (state.autoLatency || 0);
+            const adjusted = rawTime - manualLatency - deviceLatency;
+
+            const index = state.currentStep;
+            let best = null;
+            let bestDistance = Infinity;
+
+            for (const expectedStep of state.expected) {
+                if (state.matched.has(expectedStep)) continue;
+                const expectedTime = state.startTime + expectedStep * state.stepDuration;
+                const distance = Math.abs(expectedTime - adjusted);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    best = { step: expectedStep, expectedTime };
+                }
+            }
+
+            const tolerance = Math.max(0.08, state.stepDuration * 1.2);
+            if (!best || bestDistance > tolerance) {
+                // 先判断是不是同一次击打被重复触发，或者节拍器的声音被麦克风收了进来：
+                // 如果离一个已经判过的音很近，就忽略，不计为多余敲击
+                let nearMatched = false;
+                for (const step of state.matched.keys()) {
+                    const expectedTime = state.startTime + step * state.stepDuration;
+                    if (Math.abs(expectedTime - adjusted) <= tolerance) {
+                        nearMatched = true;
+                        break;
+                    }
+                }
+                if (nearMatched) return;
+
+                state.extras += 1;
+                flashCell(index, "hit-bad");
+                updateLiveStats();
+                return;
+            }
+
+            const offsetMs = (adjusted - best.expectedTime) * 1000;
+            state.matched.set(best.step, offsetMs);
+            // 用当前已击打的中位数做对齐，使方块颜色与最终评分口径一致
+            const runningOffsets = [...state.matched.values()];
+            const runningCenter = runningOffsets.length >= 4 ? medianOf(runningOffsets) : 0;
+            const displayOffset = offsetMs - runningCenter;
+            const kind = Math.abs(displayOffset) <= GOOD_MS
+                ? "hit-good"
+                : Math.abs(displayOffset) <= OK_MS
+                    ? "hit-ok"
+                    : "hit-bad";
+            flashCell(best.step, kind);
+            updateLiveStats();
+        }
+
+        function flashCell(step, className) {
+            const cell = state.cells[step];
+            if (!cell) return;
+            cell.className = `cell ${className}`;
+        }
+
+        function updateLiveStats() {
+            const raw = [...state.matched.values()];
+            const center = medianOf(raw);
+            const offsets = raw.map((value) => value - center);
+            const good = offsets.filter((o) => Math.abs(o) <= GOOD_MS).length;
+            const ok = offsets.filter((o) => Math.abs(o) > GOOD_MS && Math.abs(o) <= OK_MS).length;
+            const total = state.totalNotes || 1;
+            const accuracy = Math.round(((good + ok * 0.6) / total) * 100);
+            el("stat-good").textContent = good;
+            el("stat-early").textContent = offsets.filter((o) => o < -GOOD_MS).length;
+            el("stat-late").textContent = offsets.filter((o) => o > GOOD_MS).length;
+            el("stat-extra").textContent = state.extras;
+            el("stat-accuracy").textContent = `${accuracy}%`;
+            el("stat-score").textContent = Math.max(0, accuracy - Math.min(30, state.extras));
+        }
+
+        async function startTraining(mode) {
+            stopTraining(true);
+            buildPattern();
+            state.mode = mode;
+            state.running = true;
+            state.matched = new Map();
+            state.extras = 0;
+            state.currentStep = -1;
+            state.noiseFloor = 0.01;
+
+            el("start-btn").disabled = true;
+            el("stop-btn").disabled = false;
+            el("result-panel").style.display = "none";
+            el("status").textContent = mode === "mic" ? "请允许使用麦克风……" : "准备开始……";
+
+            startAudio();
+            if (mode === "mic") {
+                try {
+                    await startMic();
+                } catch (error) {
+                    el("status").textContent = "无法使用麦克风，已切换为敲击模式（可用空格或点击敲击）。";
+                    state.mode = "tap";
+                }
+            }
+
+            state.autoLatency = estimateAutoLatency();
+            state.demoActive = false;
+            const context = state.audioContext;
+            const countInStart = context.currentTime + 0.2;
+            const beatSeconds = state.stepDuration * STEPS_PER_BEAT;
+            for (let beat = 0; beat < 4; beat++) {
+                playClick(countInStart + beat * beatSeconds, beat === 0, false);
+            }
+
+            state.startTime = countInStart + 4 * beatSeconds;
+            state.nextStepTime = state.startTime;
+            state.currentStep = -1;
+            state.started = false;
+
+            el("status").textContent = "准备…… 4";
+            let remaining = 4;
+            const countTimer = window.setInterval(() => {
+                remaining -= 1;
+                el("status").textContent = remaining > 0
+                    ? `准备…… ${remaining}`
+                    : (state.cueMode === "full" ? "开始！" : "开始！节拍器已静音，靠内心的拍子");
+                if (remaining <= 0) {
+                    state.started = true;
+                    window.clearInterval(countTimer);
+                }
+            }, beatSeconds * 1000);
+
+            state.schedulerTimer = window.setTimeout(scheduler, 50);
+        }
+
+        function stopTraining(silent) {
+            state.running = false;
+            state.started = false;
+            if (state.schedulerTimer) {
+                window.clearTimeout(state.schedulerTimer);
+                state.schedulerTimer = null;
+            }
+            if (state.playbackTimer) {
+                window.clearTimeout(state.playbackTimer);
+                state.playbackTimer = null;
+            }
+            if (state.mediaStream) {
+                state.mediaStream.getTracks().forEach((track) => track.stop());
+                state.mediaStream = null;
+                state.analyser = null;
+            }
+            el("start-btn").disabled = false;
+            el("stop-btn").disabled = true;
+            if (!silent) {
+                el("status").textContent = "已停止";
+            }
+        }
+
+        function finishTraining() {
+            state.running = false;
+            if (state.schedulerTimer) {
+                window.clearTimeout(state.schedulerTimer);
+                state.schedulerTimer = null;
+            }
+
+            const missedSteps = state.expected.filter((step) => !state.matched.has(step));
+            for (const step of missedSteps) flashCell(step, "missed");
+
+            // 先扣掉系统音频延迟，再按本人的击打中心对齐，评分反映的是稳定性而不是设备延迟
+            const rawOffsets = [...state.matched.values()];
+            const center = medianOf(rawOffsets);
+            state.rawMatched = new Map(state.matched);
+            const offsets = rawOffsets.map((value) => value - center);
+            const good = offsets.filter((o) => Math.abs(o) <= GOOD_MS).length;
+            const ok = offsets.filter((o) => Math.abs(o) > GOOD_MS && Math.abs(o) <= OK_MS).length;
+            const total = state.totalNotes || 1;
+            const accuracy = Math.round(((good + ok * 0.6) / total) * 100);
+            const avgOffset = offsets.length
+                ? Math.round(offsets.reduce((sum, o) => sum + o, 0) / offsets.length)
+                : 0;
+            const tendency = Math.round(center);
+            // 多余敲击每次扣 1 分，最多扣 30 分，避免个别误触发把成绩压到底
+            const penalty = Math.min(30, state.extras);
+            const score = Math.max(0, accuracy - penalty);
+
+            el("stat-good").textContent = good;
+            el("stat-early").textContent = offsets.filter((o) => o < -GOOD_MS).length;
+            el("stat-late").textContent = offsets.filter((o) => o > GOOD_MS).length;
+            el("stat-missed").textContent = missedSteps.length;
+            el("stat-extra").textContent = state.extras;
+            el("stat-accuracy").textContent = `${accuracy}%`;
+            el("stat-offset").textContent = offsets.length ? avgOffset : "-";
+            el("stat-score").textContent = score;
+
+            const grade = GRADE_BANDS.reduce((result, [name, threshold]) => result || (score >= threshold ? name : null), null) ?? "D";
+            const gradeText = {
+                S: "节奏非常稳定，可以尝试更快的速度或更复杂的节奏型。",
+                A: "节奏把握得很好，注意让每一次击打都更均匀。",
+                B: "基本跟上了，建议放慢速度，先把每个音找准。",
+                C: "还有些抢拍或拖拍，先练习四分音符，再逐步加难。",
+                D: "别急，先把速度降到 60 左右，跟着节拍器慢慢敲。",
+            }[grade];
+
+            const tendencyText = Math.abs(tendency) <= 30
+                ? "已自动对齐你的击打习惯"
+                : `整体偏${tendency > 0 ? "晚" : "早"}约 ${Math.abs(tendency)} 毫秒，可用下方“击打延迟校准”微调`;
+
+            el("grade").textContent = grade;
+            el("grade-text").textContent =
+                `准确率 ${accuracy}%` +
+                (penalty > 0 ? `，多余敲击 ${state.extras} 次扣 ${penalty} 分` : "") +
+                `，最终得分 ${score}。${gradeText}（平均偏差 ${offsets.length ? avgOffset : 0} 毫秒，${tendencyText}）`;
+            el("result-panel").style.display = "block";
+            stopTraining(true);
+
+            const diagnosis = buildDiagnosis({
+                missed: missedSteps.length,
+                extras: state.extras,
+                score,
+                tendency,
+            });
+            el("diagnosis-text").textContent = `诊断建议：${diagnosis}`;
+            el("report-panel").style.display = "block";
+            drawReportCard({ grade, accuracy, avgOffset, missed: missedSteps.length, extras: state.extras, diagnosis, offsets });
+
+            const timelineItems = state.expected.map((step) => ({
+                offset: state.matched.has(step) ? state.matched.get(step) - center : null,
+            }));
+            el("timeline-panel").style.display = "block";
+            drawTimelineChart(timelineItems);
+
+            const levelResult = handleLevelResult(score);
+            const nextButton = el("next-level-btn");
+            if (levelResult && levelResult.unlocked) {
+                nextButton.style.display = "inline-block";
+                nextButton.textContent = `进入第 ${levelResult.unlocked} 关`;
+                nextButton.dataset.level = String(levelResult.unlocked);
+                el("status").textContent = `训练结束，已解锁第 ${levelResult.unlocked} 关`;
+            } else {
+                nextButton.style.display = "none";
+                el("status").textContent = "训练结束";
+            }
+
+            saveRecord({ accuracy, avgOffset, score });
+        }
+
+        function playDemo() {
+            stopTraining(true);
+            buildPattern();
+            startAudio();
+            const context = state.audioContext;
+            const start = context.currentTime + 0.3;
+            const expectedSet = new Set(state.expected);
+
+            // 节奏型用明亮的音色，节拍器只在没有被节奏型占用的拍点上补一声
+            for (let step = 0; step < state.totalSteps; step++) {
+                const stepInBar = step % (state.beats * STEPS_PER_BEAT);
+                const isBeatStart = stepInBar % STEPS_PER_BEAT === 0;
+                const time = start + step * state.stepDuration;
+                if (expectedSet.has(step)) {
+                    playClick(time, stepInBar === 0, true);
+                } else if (isBeatStart) {
+                    playClick(time, stepInBar === 0, false);
+                }
+            }
+
+            // 示范播放时让网格跟着走，能看清节奏落在哪些格子上
+            state.demoActive = true;
+            el("status").textContent = "正在示范播放……";
+            const highlight = () => {
+                if (!state.demoActive) return;
+                const elapsed = context.currentTime - start;
+                const index = Math.floor(elapsed / state.stepDuration);
+                state.cells.forEach((cell, cellIndex) => {
+                    if (cell) cell.classList.toggle("now", cellIndex === index);
+                });
+                if (index < state.totalSteps) {
+                    window.requestAnimationFrame(highlight);
+                } else {
+                    state.demoActive = false;
+                    state.cells.forEach((cell) => {
+                        if (cell) cell.classList.remove("now");
+                    });
+                    el("status").textContent = "示范播放结束，可以开始练习了";
+                }
+            };
+            window.requestAnimationFrame(highlight);
+        }
+
+        function saveRecord({ accuracy, avgOffset, score }) {
+            const records = loadRecords();
+            records.unshift({
+                time: new Date().toLocaleString("zh-CN"),
+                timestamp: Date.now(),
+                student: state.student,
+                bpm: state.bpm,
+                signature: el("time-signature").value,
+                pattern: PATTERNS[el("pattern-select").value].label,
+                cue: el("cue-mode").value,
+                accuracy,
+                avgOffset,
+                score,
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0, 30)));
+            renderRecords();
+        }
+
+        function loadRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function renderRecords() {
+            const records = loadRecords();
+            drawProgressChart();
+            updateStudentLists(records);
+            renderStudentSummary(records);
+            const body = el("records-body");
+            if (!records.length) {
+                body.innerHTML = '<tr><td colspan="9" class="hint">暂无记录</td></tr>';
+                return;
+            }
+            body.innerHTML = records
+                .slice(0, 10)
+                .map(
+                    (record) =>
+                        `<tr><td>${record.student || "本人"}</td><td>${record.time}</td><td>${record.bpm}</td><td>${record.signature}</td><td>${record.pattern}</td><td>${cueLabel(record.cue)}</td><td>${record.accuracy}%</td><td>${record.avgOffset} ms</td><td>${record.score}</td></tr>`
+                )
+                .join("");
+        }
+
+        function exportCsv() {
+            const records = loadRecords();
+            const header = "练习者,时间,速度,拍号,节奏型,提示模式,准确率,平均偏差(ms),得分";
+            const rows = records.map(
+                (r) => `${r.student || "本人"},${r.time},${r.bpm},${r.signature},${r.pattern},${cueLabel(r.cue)},${r.accuracy},${r.avgOffset},${r.score}`
+            );
+            const blob = new Blob(["\ufeff" + [header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "节奏训练记录.csv";
+            link.click();
+        }
+
+        el("bpm-range").addEventListener("input", (event) => updateBpm(event.target.value));
+        el("bpm-input").addEventListener("change", (event) => updateBpm(event.target.value));
+            el("time-signature").addEventListener("change", buildPattern);
+        el("pattern-select").addEventListener("change", () => {
+            buildPattern();
+            updateCustomPanel();
+        });
+            el("bar-count").addEventListener("change", buildPattern);
+            el("cue-mode").addEventListener("change", () => {
+                buildPattern();
+                el("status").textContent = el("cue-mode").value === "full"
+                    ? "全程节拍模式：节拍器会一直响"
+                    : "内化节拍模式：只给 4 拍预备，之后靠内心的拍子";
+            });
+        el("sensitivity").addEventListener("input", (event) => {
+            const value = Number(event.target.value);
+            el("sensitivity-display").textContent = value <= 3 ? "低" : value <= 7 ? "中" : "高";
+        });
+        el("latency").addEventListener("input", (event) => {
+            el("offset-display").textContent = event.target.value;
+        });
+
+        el("start-btn").addEventListener("click", () => {
+            if (el("mic-toggle").checked) {
+                startTraining("mic");
+            } else if (el("midi-toggle").checked) {
+                startTraining("midi");
+            } else {
+                el("status").textContent = "请至少开启一种输入方式：麦克风或 MIDI 设备。";
+            }
+        });
+        el("stop-btn").addEventListener("click", () => stopTraining(false));
+        el("demo-btn").addEventListener("click", playDemo);
+        el("export-btn").addEventListener("click", exportCsv);
+        el("clear-btn").addEventListener("click", () => {
+            localStorage.removeItem(STORAGE_KEY);
+            renderRecords();
+        });
+
+        const pad = el("pad");
+        const padDown = (event) => {
+            event.preventDefault();
+            pad.classList.add("active");
+            registerHit("pad");
+        };
+        const padUp = () => pad.classList.remove("active");
+        pad.addEventListener("mousedown", padDown);
+        pad.addEventListener("touchstart", padDown, { passive: false });
+        pad.addEventListener("mouseup", padUp);
+        pad.addEventListener("touchend", padUp);
+
+        window.addEventListener("keydown", (event) => {
+            if (event.code === "Space" && !event.repeat) {
+                event.preventDefault();
+                pad.classList.add("active");
+                registerHit("keyboard");
+            }
+        });
+        window.addEventListener("keyup", (event) => {
+            if (event.code === "Space") pad.classList.remove("active");
+        });
+
+        // ==================== 关卡系统 ====================
+        const LEVEL_KEY = "rhythm-level-progress";
+
+        const LEVELS = [
+            { name: "四分音符 60", bpm: 60, pattern: "quarter", bars: 2, cue: "full" },
+            { name: "四分音符 80", bpm: 80, pattern: "quarter", bars: 2, cue: "full" },
+            { name: "八分音符 60", bpm: 60, pattern: "eighth", bars: 2, cue: "full" },
+            { name: "八分音符 80", bpm: 80, pattern: "eighth", bars: 2, cue: "full" },
+            { name: "长短交替 70", bpm: 70, pattern: "mix", bars: 2, cue: "full" },
+            { name: "含休止符 70", bpm: 70, pattern: "rests", bars: 2, cue: "full" },
+            { name: "十六分音符 60", bpm: 60, pattern: "sixteenth", bars: 2, cue: "full" },
+            { name: "附点节奏 60", bpm: 60, pattern: "dotted", bars: 2, cue: "full" },
+            { name: "隔小节提示 70", bpm: 70, pattern: "eighth", bars: 4, cue: "alternate" },
+            { name: "内化节拍 70", bpm: 70, pattern: "eighth", bars: 2, cue: "countin" },
+            { name: "内化节拍 90", bpm: 90, pattern: "mix", bars: 4, cue: "countin" },
+            { name: "内化节拍 100", bpm: 100, pattern: "sixteenth", bars: 2, cue: "countin" },
+        ];
+
+        const levelState = { unlocked: 1, passes: {}, current: 1 };
+
+        function cueLabel(cue) {
+            if (cue === "alternate") return "隔小节给节拍";
+            if (cue === "countin") return "内化节拍";
+            return "全程跟拍";
+        }
+
+        function loadLevelState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(LEVEL_KEY) || "{}");
+                if (saved && typeof saved === "object") {
+                    levelState.unlocked = Math.min(Math.max(saved.unlocked || 1, 1), LEVELS.length);
+                    levelState.passes = saved.passes || {};
+                    levelState.current = Math.min(Math.max(saved.current || 1, 1), LEVELS.length);
+                }
+            } catch (error) {
+                // 读取失败时使用默认进度
+            }
+        }
+
+        function saveLevelState() {
+            try {
+                localStorage.setItem(LEVEL_KEY, JSON.stringify(levelState));
+            } catch (error) {
+                // 存储不可用时忽略
+            }
+        }
+
+        function renderLevelPath() {
+            const path = el("level-path");
+            if (!path) return;
+            path.innerHTML = "";
+
+            LEVELS.forEach((level, index) => {
+                const number = index + 1;
+                const done = (levelState.passes[number] || 0) >= 2;
+                const locked = number > levelState.unlocked;
+                const chip = document.createElement("div");
+                chip.className = "level-chip";
+                if (done) chip.classList.add("done");
+                if (locked) chip.classList.add("locked");
+                if (number === levelState.current) chip.classList.add("current");
+                chip.innerHTML = `<span>第 ${number} 关</span><span class="level-name">${level.name}</span>`;
+                if (!locked) {
+                    chip.addEventListener("click", () => applyLevel(number));
+                }
+                path.appendChild(chip);
+            });
+
+            const level = LEVELS[levelState.current - 1];
+            const passes = levelState.passes[levelState.current] || 0;
+            if (el("level-summary")) {
+                el("level-summary").textContent = `第 ${levelState.current} 关 / 共 ${LEVELS.length} 关`;
+            }
+            if (el("level-task")) {
+                el("level-task").textContent =
+                    `本关要求：${level.bpm} BPM、${PATTERNS[level.pattern].label}、${level.bars} 小节、${cueLabel(level.cue)}；` +
+                    `连续两次达到 B 以上即解锁下一关（已完成 ${Math.min(passes, 2)}/2）。`;
+            }
+        }
+
+        function applyLevel(number) {
+            const level = LEVELS[number - 1];
+            if (!level) return;
+            levelState.current = number;
+            saveLevelState();
+            updateBpm(level.bpm);
+            el("pattern-select").value = level.pattern;
+            el("bar-count").value = String(level.bars);
+            el("cue-mode").value = level.cue;
+            buildPattern();
+            renderLevelPath();
+            el("status").textContent = `已切换到第 ${number} 关：${level.name}`;
+        }
+
+        function handleLevelResult(score) {
+            const number = levelState.current;
+            if (!LEVELS[number - 1]) return null;
+
+            if (score >= 62) {
+                levelState.passes[number] = (levelState.passes[number] || 0) + 1;
+                let unlocked = null;
+                if (levelState.passes[number] >= 2 && number === levelState.unlocked && number < LEVELS.length) {
+                    levelState.unlocked = number + 1;
+                    levelState.passes[number] = 2;
+                    unlocked = number + 1;
+                }
+                saveLevelState();
+                renderLevelPath();
+                return { passed: true, unlocked };
+            }
+
+            renderLevelPath();
+            return { passed: false, unlocked: null };
+        }
+
+        // ==================== 诊断建议 ====================
+        function buildDiagnosis({ missed, extras, score, tendency }) {
+            const notes = [];
+            const total = state.totalNotes || 1;
+
+            if (missed / total > 0.2) {
+                notes.push(`漏敲比较多（${missed} 个音没敲到），先把速度降到 60 左右，确保每一拍都敲实。`);
+            }
+            if (extras > 3) {
+                notes.push(`出现 ${extras} 次多余敲击，注意一拍只敲一次。`);
+            }
+            if (Math.abs(tendency) > 40) {
+                notes.push(`整体偏${tendency > 0 ? "晚" : "早"}约 ${Math.abs(tendency)} 毫秒，可以调整“击打延迟校准”。`);
+            }
+
+            const beats = state.beats || 4;
+            const buckets = new Map();
+            for (const entry of state.matched.entries()) {
+                const beatIndex = Math.floor((entry[0] % (beats * STEPS_PER_BEAT)) / STEPS_PER_BEAT) + 1;
+                if (!buckets.has(beatIndex)) buckets.set(beatIndex, []);
+                buckets.get(beatIndex).push(entry[1]);
+            }
+            let worst = null;
+            for (const entry of buckets.entries()) {
+                const values = entry[1];
+                if (values.length < 2) continue;
+                const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+                if (!worst || Math.abs(average) > Math.abs(worst.average)) {
+                    worst = { beat: entry[0], average };
+                }
+            }
+            if (worst && Math.abs(worst.average) > 55) {
+                notes.push(`第 ${worst.beat} 拍最容易${worst.average > 0 ? "拖拍" : "抢拍"}，可以单独放慢这一拍练习。`);
+            }
+
+            if (!notes.length) {
+                if (score >= 90) notes.push("节奏很稳定，可以加快速度或换更复杂的节奏型。");
+                else if (score >= 75) notes.push("整体不错，注意让每一拍的力度和间隔更均匀。");
+                else notes.push("先保持现在的速度多练几遍，稳定之后再提速。");
+            }
+            return notes.slice(0, 3).join(" ");
+        }
+
+        // ==================== 成绩单 ====================
+        function drawReportCard({ grade, accuracy, avgOffset, missed, extras, diagnosis, offsets }) {
+            const canvas = el("report-canvas");
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#101a22";
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = "#eef3f7";
+            ctx.font = "bold 24px 'Microsoft YaHei', sans-serif";
+            ctx.fillText("节奏闯关成绩单", 32, 50);
+            ctx.font = "14px 'Microsoft YaHei', sans-serif";
+            ctx.fillStyle = "#9fb0bd";
+            ctx.fillText(new Date().toLocaleString("zh-CN"), 32, 76);
+
+            ctx.fillStyle = "#2dd4bf";
+            ctx.font = "bold 88px 'Microsoft YaHei', sans-serif";
+            ctx.fillText(grade, 32, 176);
+
+            ctx.fillStyle = "#eef3f7";
+            ctx.font = "17px 'Microsoft YaHei', sans-serif";
+            ctx.fillText(`准确率 ${accuracy}%`, 170, 130);
+            ctx.fillText(`平均偏差 ${avgOffset} 毫秒`, 170, 158);
+            ctx.fillText(`漏敲 ${missed} 次 · 多余敲击 ${extras} 次`, 170, 186);
+            ctx.fillStyle = "#9fb0bd";
+            ctx.font = "14px 'Microsoft YaHei', sans-serif";
+            ctx.fillText(`${state.bpm} BPM · ${el("time-signature").value} · ${PATTERNS[el("pattern-select").value].label} · ${cueLabel(state.cueMode)}`, 170, 214);
+
+            // 偏差分布
+            const chartLeft = 32;
+            const chartTop = 246;
+            const chartWidth = width - 64;
+            const chartHeight = 96;
+            ctx.strokeStyle = "#2a3642";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(chartLeft, chartTop, chartWidth, chartHeight);
+            ctx.strokeStyle = "#3d4b58";
+            ctx.beginPath();
+            ctx.moveTo(chartLeft + chartWidth / 2, chartTop);
+            ctx.lineTo(chartLeft + chartWidth / 2, chartTop + chartHeight);
+            ctx.stroke();
+
+            const buckets = new Array(13).fill(0);
+            offsets.forEach((value) => {
+                const index = Math.min(12, Math.max(0, Math.floor((value + 180) / 30)));
+                buckets[index] += 1;
+            });
+            const maxBucket = Math.max(1, ...buckets);
+            const barWidth = chartWidth / buckets.length;
+            buckets.forEach((count, index) => {
+                const barHeight = (count / maxBucket) * (chartHeight - 12);
+                ctx.fillStyle = index === 6 ? "#2dd4bf" : "#3f6f8f";
+                ctx.fillRect(chartLeft + index * barWidth + 2, chartTop + chartHeight - barHeight, barWidth - 4, barHeight);
+            });
+            ctx.fillStyle = "#9fb0bd";
+            ctx.font = "12px 'Microsoft YaHei', sans-serif";
+            ctx.fillText("偏早", chartLeft, chartTop + chartHeight + 18);
+            ctx.fillText("准时", chartLeft + chartWidth / 2 - 14, chartTop + chartHeight + 18);
+            ctx.fillText("偏晚", chartLeft + chartWidth - 26, chartTop + chartHeight + 18);
+
+            ctx.fillStyle = "#cbd5e1";
+            ctx.font = "14px 'Microsoft YaHei', sans-serif";
+            wrapCanvasText(ctx, `建议：${diagnosis}`, chartLeft, chartTop + chartHeight + 46, chartWidth, 20);
+        }
+
+        function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+            let line = "";
+            let offsetY = y;
+            for (const character of text) {
+                const test = line + character;
+                if (ctx.measureText(test).width > maxWidth && line) {
+                    ctx.fillText(line, x, offsetY);
+                    line = character;
+                    offsetY += lineHeight;
+                } else {
+                    line = test;
+                }
+            }
+            if (line) ctx.fillText(line, x, offsetY);
+        }
+
+        function saveReportCard() {
+            const canvas = el("report-canvas");
+            if (!canvas) return;
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `节奏闯关成绩单_${new Date().toLocaleDateString("zh-CN").replace(/\//g, "-")}.png`;
+                link.click();
+            });
+        }
+
+        // ==================== 进步曲线 ====================
+        function drawProgressChart() {
+            const canvas = el("progress-chart");
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+            const records = loadRecords().slice(0, 20).reverse();
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#141a21";
+            ctx.fillRect(0, 0, width, height);
+
+            const left = 48;
+            const top = 24;
+            const chartWidth = width - left - 24;
+            const chartHeight = height - top - 34;
+
+            ctx.strokeStyle = "#2a3642";
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = top + (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(left, y);
+                ctx.lineTo(left + chartWidth, y);
+                ctx.stroke();
+                ctx.fillStyle = "#7d8b98";
+                ctx.font = "12px 'Microsoft YaHei', sans-serif";
+                ctx.fillText(String(100 - i * 25), 14, y + 4);
+            }
+
+            if (!records.length) {
+                ctx.fillStyle = "#9fb0bd";
+                ctx.font = "15px 'Microsoft YaHei', sans-serif";
+                ctx.fillText("还没有练习记录，完成一次练习后这里会出现进步曲线", left + 20, top + chartHeight / 2);
+                return;
+            }
+
+            const stepX = records.length > 1 ? chartWidth / (records.length - 1) : 0;
+            const series = [
+                { key: "accuracy", color: "#2dd4bf", label: "准确率" },
+                { key: "score", color: "#f59e0b", label: "得分" },
+            ];
+
+            series.forEach((item) => {
+                ctx.strokeStyle = item.color;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                records.forEach((record, index) => {
+                    const value = Number(record[item.key]) || 0;
+                    const x = left + index * stepX;
+                    const y = top + chartHeight - (Math.max(0, Math.min(100, value)) / 100) * chartHeight;
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                ctx.fillStyle = item.color;
+                records.forEach((record, index) => {
+                    const value = Number(record[item.key]) || 0;
+                    const x = left + index * stepX;
+                    const y = top + chartHeight - (Math.max(0, Math.min(100, value)) / 100) * chartHeight;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+
+            ctx.fillStyle = "#2dd4bf";
+            ctx.font = "13px 'Microsoft YaHei', sans-serif";
+            ctx.fillText("准确率", left, height - 10);
+            ctx.fillStyle = "#f59e0b";
+            ctx.fillText("得分", left + 60, height - 10);
+            ctx.fillStyle = "#7d8b98";
+            ctx.fillText(`最近 ${records.length} 次练习（从早到晚）`, left + 130, height - 10);
+        }
+
+        el("save-report-btn").addEventListener("click", saveReportCard);
+        el("next-level-btn").addEventListener("click", (event) => {
+            const level = Number(event.target.dataset.level || 0);
+            if (level) applyLevel(level);
+        });
+
+        // ==================== 自定义节奏型 ====================
+        const CUSTOM_KEY = "rhythm-custom-pattern";
+
+        function loadCustomPattern() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]");
+                if (Array.isArray(saved) && saved.length) {
+                    state.customHits = saved
+                        .map((value) => Number(value))
+                        .filter((value) => Number.isInteger(value) && value >= 0 && value < 16)
+                        .sort((a, b) => a - b);
+                }
+            } catch (error) {
+                // 读取失败时使用默认节奏型
+            }
+        }
+
+        function saveCustomPattern() {
+            try {
+                localStorage.setItem(CUSTOM_KEY, JSON.stringify(state.customHits));
+            } catch (error) {
+                // 存储不可用时忽略
+            }
+        }
+
+        function renderCustomEditor() {
+            const grid = el("custom-grid");
+            if (!grid) return;
+            grid.innerHTML = "";
+            for (let beat = 0; beat < 4; beat++) {
+                const group = document.createElement("div");
+                group.className = "custom-beat";
+                for (let sub = 0; sub < 4; sub++) {
+                    const step = beat * 4 + sub;
+                    const cell = document.createElement("div");
+                    cell.className = "custom-cell" + (state.customHits.includes(step) ? " on" : "");
+                    cell.title = `第 ${beat + 1} 拍第 ${sub + 1} 个十六分位置`;
+                    cell.dataset.step = String(step);
+                    cell.addEventListener("click", () => {
+                        state.customHits = state.customHits.includes(step)
+                            ? state.customHits.filter((value) => value !== step)
+                            : state.customHits.concat(step).sort((a, b) => a - b);
+                        saveCustomPattern();
+                        renderCustomEditor();
+                        if (el("pattern-select").value === "custom") buildPattern();
+                    });
+                    group.appendChild(cell);
+                }
+                grid.appendChild(group);
+            }
+        }
+
+        function updateCustomPanel() {
+            const panel = el("custom-panel");
+            if (!panel) return;
+            const isCustom = el("pattern-select").value === "custom";
+            panel.style.display = isCustom ? "block" : "none";
+            if (isCustom) renderCustomEditor();
+        }
+
+        el("custom-clear-btn").addEventListener("click", () => {
+            state.customHits = [];
+            saveCustomPattern();
+            renderCustomEditor();
+            buildPattern();
+        });
+
+        el("custom-reset-btn").addEventListener("click", () => {
+            state.customHits = [0, 4, 8, 12];
+            saveCustomPattern();
+            renderCustomEditor();
+            buildPattern();
+        });
+
+        // ==================== 练习者与班级统计 ====================
+        const STUDENT_KEY = "rhythm-current-student";
+
+        function loadStudent() {
+            try {
+                const saved = localStorage.getItem(STUDENT_KEY);
+                if (saved) state.student = saved;
+            } catch (error) {
+                // 忽略
+            }
+            if (el("student-name")) {
+                el("student-name").value = state.student === "本人" ? "" : state.student;
+            }
+        }
+
+        function updateStudentLists(records) {
+            const list = el("student-list");
+            if (!list) return;
+            const names = new Set();
+            records.forEach((record) => names.add(record.student || "本人"));
+            list.innerHTML = "";
+            names.forEach((name) => {
+                const option = document.createElement("option");
+                option.value = name;
+                list.appendChild(option);
+            });
+        }
+
+        function renderStudentSummary(records) {
+            const target = el("student-summary");
+            if (!target) return;
+            if (!records.length) {
+                target.innerHTML = "";
+                return;
+            }
+            const map = new Map();
+            records.forEach((record) => {
+                const name = record.student || "本人";
+                if (!map.has(name)) map.set(name, { count: 0, accuracy: 0, score: 0 });
+                const item = map.get(name);
+                item.count += 1;
+                item.accuracy += Number(record.accuracy) || 0;
+                item.score += Number(record.score) || 0;
+            });
+            const rows = Array.from(map.entries())
+                .map(([name, item]) =>
+                    `<tr><td>${name}</td><td>${item.count}</td><td>${Math.round(item.accuracy / item.count)}%</td><td>${Math.round(item.score / item.count)}</td></tr>`)
+                .join("");
+            target.innerHTML =
+                '<table class="records"><thead><tr><th>练习者</th><th>练习次数</th><th>平均准确率</th><th>平均得分</th></tr></thead><tbody>' +
+                rows +
+                "</tbody></table>";
+        }
+
+        el("student-name").addEventListener("change", (event) => {
+            const value = event.target.value.trim();
+            state.student = value || "本人";
+            try {
+                localStorage.setItem(STUDENT_KEY, state.student);
+            } catch (error) {
+                // 忽略
+            }
+        });
+
+        // ==================== 击打偏差图 ====================
+        function drawTimelineChart(items) {
+            const canvas = el("timeline-canvas");
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#141a21";
+            ctx.fillRect(0, 0, width, height);
+
+            const left = 58;
+            const top = 18;
+            const chartWidth = width - left - 24;
+            const chartHeight = height - top - 42;
+            const maxOffset = 200;
+            const yFor = (value) =>
+                top + chartHeight / 2 - (Math.max(-maxOffset, Math.min(maxOffset, value)) / maxOffset) * (chartHeight / 2);
+
+            ctx.fillStyle = "rgba(16, 185, 129, 0.16)";
+            ctx.fillRect(left, yFor(GOOD_MS), chartWidth, yFor(-GOOD_MS) - yFor(GOOD_MS));
+
+            ctx.strokeStyle = "#2a3642";
+            ctx.lineWidth = 1;
+            [-200, -100, 0, 100, 200].forEach((value) => {
+                const y = yFor(value);
+                ctx.beginPath();
+                ctx.moveTo(left, y);
+                ctx.lineTo(left + chartWidth, y);
+                ctx.stroke();
+                ctx.fillStyle = "#7d8b98";
+                ctx.font = "12px 'Microsoft YaHei', sans-serif";
+                ctx.fillText(String(value), 16, y + 4);
+            });
+
+            const total = Math.max(1, items.length);
+            const stepX = total > 1 ? chartWidth / (total - 1) : 0;
+
+            items.forEach((item, index) => {
+                const x = left + index * stepX;
+                if (item.offset === null) {
+                    ctx.fillStyle = "#ef4444";
+                    ctx.font = "14px 'Microsoft YaHei', sans-serif";
+                    ctx.fillText("✕", x - 5, top + chartHeight + 20);
+                    return;
+                }
+                const y = yFor(item.offset);
+                const absolute = Math.abs(item.offset);
+                ctx.fillStyle = absolute <= GOOD_MS ? "#2dd4bf" : absolute <= OK_MS ? "#eab308" : "#ef4444";
+                ctx.beginPath();
+                ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.fillStyle = "#7d8b98";
+            ctx.font = "12px 'Microsoft YaHei', sans-serif";
+            ctx.fillText("每个音的顺序（从左到右）", left, height - 8);
+            ctx.fillText("✕ 表示漏敲", left + chartWidth - 90, height - 8);
+        }
+
+        loadLevelState();
+        loadCustomPattern();
+        loadStudent();
+
+        // ==================== MIDI 设备输入 ====================
+        const MIDI_KEY = "rhythm-midi-enabled";
+        let midiAccess = null;
+
+        function updateMidiStatus(text) {
+            if (el("midi-status")) el("midi-status").textContent = text;
+        }
+
+        function bindMidiInputs() {
+            if (!midiAccess) return;
+            const names = [];
+            midiAccess.inputs.forEach((input) => {
+                names.push(input.name || "MIDI 设备");
+                input.onmidimessage = handleMidiMessage;
+            });
+            if (el("midi-toggle") && names.length) el("midi-toggle").checked = true;
+            updateMidiStatus(
+                names.length
+                    ? `已连接：${names.join("、")}；敲击电子鼓或键盘会直接计入成绩。`
+                    : "已开启 MIDI，但还没有检测到设备，请检查 USB 连接。"
+            );
+        }
+
+        async function enableMidi() {
+            if (!navigator.requestMIDIAccess) {
+                updateMidiStatus("当前环境不支持 MIDI 输入，请改用 Edge 或 Chrome 打开。");
+                return;
+            }
+            try {
+                midiAccess = await navigator.requestMIDIAccess();
+                try {
+                    localStorage.setItem(MIDI_KEY, "1");
+                } catch (error) {
+                    // 忽略
+                }
+                bindMidiInputs();
+                midiAccess.onstatechange = bindMidiInputs;
+            } catch (error) {
+                updateMidiStatus(`无法使用 MIDI：${error.message}`);
+            }
+        }
+
+        function handleMidiMessage(event) {
+            const data = event.data || [];
+            const status = data[0] & 0xf0;
+            const velocity = data[2] || 0;
+            if (status !== 0x90 || velocity === 0) return;
+            const context = state.audioContext;
+            if (!context) return;
+            const offsetSeconds =
+                typeof event.timeStamp === "number" && event.timeStamp > 0
+                    ? (event.timeStamp - performance.now()) / 1000
+                    : 0;
+            registerHitAt(context.currentTime + offsetSeconds, "midi");
+        }
+
+        el("midi-toggle").addEventListener("change", (event) => {
+            if (event.target.checked) {
+                enableMidi();
+            } else {
+                if (midiAccess) {
+                    midiAccess.inputs.forEach((input) => {
+                        input.onmidimessage = null;
+                    });
+                }
+                updateMidiStatus("已关闭 MIDI 输入。");
+            }
+        });
+
+        try {
+            if (localStorage.getItem(MIDI_KEY) === "1") enableMidi();
+        } catch (error) {
+            // 忽略
+        }
+
+        // ==================== 回放我的击打 ====================
+        function playbackMyHits() {
+            const context = state.audioContext;
+            if (!context || !state.rawMatched || !state.rawMatched.size) {
+                el("status").textContent = "还没有可回放的击打，先完成一次练习。";
+                return;
+            }
+            const start = context.currentTime + 0.5;
+            for (let step = 0; step < state.totalSteps; step++) {
+                const stepInBar = step % (state.beats * STEPS_PER_BEAT);
+                if (stepInBar % STEPS_PER_BEAT === 0) {
+                    playClick(start + step * state.stepDuration, stepInBar === 0, false);
+                }
+            }
+            state.rawMatched.forEach((offset, step) => {
+                playClick(start + step * state.stepDuration + offset / 1000, true, true);
+            });
+            el("status").textContent = "正在回放：细的声音是标准格点，亮的声音是你当时的击打。";
+        }
+
+        el("playback-btn").addEventListener("click", playbackMyHits);
+
+        // ==================== 练习周报 ====================
+        function generateWeeklyReport() {
+            const records = loadRecords();
+            if (!records.length) {
+                el("status").textContent = "还没有练习记录，先练一次再生成周报。";
+                return null;
+            }
+            const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+            const recent = records.filter((record) => (record.timestamp || 0) >= weekAgo);
+            const pool = recent.length ? recent : records.slice(0, 10);
+            const count = pool.length;
+            const average = (key) => Math.round(pool.reduce((sum, record) => sum + (Number(record[key]) || 0), 0) / count);
+
+            const avgAccuracy = average("accuracy");
+            const avgScore = average("score");
+            const avgOffset = average("avgOffset");
+            const best = pool.reduce((max, record) => Math.max(max, Number(record.score) || 0), 0);
+            const students = Array.from(new Set(pool.map((record) => record.student || "本人"))).slice(0, 8).join("、");
+
+            const half = Math.ceil(count / 2);
+            const recentHalf = pool.slice(0, half);
+            const earlierHalf = pool.slice(half);
+            const trend = earlierHalf.length
+                ? Math.round(recentHalf.reduce((sum, r) => sum + (Number(r.score) || 0), 0) / recentHalf.length) -
+                  Math.round(earlierHalf.reduce((sum, r) => sum + (Number(r.score) || 0), 0) / earlierHalf.length)
+                : 0;
+
+            const suggestion = trend > 5
+                ? `近期得分比之前提高约 ${trend} 分，可以尝试提高速度或更换更复杂的节奏型。`
+                : trend < -5
+                    ? `近期得分比之前下降约 ${Math.abs(trend)} 分，建议回到上一关巩固，或降低速度重新稳定。`
+                    : "整体保持稳定，可以按当前速度继续练习，或尝试新的节奏型。";
+
+            const data = { count, avgAccuracy, avgScore, avgOffset, best, students, trend, suggestion, pool, recent: recent.length > 0 };
+            drawWeeklyReport(data);
+            return data;
+        }
+
+        function drawWeeklyReport(data) {
+            const canvas = el("weekly-canvas");
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#101a22";
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = "#eef3f7";
+            ctx.font = "bold 22px 'Microsoft YaHei', sans-serif";
+            ctx.fillText("节奏闯关练习周报", 32, 48);
+            ctx.font = "14px 'Microsoft YaHei', sans-serif";
+            ctx.fillStyle = "#9fb0bd";
+            ctx.fillText(`${data.recent ? "最近 7 天" : `最近 ${data.count} 次练习`} · 练习者：${data.students}`, 32, 74);
+
+            ctx.fillStyle = "#eef3f7";
+            ctx.font = "17px 'Microsoft YaHei', sans-serif";
+            ctx.fillText(`练习次数 ${data.count} 次`, 32, 120);
+            ctx.fillText(`平均准确率 ${data.avgAccuracy}%`, 32, 152);
+            ctx.fillText(`平均得分 ${data.avgScore}`, 32, 184);
+            ctx.fillText(`最高得分 ${data.best}`, 32, 216);
+            ctx.fillText(`平均偏差 ${data.avgOffset} 毫秒`, 32, 248);
+
+            const chartLeft = 320;
+            const chartTop = 104;
+            const chartWidth = width - chartLeft - 32;
+            const chartHeight = 150;
+            ctx.strokeStyle = "#2a3642";
+            ctx.strokeRect(chartLeft, chartTop, chartWidth, chartHeight);
+
+            const items = data.pool.slice(0, 16).reverse();
+            const barWidth = chartWidth / Math.max(1, items.length);
+            items.forEach((record, index) => {
+                const value = Math.max(0, Math.min(100, Number(record.accuracy) || 0));
+                const barHeight = (value / 100) * (chartHeight - 10);
+                ctx.fillStyle = "#2dd4bf";
+                ctx.fillRect(chartLeft + index * barWidth + 2, chartTop + chartHeight - barHeight, barWidth - 4, barHeight);
+            });
+            ctx.fillStyle = "#7d8b98";
+            ctx.font = "12px 'Microsoft YaHei', sans-serif";
+            ctx.fillText("每次练习的准确率（左早右晚）", chartLeft, chartTop + chartHeight + 18);
+
+            ctx.fillStyle = "#cbd5e1";
+            ctx.font = "14px 'Microsoft YaHei', sans-serif";
+            wrapCanvasText(ctx, `建议：${data.suggestion}`, 32, 300, width - 64, 20);
+        }
+
+        function saveWeeklyReport() {
+            const canvas = el("weekly-canvas");
+            if (!canvas) return;
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "节奏闯关练习周报.png";
+                link.click();
+            });
+        }
+
+        el("weekly-btn").addEventListener("click", generateWeeklyReport);
+        el("weekly-save-btn").addEventListener("click", () => {
+            if (generateWeeklyReport()) saveWeeklyReport();
+        });
+
+        applyLevel(levelState.current);
+        updateCustomPanel();
+        buildPattern();
+        renderLevelPath();
+        renderRecords();
+    </script>
+</body>
+</html>

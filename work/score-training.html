@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="乐感工坊">
+    <title>视奏训练 - 乐感工坊</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="guide-styles.css">
+    <script src="page-memory.js"></script>
+    <script src="pitch-detector.js"></script>
+    <style>
+        .st-wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+        .st-panel {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .st-row { display: flex; flex-wrap: wrap; gap: 12px; }
+        .st-field { flex: 1 1 190px; }
+        .st-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .st-field select,
+        .st-field input[type="number"],
+        .st-field textarea {
+            width: 100%;
+            padding: 9px;
+            font-size: 0.95rem;
+            background: var(--background);
+            color: var(--text-primary);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        .st-field textarea { min-height: 76px; resize: vertical; }
+        .st-btn {
+            padding: 12px 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .st-btn.stop { background: #ef4444; }
+        .st-btn.ghost {
+            background: var(--surface-light);
+            color: var(--text-primary);
+            border: 2px solid var(--primary-color);
+        }
+        .st-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .st-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+        #roll-canvas {
+            width: 100%;
+            background: var(--surface-light);
+            border-radius: 12px;
+            display: block;
+        }
+        .st-stats { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-around; }
+        .st-stat { text-align: center; min-width: 96px; }
+        .st-stat .num {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+        }
+        .st-stat .lbl { font-size: 0.75rem; color: var(--text-secondary); }
+        .st-hint { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+        .st-status {
+            min-height: 1.5em;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent-happy, #10b981);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .st-grade { font-size: 2.4rem; font-weight: 800; text-align: center; }
+        table.st-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        table.st-table th, table.st-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="main-nav"></nav>
+
+    <div class="st-wrap">
+        <header style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 2.2rem;">🎼</div>
+            <h1 style="margin: 0 0 4px 0; font-size: 1.7rem;">视奏训练</h1>
+            <p class="st-hint" style="margin: 0;">导入乐谱，跟着谱子演奏，系统逐音判定音高与节奏是否正确。</p>
+        </header>
+
+        <div class="st-panel">
+            <div class="st-row">
+                <div class="st-field">
+                    <label>示例曲目</label>
+                    <select id="sample-select">
+                        <optgroup label="儿歌">
+                            <option value="twinkle">小星星</option>
+                            <option value="tigers">两只老虎</option>
+                            <option value="mary">玛丽有只小羊羔</option>
+                            <option value="birthday">生日歌</option>
+                            <option value="jingle">铃儿响叮当</option>
+                        </optgroup>
+                        <optgroup label="经典旋律">
+                            <option value="ode">欢乐颂</option>
+                            <option value="silent">平安夜（3/4 拍）</option>
+                            <option value="elise">致爱丽丝（开头）</option>
+                        </optgroup>
+                        <optgroup label="基础练习">
+                            <option value="scale">C 大调音阶</option>
+                            <option value="bass">低音谱表练习（左手）</option>
+                            <option value="rhythm">节奏综合练习</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="st-field">
+                    <label>导入乐谱文件（MusicXML / MIDI）</label>
+                    <input type="file" id="score-file" accept=".xml,.musicxml,.mid,.midi">
+                </div>
+            </div>
+            <p class="st-hint" style="margin-top: 10px;">
+                支持 MusicXML（.xml、.musicxml）与 MIDI（.mid、.midi）两种格式，可用 MuseScore、Sibelius、Finale 等打谱软件导出。
+                <br>
+                <strong>关于图片谱：</strong>照片或扫描件需要光学识别（OMR），浏览器离线环境无法完成。可行的替代做法是——
+                把谱子照片用手机上的识谱 App 或 MuseScore 打成谱子后导出 MusicXML，再导入这里；也可以用下方的"手动输入"直接敲音名。
+            </p>
+            <div class="st-field" style="margin-top: 12px;">
+                <label>手动输入（格式：音名:拍数，空格分隔，例如 C4:1 D4:1 E4:2）</label>
+                <textarea id="manual-input" placeholder="C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2"></textarea>
+            </div>
+            <div class="st-buttons" style="margin-top: 10px;">
+                <button class="st-btn ghost" id="manual-btn">用这段旋律练习</button>
+            </div>
+        </div>
+
+        <div class="st-panel">
+            <div class="st-row">
+                <div class="st-field">
+                    <label>速度（BPM）：<span id="bpm-display" style="color: var(--primary-color);">70</span></label>
+                    <input type="range" id="bpm-range" min="40" max="160" step="1" value="70" style="width: 100%;">
+                    <input type="number" id="bpm-input" min="40" max="160" value="70" style="margin-top: 6px;">
+                </div>
+                <div class="st-field block">
+                    <label>判定内容</label>
+                    <select id="judge-mode" data-segmented>
+                        <option value="both" selected>音高与节奏都判</option>
+                        <option value="pitch">只判音高</option>
+                        <option value="rhythm">只判节奏</option>
+                    </select>
+                </div>
+                <div class="st-field block">
+                    <label>节拍器</label>
+                    <select id="metronome-mode" data-segmented>
+                        <option value="on" selected>演奏时给节拍</option>
+                        <option value="countin">只在预备拍给节拍</option>
+                        <option value="off">完全不给节拍</option>
+                    </select>
+                </div>
+            </div>
+            <p class="st-hint" style="margin-top: 10px;">
+                判定标准与节奏闯关一致：偏差 70 毫秒以内为"准"，70 至 150 毫秒为"偏差"。评分前会自动扣除设备延迟。
+            </p>
+        </div>
+
+        <div class="st-panel">
+            <div class="st-buttons" style="margin-bottom: 12px;">
+                <button class="st-btn" id="start-btn">🎤 开始演奏</button>
+                <button class="st-btn stop" id="stop-btn" disabled>⏹ 停止</button>
+                <button class="st-btn ghost" id="reset-btn">↺ 重新开始</button>
+            </div>
+            <div class="st-row" style="margin-bottom: 8px;">
+                <label class="lg-switch">
+                    <input type="checkbox" id="mic-toggle" checked>
+                    <span class="lg-switch-label">🎤 麦克风（识别乐器声音）</span>
+                </label>
+                <label class="lg-switch">
+                    <input type="checkbox" id="midi-toggle">
+                    <span class="lg-switch-label">🎹 MIDI 设备（电子琴、电钢琴）</span>
+                </label>
+            </div>
+            <p class="st-hint" id="midi-status" style="margin: 0 0 8px 0;"></p>
+            <div class="st-status" id="status">请选择或导入一份乐谱</div>
+            <canvas id="roll-canvas" width="960" height="300"></canvas>
+            <canvas id="staff-canvas" width="960" height="300" style="display: none; width: 100%; background: var(--surface-light); border-radius: 12px;"></canvas>
+            <p class="st-hint" style="margin-top: 8px;">
+                横轴是时间，纵轴是音高。淡紫色是待演奏的音符，绿色表示音高与节奏都正确，黄色表示时值略有偏差，红色表示音高错误或漏奏。
+            </p>
+            <div class="st-field block" style="margin-top: 8px;">
+                <label>显示方式</label>
+                <select id="view-mode" data-segmented>
+                    <option value="roll" selected>钢琴卷帘</option>
+                    <option value="staff">五线谱</option>
+                </select>
+            </div>
+            <div class="st-field block" style="margin-top: 8px;">
+                <label>谱号</label>
+                <select id="clef-mode" data-segmented>
+                    <option value="auto" selected>自动判断</option>
+                    <option value="treble">高音谱号</option>
+                    <option value="bass">低音谱号</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="st-panel">
+            <div class="st-stats">
+                <div class="st-stat"><div class="num" id="stat-pitch">-</div><div class="lbl">音准准确率</div></div>
+                <div class="st-stat"><div class="num" id="stat-rhythm">-</div><div class="lbl">节奏准确率</div></div>
+                <div class="st-stat"><div class="num" id="stat-correct">0</div><div class="lbl">正确音符</div></div>
+                <div class="st-stat"><div class="num" id="stat-wrong">0</div><div class="lbl">音高错误</div></div>
+                <div class="st-stat"><div class="num" id="stat-missed">0</div><div class="lbl">漏奏</div></div>
+                <div class="st-stat"><div class="num" id="stat-total">0</div><div class="lbl">音符总数</div></div>
+                <div class="st-stat"><div class="num" id="stat-score">0</div><div class="lbl">综合得分</div></div>
+            </div>
+        </div>
+
+        <div class="st-panel" id="result-panel" style="display: none;">
+            <div class="st-grade" id="grade">-</div>
+            <p class="st-hint" id="diagnosis" style="text-align: center; margin-top: 8px;"></p>
+        </div>
+
+        <div class="st-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.9rem;">练习记录</strong>
+                <div>
+                    <button class="st-btn ghost" id="export-btn" style="padding: 6px 12px; font-size: 0.8rem;">导出 CSV</button>
+                    <button class="st-btn ghost" id="clear-btn" style="padding: 6px 12px; font-size: 0.8rem;">清空</button>
+                </div>
+            </div>
+            <table class="st-table">
+                <thead>
+                    <tr><th>时间</th><th>曲目</th><th>速度</th><th>音准</th><th>节奏</th><th>得分</th></tr>
+                </thead>
+                <tbody id="records-body">
+                    <tr><td colspan="6" class="st-hint">暂无记录</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "score-training-records";
+        const STEPS_PER_BEAT = 4;
+        const GOOD_MS = 70;
+        const OK_MS = 150;
+
+        const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const STEP_TO_SEMITONE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+        const SAMPLES = {
+            twinkle: {
+                name: "小星星",
+                beatsPerBar: 4,
+                melody: "C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2",
+            },
+            tigers: {
+                name: "两只老虎",
+                beatsPerBar: 4,
+                melody:
+                    "C4:1 D4:1 E4:1 C4:1 C4:1 D4:1 E4:1 C4:1 " +
+                    "E4:1 F4:1 G4:2 E4:1 F4:1 G4:2 " +
+                    "G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:1 C4:1 G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:1 C4:1 " +
+                    "C4:1 G3:1 C4:2 C4:1 G3:1 C4:2",
+            },
+            mary: {
+                name: "玛丽有只小羊羔",
+                beatsPerBar: 4,
+                melody:
+                    "E4:1 D4:1 C4:1 D4:1 E4:1 E4:1 E4:2 " +
+                    "D4:1 D4:1 D4:2 E4:1 G4:1 G4:2 " +
+                    "E4:1 D4:1 C4:1 D4:1 E4:1 E4:1 E4:1 E4:1 " +
+                    "D4:1 D4:1 E4:1 D4:1 C4:4",
+            },
+            birthday: {
+                name: "生日歌",
+                beatsPerBar: 3,
+                melody: "G4:0.5 G4:0.5 A4:1 G4:1 C5:1 B4:2 G4:0.5 G4:0.5 A4:1 G4:1 D5:1 C5:2",
+            },
+            jingle: {
+                name: "铃儿响叮当",
+                beatsPerBar: 4,
+                melody:
+                    "E4:1 E4:1 E4:2 E4:1 E4:1 E4:2 " +
+                    "E4:1 G4:1 C4:1 D4:1 E4:4 " +
+                    "F4:1 F4:1 F4:1 F4:1 F4:1 E4:1 E4:1 E4:0.5 E4:0.5 " +
+                    "E4:1 D4:1 D4:1 E4:1 D4:2 G4:2",
+            },
+            ode: {
+                name: "欢乐颂",
+                beatsPerBar: 4,
+                melody: "E4:1 E4:1 F4:1 G4:1 G4:1 F4:1 E4:1 D4:1 C4:1 C4:1 D4:1 E4:1 E4:1.5 D4:0.5 D4:2",
+            },
+            silent: {
+                name: "平安夜",
+                beatsPerBar: 3,
+                melody:
+                    "G4:1.5 A4:0.5 G4:1 E4:3 " +
+                    "G4:1.5 A4:0.5 G4:1 E4:3 " +
+                    "D5:2 D5:1 B4:3 " +
+                    "C5:2 C5:1 G4:3",
+            },
+            elise: {
+                name: "致爱丽丝（开头）",
+                beatsPerBar: 3,
+                melody:
+                    "E5:0.25 D#5:0.25 E5:0.25 D#5:0.25 E5:0.5 B4:0.25 D5:0.25 C5:0.25 A4:1.25 " +
+                    "C4:0.25 E4:0.25 A4:0.25 B4:1.25 " +
+                    "E4:0.25 G#4:0.25 B4:0.25 C5:1.25 " +
+                    "E4:0.25 E5:0.25 D#5:0.25 E5:0.25 D#5:0.25 E5:0.5 B4:0.25 D5:0.25 C5:0.25 A4:1.25",
+            },
+            scale: {
+                name: "C 大调音阶",
+                beatsPerBar: 4,
+                melody: "C4:1 D4:1 E4:1 F4:1 G4:1 A4:1 B4:1 C5:1",
+            },
+            bass: {
+                name: "低音谱表练习（左手）",
+                beatsPerBar: 4,
+                melody:
+                    "C3:1 E3:1 G3:1 C4:2 G3:1 E3:1 C3:2 " +
+                    "G2:1 B2:1 D3:1 G3:2 D3:1 B2:1 G2:2 " +
+                    "C3:0.5 D3:0.5 E3:0.5 F3:0.5 G3:1 A3:0.5 B3:0.5 C4:2",
+            },
+            rhythm: {
+                name: "节奏综合练习",
+                beatsPerBar: 4,
+                melody:
+                    "C4:0.5 D4:0.5 E4:0.5 F4:0.5 G4:1 A4:0.5 B4:0.5 " +
+                    "C5:0.25 D5:0.25 C5:0.25 B4:0.25 A4:0.5 G4:0.5 F4:1 " +
+                    "E4:0.75 F4:0.25 G4:1 A4:0.5 G4:0.5 " +
+                    "F4:0.5 E4:0.5 D4:0.5 C4:0.5 C4:2",
+            },
+        };
+
+        const state = {
+            running: false,
+            notes: [],
+            bpm: 70,
+            startTime: 0,
+            audioContext: null,
+            mediaStream: null,
+            analyser: null,
+            dataBuffer: null,
+            results: new Map(),
+            extras: 0,
+            lastOnset: 0,
+            schedulerTimer: null,
+            currentBeat: 0,
+            scoreName: "",
+            autoLatency: 0,
+            beatsPerBar: 4,
+            clicks: [],
+            countTimer: null,
+        };
+
+        const el = (id) => document.getElementById(id);
+
+        // ---------------- 乐谱解析 ----------------
+        function noteNameToMidi(name) {
+            const match = /^([A-G])([#b]?)(-?\d)$/.exec(name.trim());
+            if (!match) return null;
+            let semitone = STEP_TO_SEMITONE[match[1]];
+            if (match[2] === "#") semitone += 1;
+            if (match[2] === "b") semitone -= 1;
+            return (Number(match[3]) + 1) * 12 + semitone;
+        }
+
+        function midiToName(midi) {
+            return NOTE_NAMES[((midi % 12) + 12) % 12] + (Math.floor(midi / 12) - 1);
+        }
+
+        function parseMelodyString(text) {
+            const tokens = text.split(/[\s,，]+/).filter(Boolean);
+            const notes = [];
+            let position = 0;
+            for (const token of tokens) {
+                const [name, beatsText] = token.split(":");
+                const midi = noteNameToMidi(name || "");
+                if (midi === null) continue;
+                const beats = Number(beatsText) > 0 ? Number(beatsText) : 1;
+                notes.push({ midi, startBeat: position, beats });
+                position += beats;
+            }
+            return notes;
+        }
+
+        function parseMusicXml(text) {
+            const doc = new DOMParser().parseFromString(text, "application/xml");
+            const divisionsNode = doc.querySelector("attributes divisions");
+            const divisions = Number(divisionsNode ? divisionsNode.textContent : 1) || 1;
+            const notes = [];
+            let position = 0;
+            doc.querySelectorAll("note").forEach((node) => {
+                const isRest = !!node.querySelector("rest");
+                const isChord = !!node.querySelector("chord");
+                const duration = Number((node.querySelector("duration") || {}).textContent || 0);
+                const step = (node.querySelector("pitch step") || {}).textContent;
+                const octave = (node.querySelector("pitch octave") || {}).textContent;
+                const alterNode = node.querySelector("pitch alter");
+                const alter = alterNode ? Number(alterNode.textContent) : 0;
+
+                if (!isChord && !isRest) {
+                    if (step && octave) {
+                        notes.push({
+                            midi: (Number(octave) + 1) * 12 + STEP_TO_SEMITONE[step] + alter,
+                            startBeat: position / divisions,
+                            beats: duration / divisions,
+                        });
+                    }
+                }
+                if (!isChord) position += duration;
+            });
+            const timeNode = doc.querySelector("time beats");
+            return { notes, beatsPerBar: timeNode ? Number(timeNode.textContent) || 4 : 4 };
+        }
+
+        function readVarInt(view, offset) {
+            let value = 0;
+            let byte = 0;
+            let cursor = offset;
+            do {
+                byte = view.getUint8(cursor++);
+                value = (value << 7) | (byte & 0x7f);
+            } while (byte & 0x80);
+            return { value, next: cursor };
+        }
+
+        function parseMidi(buffer) {
+            const view = new DataView(buffer);
+            if (view.getUint32(0) !== 0x4d546864) throw new Error("不是有效的 MIDI 文件");
+            const division = view.getUint16(12) || 480;
+            const trackCount = view.getUint16(10);
+            let offset = 14;
+            let tempo = 500000;
+            let beatsPerBar = 4;
+            const rawNotes = [];
+            const pending = new Map();
+
+            for (let track = 0; track < trackCount && offset + 8 <= view.byteLength; track++) {
+                if (view.getUint32(offset) !== 0x4d54726b) break;
+                const length = view.getUint32(offset + 4);
+                let cursor = offset + 8;
+                const end = cursor + length;
+                let ticks = 0;
+                let runningStatus = 0;
+
+                while (cursor < end) {
+                    const delta = readVarInt(view, cursor);
+                    ticks += delta.value;
+                    cursor = delta.next;
+                    let status = view.getUint8(cursor);
+                    if (status < 0x80) status = runningStatus;
+                    else { cursor += 1; runningStatus = status; }
+
+                    if (status === 0xff) {
+                        const type = view.getUint8(cursor);
+                        cursor += 1;
+                        const meta = readVarInt(view, cursor);
+                        cursor = meta.next;
+                        if (type === 0x51 && meta.value >= 3) {
+                            tempo = (view.getUint8(cursor) << 16) | (view.getUint8(cursor + 1) << 8) | view.getUint8(cursor + 2);
+                        }
+                        if (type === 0x58 && meta.value >= 2) {
+                            beatsPerBar = view.getUint8(cursor) || 4;
+                        }
+                        cursor += meta.value;
+                    } else if (status === 0xf0 || status === 0xf7) {
+                        const sysex = readVarInt(view, cursor);
+                        cursor = sysex.next + sysex.value;
+                    } else {
+                        const command = status & 0xf0;
+                        const note = view.getUint8(cursor);
+                        const velocity = view.getUint8(cursor + 1);
+                        cursor += 2;
+                        if (command === 0x90 && velocity > 0) {
+                            if (!pending.has(note)) pending.set(note, ticks);
+                        } else if (command === 0x80 || (command === 0x90 && velocity === 0)) {
+                            if (pending.has(note)) {
+                                rawNotes.push({ midi: note, startTick: pending.get(note), endTick: ticks });
+                                pending.delete(note);
+                            }
+                        }
+                    }
+                }
+                offset = end;
+            }
+
+            const secondsPerTick = tempo / 1000000 / division;
+            return {
+                beatsPerBar,
+                notes: rawNotes
+                    .sort((a, b) => a.startTick - b.startTick)
+                    .map((note) => ({
+                        midi: note.midi,
+                        startBeat: (note.startTick * secondsPerTick) / (60 / state.bpm),
+                        beats: Math.max(0.25, ((note.endTick - note.startTick) * secondsPerTick) / (60 / state.bpm)),
+                    })),
+            };
+        }
+
+        // ---------------- 谱面显示 ----------------
+        function drawRoll() {
+            const canvas = el("roll-canvas");
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#141a21";
+            ctx.fillRect(0, 0, width, height);
+
+            if (!state.notes.length) {
+                ctx.fillStyle = "#9fb0bd";
+                ctx.font = "16px 'Microsoft YaHei', sans-serif";
+                ctx.fillText("请选择示例曲目，或导入 MusicXML / MIDI 乐谱", 40, height / 2);
+                return;
+            }
+
+            const beatsTotal = state.notes.reduce((max, note) => Math.max(max, note.startBeat + note.beats), 0) || 1;
+            const midis = state.notes.map((note) => note.midi);
+            const minMidi = Math.min(...midis) - 2;
+            const maxMidi = Math.max(...midis) + 2;
+            const left = 56;
+            const top = 18;
+            const right = 16;
+            const bottom = 30;
+            const chartWidth = width - left - right;
+            const chartHeight = height - top - bottom;
+            const rowHeight = chartHeight / Math.max(1, maxMidi - minMidi);
+
+            const secondsPerBeat = 60 / state.bpm;
+            const elapsed = state.running && state.startTime
+                ? Math.max(0, state.audioContext.currentTime - (state.outputLatency || 0) - state.startTime)
+                : 0;
+
+            for (let beat = 0; beat <= beatsTotal; beat++) {
+                const x = left + (beat / beatsTotal) * chartWidth;
+                ctx.strokeStyle = beat % 4 === 0 ? "#3a4658" : "#242f3b";
+                ctx.beginPath();
+                ctx.moveTo(x, top);
+                ctx.lineTo(x, top + chartHeight);
+                ctx.stroke();
+                if (beat % 4 === 0) {
+                    ctx.fillStyle = "#7d8b98";
+                    ctx.font = "11px 'Microsoft YaHei', sans-serif";
+                    ctx.fillText(`${beat / 4 + 1}`, x + 3, height - 10);
+                }
+            }
+
+            state.notes.forEach((note, index) => {
+                const x = left + (note.startBeat / beatsTotal) * chartWidth;
+                const w = Math.max(6, (note.beats / beatsTotal) * chartWidth - 2);
+                const y = top + chartHeight - (note.midi - minMidi + 1) * rowHeight;
+                const result = state.results.get(index);
+
+                let fill = "rgba(99, 102, 241, 0.55)";
+                if (result) {
+                    if (!result.pitchCorrect) fill = "#ef4444";
+                    else if (Math.abs(result.offsetMs) <= GOOD_MS) fill = "#10b981";
+                    else if (Math.abs(result.offsetMs) <= OK_MS) fill = "#eab308";
+                    else fill = "#f97316";
+                } else if (elapsed > 0 && note.startBeat * secondsPerBeat < elapsed) {
+                    fill = "rgba(148, 163, 184, 0.5)";
+                }
+
+                ctx.fillStyle = fill;
+                ctx.beginPath();
+                ctx.roundRect ? ctx.roundRect(x, y, w, Math.max(8, rowHeight - 2), 4) : ctx.rect(x, y, w, Math.max(8, rowHeight - 2));
+                ctx.fill();
+            });
+
+            if (elapsed > 0) {
+                const x = left + Math.min(1, (elapsed / secondsPerBeat) / beatsTotal) * chartWidth;
+                ctx.strokeStyle = "#2dd4bf";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, top);
+                ctx.lineTo(x, top + chartHeight);
+                ctx.stroke();
+            }
+        }
+
+        // ---------------- 五线谱视图 ----------------
+        const DIATONIC_STEP = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
+        const SHARP_PITCH_CLASSES = [1, 3, 6, 8, 10];
+
+        function diatonicIndex(midi) {
+            const octave = Math.floor(midi / 12) - 1;
+            const pitchClass = ((midi % 12) + 12) % 12;
+            return octave * 7 + DIATONIC_STEP[pitchClass];
+        }
+
+        function renderScore() {
+            const mode = el("view-mode") ? el("view-mode").value : "roll";
+            if (mode === "staff") {
+                el("roll-canvas").style.display = "none";
+                el("staff-canvas").style.display = "block";
+                drawStaff();
+            } else {
+                el("roll-canvas").style.display = "block";
+                el("staff-canvas").style.display = "none";
+                drawRoll();
+            }
+        }
+
+        // 谱号：自动按音域判断，也可手动指定
+        function currentClef() {
+            const mode = el("clef-mode") ? el("clef-mode").value : "auto";
+            if (mode === "treble" || mode === "bass") return mode;
+            if (!state.notes.length) return "treble";
+            const sorted = state.notes.map((note) => note.midi).sort((a, b) => a - b);
+            const median = sorted[Math.floor(sorted.length / 2)];
+            return median <= 55 ? "bass" : "treble";
+        }
+
+        // 符尾：八分一条、十六分两条、三十二分三条
+        function flagCountFor(beats) {
+            if (beats <= 0.13) return 3;
+            if (beats <= 0.26) return 2;
+            if (beats <= 0.55) return 1;
+            return 0;
+        }
+
+        function drawFlags(ctx, stemX, stemEndY, stemUp, count, color) {
+            if (count <= 0) return;
+            ctx.fillStyle = color;
+            for (let i = 0; i < count; i++) {
+                const y = stemEndY + (stemUp ? i * 10 : -i * 10);
+                ctx.beginPath();
+                if (stemUp) {
+                    ctx.moveTo(stemX, y);
+                    ctx.quadraticCurveTo(stemX + 14, y + 5, stemX + 7, y + 19);
+                    ctx.quadraticCurveTo(stemX + 10, y + 8, stemX, y + 4);
+                } else {
+                    ctx.moveTo(stemX, y);
+                    ctx.quadraticCurveTo(stemX + 14, y - 5, stemX + 7, y - 19);
+                    ctx.quadraticCurveTo(stemX + 10, y - 8, stemX, y - 4);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function drawStaff() {
+            const canvas = el("staff-canvas");
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext("2d");
+            const width = canvas.width;
+            const height = canvas.height;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, width, height);
+
+            if (!state.notes.length) {
+                ctx.fillStyle = "#475569";
+                ctx.font = "16px 'Microsoft YaHei', sans-serif";
+                ctx.fillText("请选择示例曲目，或导入 MusicXML / MIDI 乐谱", 40, height / 2);
+                return;
+            }
+
+            const lineGap = 14;
+            const staffTop = 96;
+            const bottomLine = staffTop + lineGap * 4;
+            const left = 100;
+            const right = 28;
+            const chartWidth = width - left - right;
+            const beatsTotal = state.notes.reduce((max, note) => Math.max(max, note.startBeat + note.beats), 0) || 1;
+            const secondsPerBeat = 60 / state.bpm;
+            const elapsed = state.running && state.startTime
+                ? Math.max(0, state.audioContext.currentTime - (state.outputLatency || 0) - state.startTime)
+                : 0;
+            const clef = currentClef();
+            // 高音谱表最下面一线是 E4，低音谱表最下面一线是 G2
+            const baseStep = clef === "bass" ? diatonicIndex(43) : diatonicIndex(64);
+
+            ctx.strokeStyle = "#111827";
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                const y = staffTop + i * lineGap;
+                ctx.beginPath();
+                ctx.moveTo(left - 36, y);
+                ctx.lineTo(width - right, y);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = "#111827";
+            ctx.font = "60px 'Segoe UI Symbol', 'Bravura', 'Microsoft YaHei', serif";
+            if (clef === "bass") {
+                // 低音谱号：F 谱号，同时画出两个点作为识别特征
+                ctx.fillText("𝄢", 26, staffTop + lineGap + 2);
+                ctx.beginPath();
+                ctx.arc(62, staffTop + lineGap - 4, 3, 0, Math.PI * 2);
+                ctx.arc(62, staffTop + lineGap + 8, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillText("𝄞", 28, bottomLine + 4);
+            }
+            ctx.fillStyle = "#64748b";
+            ctx.font = "12px 'Microsoft YaHei', sans-serif";
+            ctx.fillText(clef === "bass" ? "低音谱号" : "高音谱号", 22, staffTop - 24);
+
+            for (let beat = 0; beat <= beatsTotal; beat += state.beatsPerBar) {
+                const x = left + (beat / beatsTotal) * chartWidth;
+                ctx.strokeStyle = "#334155";
+                ctx.lineWidth = beat === 0 ? 2 : 1;
+                ctx.beginPath();
+                ctx.moveTo(x, staffTop);
+                ctx.lineTo(x, bottomLine);
+                ctx.stroke();
+                ctx.fillStyle = "#64748b";
+                ctx.font = "11px 'Microsoft YaHei', sans-serif";
+                ctx.fillText(`第${Math.floor(beat / state.beatsPerBar) + 1}小节`, x + 4, bottomLine + 22);
+            }
+
+            state.notes.forEach((note, index) => {
+                const x = left + (note.startBeat / beatsTotal) * chartWidth + 8;
+                const step = diatonicIndex(note.midi) - baseStep;
+                const y = bottomLine - step * (lineGap / 2);
+                const result = state.results.get(index);
+
+                let color = "#4338ca";
+                if (result) {
+                    if (!result.pitchCorrect) color = "#dc2626";
+                    else if (Math.abs(result.offsetMs) <= GOOD_MS) color = "#059669";
+                    else if (Math.abs(result.offsetMs) <= OK_MS) color = "#ca8a04";
+                    else color = "#ea580c";
+                }
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1.5;
+                if (step > 8) {
+                    for (let extra = 10; extra <= step; extra += 2) {
+                        const ledgerY = bottomLine - extra * (lineGap / 2);
+                        ctx.beginPath();
+                        ctx.moveTo(x - 12, ledgerY);
+                        ctx.lineTo(x + 12, ledgerY);
+                        ctx.stroke();
+                    }
+                } else if (step < 0) {
+                    for (let extra = -2; extra >= step; extra -= 2) {
+                        const ledgerY = bottomLine - extra * (lineGap / 2);
+                        ctx.beginPath();
+                        ctx.moveTo(x - 12, ledgerY);
+                        ctx.lineTo(x + 12, ledgerY);
+                        ctx.stroke();
+                    }
+                }
+
+                if (SHARP_PITCH_CLASSES.includes(((note.midi % 12) + 12) % 12)) {
+                    ctx.fillStyle = color;
+                    ctx.font = "20px 'Microsoft YaHei', sans-serif";
+                    ctx.fillText("♯", x - 22, y + 7);
+                }
+
+                ctx.fillStyle = note.beats >= 2 ? "#ffffff" : color;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.ellipse(x, y, 7, 5, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                const stemUp = y > staffTop + lineGap * 2;
+                const stemX = stemUp ? x + 6.5 : x - 6.5;
+                const stemEndY = stemUp ? y - 42 : y + 42;
+                ctx.beginPath();
+                ctx.moveTo(stemX, y);
+                ctx.lineTo(stemX, stemEndY);
+                ctx.stroke();
+
+                drawFlags(ctx, stemX, stemEndY, stemUp, flagCountFor(note.beats), color);
+            });
+
+            if (elapsed > 0) {
+                const x = left + Math.min(1, (elapsed / secondsPerBeat) / beatsTotal) * chartWidth;
+                ctx.strokeStyle = "#0f766e";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, staffTop - 18);
+                ctx.lineTo(x, bottomLine + 18);
+                ctx.stroke();
+            }
+        }
+
+        // ---------------- 音频 ----------------
+        function updateBpm(value) {
+            const bpm = Math.min(160, Math.max(40, Number(value) || 70));
+            state.bpm = bpm;
+            el("bpm-range").value = bpm;
+            el("bpm-input").value = bpm;
+            el("bpm-display").textContent = bpm;
+        }
+
+        function playClick(time, accent) {
+            const context = state.audioContext;
+            if (!context) return;
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            osc.frequency.value = accent ? 1400 : 950;
+            osc.type = "square";
+            gain.gain.setValueAtTime(0.0001, time);
+            gain.gain.exponentialRampToValueAtTime(accent ? 0.32 : 0.24, time + 0.003);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.09);
+            osc.connect(gain);
+            gain.connect(context.destination);
+            osc.start(time);
+            osc.stop(time + 0.1);
+            state.clicks.push(osc);
+            osc.onended = () => {
+                const index = state.clicks.indexOf(osc);
+                if (index >= 0) state.clicks.splice(index, 1);
+            };
+        }
+
+        function stopAllClicks() {
+            state.clicks.forEach((osc) => {
+                try {
+                    osc.stop();
+                    osc.disconnect();
+                } catch (error) {
+                    // 已经停止的节点忽略
+                }
+            });
+            state.clicks = [];
+        }
+
+        function estimateAutoLatency() {
+            const context = state.audioContext;
+            const device = (context.baseLatency || 0) + (context.outputLatency || 0);
+            state.outputLatency = device;
+            const bufferDelay = 2048 / (context.sampleRate || 44100);
+            return Math.min(0.2, device + 0.02 + bufferDelay * 0.5);
+        }
+
+        async function startMic() {
+            if (state.mediaStream) return;
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+            });
+            state.mediaStream = stream;
+            const source = state.audioContext.createMediaStreamSource(stream);
+            state.analyser = state.audioContext.createAnalyser();
+            state.analyser.fftSize = 2048;
+            state.dataBuffer = new Float32Array(state.analyser.fftSize);
+            source.connect(state.analyser);
+            detectLoop();
+        }
+
+        function detectLoop() {
+            if (!state.analyser) return;
+            const context = state.audioContext;
+            const buffer = state.dataBuffer;
+            state.analyser.getFloatTimeDomainData(buffer);
+
+            const rms = PitchDetector.calculateRMS(buffer);
+            const now = performance.now();
+            const threshold = 0.02;
+
+            if (rms > threshold && now - state.lastOnset > 140) {
+                state.lastOnset = now;
+                const pitch = PitchDetector.autoCorrelate(buffer, context.sampleRate, 70, 1500);
+                const detectedMidi = pitch && pitch.confidence > 0.75 && pitch.frequency > 0
+                    ? Math.round(69 + 12 * Math.log2(pitch.frequency / 440))
+                    : null;
+                registerNote(context.currentTime, detectedMidi);
+            }
+
+            if (state.running) {
+                window.requestAnimationFrame(detectLoop);
+                if (!state.frameTimer) {
+                    state.frameTimer = window.setInterval(renderScore, 60);
+                }
+            } else {
+                window.clearInterval(state.frameTimer);
+                state.frameTimer = null;
+            }
+        }
+
+        function registerNote(rawTime, detectedMidi, source) {
+            if (!state.running) return;
+            const secondsPerBeat = 60 / state.bpm;
+            const compensation = source === "midi" ? (state.outputLatency || 0) : (state.autoLatency || 0);
+            const elapsed = rawTime - compensation - state.startTime;
+
+            let best = null;
+            state.notes.forEach((note, index) => {
+                if (state.results.has(index)) return;
+                const expected = note.startBeat * secondsPerBeat;
+                const distance = Math.abs(expected - elapsed);
+                if (!best || distance < best.distance) best = { index, distance, expected, note };
+            });
+
+            const window = Math.max(0.35, secondsPerBeat * 0.6);
+            if (!best || best.distance > window) {
+                state.extras += 1;
+                updateStats();
+                return;
+            }
+
+            const offsetMs = (elapsed - best.expected) * 1000;
+            const pitchCorrect = detectedMidi === null ? false : detectedMidi === best.note.midi;
+            state.results.set(best.index, { offsetMs, pitchCorrect, detectedMidi });
+            updateStats();
+            renderScore();
+        }
+
+        function updateStats() {
+            const total = state.notes.length || 1;
+            const entries = [...state.results.values()];
+            const judgedPitch = entries.filter((entry) => entry.detectedMidi !== null);
+            const pitchCorrect = entries.filter((entry) => entry.pitchCorrect).length;
+            const goodRhythm = entries.filter((entry) => Math.abs(entry.offsetMs) <= GOOD_MS).length;
+            const okRhythm = entries.filter((entry) => Math.abs(entry.offsetMs) > GOOD_MS && Math.abs(entry.offsetMs) <= OK_MS).length;
+            const pitchRate = Math.round((pitchCorrect / total) * 100);
+            const rhythmRate = Math.round(((goodRhythm + okRhythm * 0.6) / total) * 100);
+            const score = Math.round(pitchRate * 0.6 + rhythmRate * 0.4);
+
+            el("stat-pitch").textContent = `${pitchRate}%`;
+            el("stat-rhythm").textContent = `${rhythmRate}%`;
+            el("stat-correct").textContent = String(pitchCorrect);
+            el("stat-wrong").textContent = String(judgedPitch.length - pitchCorrect);
+            el("stat-missed").textContent = String(state.notes.length - entries.length);
+            el("stat-total").textContent = String(state.notes.length);
+            el("stat-score").textContent = String(score);
+            return { pitchRate, rhythmRate, score };
+        }
+
+        // ---------------- 开始与结束 ----------------
+        async function startTraining() {
+            if (!state.notes.length) {
+                el("status").textContent = "请先选择或导入一份乐谱。";
+                return;
+            }
+            stopTraining(true);
+            state.results = new Map();
+            state.extras = 0;
+            state.running = true;
+            state.lastOnset = 0;
+            state.startTime = 0;
+            el("result-panel").style.display = "none";
+            el("start-btn").disabled = true;
+            el("stop-btn").disabled = false;
+            el("status").textContent = "请允许使用麦克风……";
+
+            if (!state.audioContext) {
+                state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (state.audioContext.state === "suspended") await state.audioContext.resume();
+
+            try {
+                if (el("mic-toggle").checked) {
+                    await startMic();
+                } else if (!el("midi-toggle").checked) {
+                    el("status").textContent = "请至少开启一种输入方式：麦克风或 MIDI 设备。";
+                    state.running = false;
+                    el("start-btn").disabled = false;
+                    el("stop-btn").disabled = true;
+                    return;
+                } else {
+                    el("status").textContent = "未使用麦克风，将使用 MIDI 设备判定。";
+                }
+            } catch (error) {
+                if (midiAccess) {
+                    el("status").textContent = "未使用麦克风，将使用 MIDI 设备判定。";
+                } else {
+                    el("status").textContent = "无法使用麦克风：" + error.message;
+                    state.running = false;
+                    el("start-btn").disabled = false;
+                    el("stop-btn").disabled = true;
+                    return;
+                }
+            }
+
+            state.autoLatency = estimateAutoLatency();
+            const context = state.audioContext;
+            const beatSeconds = 60 / state.bpm;
+            const metronomeMode = el("metronome-mode").value;
+            const countInStart = context.currentTime + 0.3;
+
+            for (let beat = 0; beat < 4; beat++) {
+                playClick(countInStart + beat * beatSeconds, beat === 0);
+            }
+            state.startTime = countInStart + 4 * beatSeconds;
+
+            if (metronomeMode === "on") {
+                const totalBeats = state.notes.reduce((max, note) => Math.max(max, note.startBeat + note.beats), 0);
+                for (let beat = 0; beat < Math.ceil(totalBeats); beat++) {
+                    playClick(state.startTime + beat * beatSeconds, beat % state.beatsPerBar === 0);
+                }
+            }
+
+            let remaining = 4;
+            el("status").textContent = "准备…… 4";
+            state.countTimer = window.setInterval(() => {
+                remaining -= 1;
+                el("status").textContent = remaining > 0 ? `准备…… ${remaining}` : "开始演奏！";
+                if (remaining <= 0) {
+                    window.clearInterval(state.countTimer);
+                    state.countTimer = null;
+                }
+            }, beatSeconds * 1000);
+
+            const totalSeconds = state.notes.reduce((max, note) => Math.max(max, note.startBeat + note.beats), 0) * beatSeconds;
+            // 结束时间要把预备拍的等待算进去，否则会提前结束、节拍器还在响
+            const leadInSeconds = Math.max(0, state.startTime - context.currentTime);
+            state.endTimer = window.setTimeout(() => finishTraining(), (leadInSeconds + totalSeconds + 0.8) * 1000);
+            renderScore();
+            updateStats();
+        }
+
+        function stopTraining(silent) {
+            state.running = false;
+            window.clearTimeout(state.endTimer);
+            window.clearInterval(state.frameTimer);
+            window.clearInterval(state.countTimer);
+            state.countTimer = null;
+            state.frameTimer = null;
+            stopAllClicks();
+            if (state.mediaStream) {
+                state.mediaStream.getTracks().forEach((track) => track.stop());
+                state.mediaStream = null;
+                state.analyser = null;
+            }
+            el("start-btn").disabled = false;
+            el("stop-btn").disabled = true;
+            if (!silent) el("status").textContent = "已停止";
+        }
+
+        function finishTraining() {
+            stopTraining(true);
+            const stats = updateStats();
+            const grade = stats.score >= 90 ? "S" : stats.score >= 78 ? "A" : stats.score >= 62 ? "B" : stats.score >= 45 ? "C" : "D";
+            const missed = state.notes.length - state.results.size;
+            const wrongPitch = [...state.results.values()].filter((entry) => !entry.pitchCorrect).length;
+            const notes = [];
+            if (missed > state.notes.length * 0.2) notes.push(`有 ${missed} 个音没有演奏出来，建议放慢速度逐句练习。`);
+            if (wrongPitch > 0) notes.push(`有 ${wrongPitch} 个音高与谱面不符，注意升降号与音区。`);
+            const lateCount = [...state.results.values()].filter((entry) => entry.offsetMs > GOOD_MS).length;
+            const earlyCount = [...state.results.values()].filter((entry) => entry.offsetMs < -GOOD_MS).length;
+            if (lateCount > earlyCount && lateCount > 2) notes.push("整体偏晚，可以先跟着节拍器慢速练习，或调整设备延迟。");
+            else if (earlyCount > 2) notes.push("整体偏早，注意把每个音弹满时值再换下一个音。");
+            if (!notes.length) notes.push("演奏完整准确，可以尝试提高速度或换更难的曲目。");
+
+            el("grade").textContent = grade;
+            el("diagnosis").textContent = notes.slice(0, 2).join(" ");
+            el("result-panel").style.display = "block";
+            el("status").textContent = "演奏结束";
+            renderScore();
+            saveRecord(stats, grade);
+        }
+
+        // ---------------- 记录 ----------------
+        function loadRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveRecord(stats, grade) {
+            const records = loadRecords();
+            records.unshift({
+                time: new Date().toLocaleString("zh-CN"),
+                name: state.scoreName || "未命名乐谱",
+                bpm: state.bpm,
+                pitch: stats.pitchRate,
+                rhythm: stats.rhythmRate,
+                score: stats.score,
+                grade,
+            });
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0, 30)));
+            } catch (error) {
+                // 忽略
+            }
+            renderRecords();
+        }
+
+        function renderRecords() {
+            const records = loadRecords();
+            const body = el("records-body");
+            if (!records.length) {
+                body.innerHTML = '<tr><td colspan="6" class="st-hint">暂无记录</td></tr>';
+                return;
+            }
+            body.innerHTML = records
+                .slice(0, 10)
+                .map((record) =>
+                    `<tr><td>${record.time}</td><td>${record.name}</td><td>${record.bpm}</td><td>${record.pitch}%</td><td>${record.rhythm}%</td><td>${record.score}</td></tr>`)
+                .join("");
+        }
+
+        function exportCsv() {
+            const records = loadRecords();
+            const header = "时间,曲目,速度,音准准确率,节奏准确率,得分";
+            const rows = records.map((record) => `${record.time},${record.name},${record.bpm},${record.pitch},${record.rhythm},${record.score}`);
+            const blob = new Blob(["\ufeff" + [header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "视奏训练记录.csv";
+            link.click();
+        }
+
+        // ---------------- 载入乐谱 ----------------
+        function loadNotes(notes, name, beatsPerBar) {
+            state.notes = notes.map((note) => ({ ...note }));
+            state.results = new Map();
+            state.scoreName = name;
+            state.beatsPerBar = beatsPerBar || 4;
+            el("result-panel").style.display = "none";
+            el("status").textContent = `已载入《${name}》，共 ${notes.length} 个音，${state.beatsPerBar}/4 拍，点击“开始演奏”。`;
+            updateStats();
+            renderScore();
+        }
+
+        el("sample-select").addEventListener("change", (event) => {
+            const sample = SAMPLES[event.target.value];
+            if (sample) loadNotes(parseMelodyString(sample.melody), sample.name, sample.beatsPerBar);
+        });
+
+        el("manual-btn").addEventListener("click", () => {
+            const notes = parseMelodyString(el("manual-input").value);
+            if (!notes.length) {
+                el("status").textContent = "没有识别到音符，请检查格式，例如 C4:1 D4:1 E4:2。";
+                return;
+            }
+            loadNotes(notes, "手动输入", 4);
+        });
+
+        el("score-file").addEventListener("change", async (event) => {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            try {
+                if (/\.(mid|midi)$/i.test(file.name)) {
+                    const buffer = await file.arrayBuffer();
+                    const parsed = parseMidi(buffer);
+                    if (!parsed.notes.length) throw new Error("没有解析到音符");
+                    loadNotes(parsed.notes, file.name.replace(/\.[^.]+$/, ""), parsed.beatsPerBar);
+                } else {
+                    const text = await file.text();
+                    const parsed = parseMusicXml(text);
+                    if (!parsed.notes.length) throw new Error("没有解析到音符");
+                    loadNotes(parsed.notes, file.name.replace(/\.[^.]+$/, ""), parsed.beatsPerBar);
+                }
+            } catch (error) {
+                el("status").textContent = `导入失败：${error.message}`;
+            }
+        });
+
+        el("bpm-range").addEventListener("input", (event) => { updateBpm(event.target.value); renderScore(); });
+        el("bpm-input").addEventListener("change", (event) => { updateBpm(event.target.value); renderScore(); });
+        el("view-mode").addEventListener("change", renderScore);
+        el("clef-mode").addEventListener("change", renderScore);
+        el("start-btn").addEventListener("click", startTraining);
+        el("stop-btn").addEventListener("click", () => stopTraining(false));
+        el("reset-btn").addEventListener("click", () => {
+            stopTraining(true);
+            state.results = new Map();
+            state.extras = 0;
+            updateStats();
+            renderScore();
+            el("status").textContent = "已重置，可以重新开始。";
+            el("result-panel").style.display = "none";
+        });
+        el("export-btn").addEventListener("click", exportCsv);
+        el("clear-btn").addEventListener("click", () => {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                // 忽略
+            }
+            renderRecords();
+        });
+
+        // ---------------- MIDI 设备（判定比麦克风更准）----------------
+        const MIDI_KEY = "score-training-midi";
+        let midiAccess = null;
+
+        function updateMidiStatus(text) {
+            if (el("midi-status")) el("midi-status").textContent = text;
+        }
+
+        function bindMidiInputs() {
+            if (!midiAccess) return;
+            const names = [];
+            midiAccess.inputs.forEach((input) => {
+                names.push(input.name || "MIDI 设备");
+                input.onmidimessage = handleScoreMidi;
+            });
+            if (el("midi-toggle") && names.length) el("midi-toggle").checked = true;
+            updateMidiStatus(names.length
+                ? `已连接：${names.join("、")}；用乐器演奏即可，音高判定比麦克风更准。`
+                : "已开启 MIDI，但还没有检测到设备，请检查 USB 连接。");
+        }
+
+        function releaseMidi() {
+            if (midiAccess) {
+                midiAccess.inputs.forEach((input) => {
+                    input.onmidimessage = null;
+                });
+            }
+            updateMidiStatus("已关闭 MIDI 输入。");
+        }
+
+        function enableMidi() {
+            if (!navigator.requestMIDIAccess) {
+                updateMidiStatus("当前环境不支持 MIDI 输入，请改用 Edge 或 Chrome 打开。");
+                return;
+            }
+            navigator.requestMIDIAccess().then((access) => {
+                midiAccess = access;
+                try {
+                    localStorage.setItem(MIDI_KEY, "1");
+                } catch (error) {
+                    // 忽略
+                }
+                bindMidiInputs();
+                access.onstatechange = bindMidiInputs;
+            }).catch((error) => {
+                updateMidiStatus(`无法使用 MIDI：${error.message}`);
+            });
+        }
+
+        function handleScoreMidi(event) {
+            const data = event.data || [];
+            if ((data[0] & 0xf0) !== 0x90 || (data[2] || 0) === 0) return;
+            const context = state.audioContext;
+            if (!context || !state.running) return;
+            const offsetSeconds =
+                typeof event.timeStamp === "number" && event.timeStamp > 0
+                    ? (event.timeStamp - performance.now()) / 1000
+                    : 0;
+            registerNote(context.currentTime + offsetSeconds, data[1], "midi");
+        }
+
+        el("midi-toggle").addEventListener("change", (event) => {
+            if (event.target.checked) {
+                enableMidi();
+            } else {
+                releaseMidi();
+            }
+        });
+        try {
+            if (localStorage.getItem(MIDI_KEY) === "1") enableMidi();
+        } catch (error) {
+            // 忽略
+        }
+
+        loadNotes(parseMelodyString(SAMPLES.twinkle.melody), SAMPLES.twinkle.name);
+        renderRecords();
+    </script>
+</body>
+</html>
