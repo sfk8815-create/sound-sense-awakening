@@ -19,6 +19,27 @@ BORDER_COLOR = "D9D9D9"
 
 OUT_PATH = "outputs/音感觉醒_软件说明书_V2.0.docx"
 
+LOGO_FILES = [
+    "outputs/chordz-cn/icons/logo-swuedu.png",
+    "outputs/chordz-cn/icons/logo-music.png",
+    "outputs/chordz-cn/icons/logo-jinyun.png",
+]
+
+
+def add_manual_logos(doc, height_cm=1.5):
+    """封面顶部并排显示西南大学、音乐学院与工作室三枚标识。"""
+    available = [path for path in LOGO_FILES if os.path.exists(path)]
+    if not available:
+        return
+    paragraph = doc.add_paragraph()
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    paragraph.paragraph_format.space_after = Pt(20)
+    for index, path in enumerate(available):
+        if index:
+            spacer = paragraph.add_run("      ")
+            set_run_font(spacer, size=10)
+        paragraph.add_run().add_picture(path, height=Cm(height_cm))
+
 
 def set_run_font(run, size=None, bold=None, color="000000", latin=LATIN_FONT, cjk=CJK_FONT):
     run.font.name = latin
@@ -194,7 +215,8 @@ def build():
     section.right_margin = Cm(2.6)
 
     # ---------------- 封面 ----------------
-    for _ in range(3):
+    add_manual_logos(doc)
+    for _ in range(2):
         doc.add_paragraph()
 
     title = doc.add_paragraph("音感觉醒软件说明书", style="Title")

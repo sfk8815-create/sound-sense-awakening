@@ -2,6 +2,12 @@
 
 # 音感觉醒 · 音乐能力训练与测评系统
 
+<p align="center">
+  <img src="outputs/chordz-cn/icons/logo-swuedu.png" height="64" alt="西南大学">
+  <img src="outputs/chordz-cn/icons/logo-music.png" height="64" alt="西南大学音乐学院">
+  <img src="outputs/chordz-cn/icons/logo-jinyun.png" height="64" alt="缙云声智">
+</p>
+
 <img src="outputs/chordz-cn/icons/icon-192.png" width="96" alt="音感觉醒图标">
 
 面向中小学音乐课堂与音乐专业基础教学的音乐能力训练工具。学生在电脑上直接练习，程序用麦克风听清每一次击打，判断节奏准不准，并自动留下可对比、可导出的练习数据；教师可以建立名单、布置作业、查看达标情况，并生成前后测进步报告。全部功能在本机运行，不联网、不注册、不上传数据。

@@ -2,6 +2,12 @@
 
 # SoundSense Awakening · Music Ability Training and Assessment System
 
+<p align="center">
+  <img src="outputs/chordz-cn/icons/logo-swuedu.png" height="64" alt="Southwest University">
+  <img src="outputs/chordz-cn/icons/logo-music.png" height="64" alt="School of Music, Southwest University">
+  <img src="outputs/chordz-cn/icons/logo-jinyun.png" height="64" alt="Jinyun SonicAI">
+</p>
+
 <img src="outputs/chordz-cn/icons/icon-192.png" width="96" alt="SoundSense Awakening icon">
 
 An offline training tool for school music classrooms and basic musicianship courses. Students practise directly on a computer; the program listens to every strike through the microphone, judges whether the rhythm is accurate, and keeps practice data that can be compared and exported. Teachers can maintain a class roster, assign homework, review pass rates and generate pre/post progress reports. Everything runs on the local machine: no network, no account, no data upload.
