@@ -21,6 +21,7 @@ outputs/新版/
 outputs/*-win32-x64/
 work/legong-app/dist/
 work/legong-app/build/
+work/legong-app/app/
 work/legong-app/node_modules/
 work/.electron-cache/
 work/.localappdata/

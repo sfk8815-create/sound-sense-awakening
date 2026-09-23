@@ -114,6 +114,14 @@
             <button class="hw-tab" id="tab-student">学生：我的作业</button>
         </div>
 
+        <div class="hw-panel hide" id="role-confirm" style="border: 1px solid rgba(250, 204, 21, 0.55);">
+            <div class="hw-row">
+                <span class="hw-meta">确认进入教师视角？这里可以布置作业、导出作业单、导入学生成绩。学生练作业不需要进来。</span>
+                <button class="btn ghost" id="role-yes">是，进入教师视角</button>
+                <button class="btn ghost" id="role-no">取消</button>
+            </div>
+        </div>
+
         <section id="teacher-view">
             <div class="hw-panel">
                 <h2>布置新作业</h2>
@@ -135,6 +143,29 @@
                     <span class="hw-meta">截止日期</span>
                     <input class="hw-input" id="hw-due" type="date" style="flex: 0 0 170px;">
                 </div>
+                <div class="hw-row" id="scope-theory" style="margin-bottom: 10px;">
+                    <span class="hw-meta">练什么</span>
+                    <select class="hw-select" id="scope-topic">
+                        <option value="all">综合卷（八类混合）</option>
+                        <option value="duration">音值组合与时值</option>
+                        <option value="meter">拍号与节拍</option>
+                        <option value="interval">音程</option>
+                        <option value="chord">和弦</option>
+                        <option value="key">调号与调性</option>
+                        <option value="scale">音阶与调式</option>
+                        <option value="notation">记谱法基础</option>
+                        <option value="term">音乐术语与记号</option>
+                    </select>
+                    <span class="hw-hint" style="margin: 0;">答的必须是这个题型才算达标</span>
+                </div>
+                <div class="hw-row hide" id="scope-rhythm" style="margin-bottom: 10px;">
+                    <span class="hw-meta">练哪几关</span>
+                    <input class="hw-input" id="scope-level-from" type="number" min="1" max="12" value="1" style="flex: 0 0 90px;">
+                    <span class="hw-meta">到</span>
+                    <input class="hw-input" id="scope-level-to" type="number" min="1" max="12" value="12" style="flex: 0 0 90px;">
+                    <span class="hw-meta">关</span>
+                    <span class="hw-hint" style="margin: 0;">留 1 到 12 表示不限关卡，学生点「去完成」会直接跳到指定关</span>
+                </div>
                 <textarea class="hw-textarea" id="hw-note" placeholder="给学生的提示，例如：重点复习音程转位与调号顺序"></textarea>
                 <div class="hw-row" style="margin-top: 10px;">
                     <span class="hw-meta">布置对象：</span>
@@ -149,12 +180,41 @@
             </div>
 
             <div class="hw-panel">
+                <h2>发给学生 / 收学生成绩</h2>
+                <div class="hw-row">
+                    <button class="btn ghost" id="export-hw">导出作业单（文件）</button>
+                    <button class="btn ghost" id="import-score">导入学生成绩</button>
+                    <input type="file" id="score-file" accept=".json,application/json" class="hide">
+                    <span class="hw-hint" id="transfer-msg" style="margin: 0;"></span>
+                </div>
+                <div class="hw-row hide" id="code-box" style="margin-top: 10px;">
+                    <textarea class="hw-textarea" id="code-text" readonly style="min-height: 76px;"></textarea>
+                    <button class="btn ghost" id="code-copy">复制作业码</button>
+                </div>
+                <p class="hw-hint">作业单文件适合整体发给学生；点某条作业的「作业码」可以生成一段短码，直接贴到班级群里逐条发。</p>
+            </div>
+
+            <div class="hw-panel">
                 <h2>作业清单与完成情况</h2>
                 <div id="teacher-list"></div>
             </div>
         </section>
 
         <section id="student-view" class="hide">
+            <div class="hw-panel">
+                <h2>收老师发的作业</h2>
+                <div class="hw-row">
+                    <button class="btn ghost" id="import-hw-file">选择作业单文件</button>
+                    <input type="file" id="hw-file" accept=".json,application/json" class="hide">
+                    <input class="hw-input" id="hw-code" placeholder="或把老师发的作业码粘贴到这里">
+                    <button class="btn ghost" id="import-hw-code">导入作业码</button>
+                </div>
+                <div class="hw-row" style="margin-top: 10px;">
+                    <button class="btn ghost" id="export-score">导出我的成绩（交给老师）</button>
+                    <span class="hw-hint" id="import-msg" style="margin: 0;"></span>
+                </div>
+                <p class="hw-hint">作业单里只有作业要求，不含题目；成绩文件里只有你在本机的练习记录。</p>
+            </div>
             <div class="hw-panel">
                 <h2>我是谁</h2>
                 <div class="hw-row">
@@ -178,6 +238,12 @@
             var THEORY_KEY = "theory-records";
             var RHYTHM_KEY = "rhythm-training-records";
             var STUDENT_KEY = "rhythm-current-student";
+            var ACTIVE_KEY = "legong-active-hw";
+
+            var TOPIC_LABEL = {
+                all: "综合卷", duration: "音值组合与时值", meter: "拍号与节拍", interval: "音程",
+                chord: "和弦", key: "调号与调性", scale: "音阶与调式", notation: "记谱法基础", term: "音乐术语与记号",
+            };
 
             var KIND_LABEL = { theory: "乐理考题", rhythm: "节奏闯关", free: "自由练习" };
             var KIND_PAGE = { theory: "theory-practice.html", rhythm: "rhythm-training.html", free: "" };
@@ -202,6 +268,142 @@
                 } catch (error) {
                     /* 存储不可用时忽略 */
                 }
+            }
+
+            function stamp() {
+                var now = new Date();
+                function pad(value) { return (value < 10 ? "0" : "") + value; }
+                return now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + "-" +
+                    pad(now.getHours()) + pad(now.getMinutes());
+            }
+
+            function downloadText(filename, text) {
+                var blob = new Blob([text], { type: "application/json;charset=utf-8" });
+                var url = URL.createObjectURL(blob);
+                var link = document.createElement("a");
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+            }
+
+            function passPayload(list) {
+                return {
+                    app: "音感觉醒",
+                    type: "homework-pass",
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    homeworks: list.map(function (hw) {
+                        return {
+                            id: hw.id,
+                            title: hw.title,
+                            kind: hw.kind,
+                            scope: hw.scope || {},
+                            minRate: hw.minRate,
+                            minTotal: hw.minTotal || 0,
+                            due: hw.due || "",
+                            note: hw.note || "",
+                            names: hw.names || [],
+                            createdAt: hw.createdAt || "",
+                            createdAtMs: hw.createdAtMs || 0,
+                        };
+                    }),
+                };
+            }
+
+            function encodePass(payload) {
+                var bytes = new TextEncoder().encode(JSON.stringify(payload));
+                var binary = "";
+                for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                return "SND1" + btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+            }
+
+            function decodePass(code) {
+                var body = String(code || "").trim().replace(/\s+/g, "");
+                if (body.indexOf("SND1") !== 0) throw new Error("这段码不是音感觉醒的作业码");
+                var data = body.slice(4).replace(/-/g, "+").replace(/_/g, "/");
+                while (data.length % 4) data += "=";
+                var binary = atob(data);
+                var bytes = new Uint8Array(binary.length);
+                for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                return JSON.parse(new TextDecoder().decode(bytes));
+            }
+
+            function applyHomeworkPass(data) {
+                if (!data || data.type !== "homework-pass") throw new Error("这不是作业单文件");
+                if (!Array.isArray(data.homeworks)) throw new Error("作业单里没有作业");
+                var list = loadHw();
+                var added = 0;
+                var updated = 0;
+                data.homeworks.forEach(function (item) {
+                    if (!item || !item.id || !item.title) return;
+                    if (["theory", "rhythm", "free"].indexOf(item.kind) === -1) return;
+                    var clean = {
+                        id: String(item.id),
+                        title: String(item.title),
+                        kind: item.kind,
+                        scope: item.scope || {},
+                        minRate: Number(item.minRate) || 0.9,
+                        minTotal: Number(item.minTotal) || 0,
+                        due: item.due || "",
+                        note: item.note || "",
+                        names: Array.isArray(item.names) ? item.names : [],
+                        createdAt: item.createdAt || "",
+                        createdAtMs: Number(item.createdAtMs) || Date.now(),
+                        done: {},
+                    };
+                    var index = -1;
+                    for (var i = 0; i < list.length; i++) {
+                        if (list[i].id === clean.id) { index = i; break; }
+                    }
+                    if (index === -1) {
+                        list.push(clean);
+                        added += 1;
+                    } else {
+                        clean.done = list[index].done || {};
+                        list[index] = clean;
+                        updated += 1;
+                    }
+                });
+                write(HW_KEY, list);
+                renderStudent();
+                renderTeacher();
+                return "作业单已导入：新增 " + added + " 条，更新 " + updated + " 条。";
+            }
+
+            function mergeRecords(key, incoming, keyOf) {
+                var existing = recordsOf(key);
+                var seen = {};
+                existing.forEach(function (item) { seen[keyOf(item)] = true; });
+                var added = 0;
+                incoming.forEach(function (item) {
+                    if (!item || typeof item !== "object") return;
+                    var id = keyOf(item);
+                    if (seen[id]) return;
+                    seen[id] = true;
+                    existing.push(item);
+                    added += 1;
+                });
+                if (added) write(key, existing);
+                return added;
+            }
+
+            function applyScoreReport(data) {
+                if (!data || data.type !== "score-report") throw new Error("这不是成绩文件");
+                var student = data.student || "本人";
+                var theory = Array.isArray(data.theory) ? data.theory : [];
+                var rhythm = Array.isArray(data.rhythm) ? data.rhythm : [];
+                var addedTheory = mergeRecords(THEORY_KEY, theory, function (item) {
+                    return (item.student || "本人") + "|" + (item.at || "");
+                });
+                var addedRhythm = mergeRecords(RHYTHM_KEY, rhythm, function (item) {
+                    return (item.student || "本人") + "|" + (item.timestamp || "");
+                });
+                renderTeacher();
+                renderStudent();
+                return "已导入 " + student + " 的成绩：乐理 " + addedTheory + " 条、节奏 " + addedRhythm + " 条。";
             }
 
             function loadHw() {
@@ -238,6 +440,18 @@
                 return "还剩 " + left + " 天（" + hw.due + "）";
             }
 
+            function scopeText(hw) {
+                var scope = hw.scope || {};
+                if (hw.kind === "theory" && scope.topic && scope.topic !== "all") {
+                    return "题型：" + (TOPIC_LABEL[scope.topic] || scope.topic);
+                }
+                if (hw.kind === "rhythm" && scope.levelFrom) {
+                    if (Number(scope.levelFrom) === Number(scope.levelTo)) return "第 " + scope.levelFrom + " 关";
+                    return "第 " + scope.levelFrom + " 至 " + scope.levelTo + " 关";
+                }
+                return "";
+            }
+
             function evaluate(hw, name) {
                 var minRate = rateOf(hw.minRate);
                 if (hw.kind === "free") {
@@ -248,23 +462,42 @@
                     var mine = recordsOf(THEORY_KEY).filter(function (item) {
                         return (item.student || "本人") === name && new Date(item.at || 0).getTime() >= hw.createdAtMs;
                     });
+                    var topic = (hw.scope && hw.scope.topic) || "";
                     var best = null;
-                    mine.forEach(function (item) {
+                    var inScope = mine.filter(function (item) {
+                        if (!topic || topic === "all") return true;
+                        return (item.type || "") === topic;
+                    });
+                    inScope.forEach(function (item) {
                         var passed = rateOf(item.accuracy) >= minRate && (Number(item.total) || 0) >= (Number(hw.minTotal) || 0);
                         if (passed && (!best || rateOf(item.accuracy) > rateOf(best.accuracy))) best = item;
                     });
                     if (best) return { ok: true, text: "达标 " + Math.round(rateOf(best.accuracy) * 100) + "%（" + best.total + " 题）", at: best.at };
-                    return { ok: false, text: mine.length ? "已练 " + mine.length + " 次，未达标" : "未开始" };
+                    if (!mine.length) return { ok: false, text: "未开始" };
+                    if (topic && topic !== "all" && !inScope.length) {
+                        return { ok: false, text: "已练 " + mine.length + " 次，但都不是「" + (TOPIC_LABEL[topic] || topic) + "」题型" };
+                    }
+                    return { ok: false, text: "已练 " + mine.length + " 次，未达标" };
                 }
                 var rhythm = recordsOf(RHYTHM_KEY).filter(function (item) {
                     return (item.student || "本人") === name && (Number(item.timestamp) || 0) >= hw.createdAtMs;
                 });
+                var scope = hw.scope || {};
                 var hit = null;
-                rhythm.forEach(function (item) {
+                var rhythmInScope = rhythm.filter(function (item) {
+                    if (!scope.levelFrom) return true;
+                    var level = Number(item.level) || 0;
+                    return level >= Number(scope.levelFrom) && level <= Number(scope.levelTo);
+                });
+                rhythmInScope.forEach(function (item) {
                     if (rateOf(item.accuracy) >= minRate && (!hit || rateOf(item.accuracy) > rateOf(hit.accuracy))) hit = item;
                 });
                 if (hit) return { ok: true, text: "达标 " + Math.round(rateOf(hit.accuracy) * 100) + "%", at: hit.time };
-                return { ok: false, text: rhythm.length ? "已练 " + rhythm.length + " 次，未达标" : "未开始" };
+                if (!rhythm.length) return { ok: false, text: "未开始" };
+                if (scope.levelFrom && !rhythmInScope.length) {
+                    return { ok: false, text: "已练 " + rhythm.length + " 次，但都不在指定关卡" };
+                }
+                return { ok: false, text: "已练 " + rhythm.length + " 次，未达标" };
             }
 
             function renderNames() {
@@ -301,12 +534,14 @@
                         "<span class='hw-tag " + (done === names.length ? "ok" : "wait") + "'>" + KIND_LABEL[hw.kind] + "</span>" +
                         "达标线 " + Math.round(rateOf(hw.minRate) * 100) + "%" +
                         (hw.kind === "theory" && hw.minTotal ? "、不少于 " + hw.minTotal + " 题" : "") +
+                        (scopeText(hw) ? " · " + scopeText(hw) : "") +
                         " · " + deadlineText(hw) + " · 完成 " + done + "/" + names.length +
                         "</div>" +
                         (hw.note ? "<div class='hw-meta'>提示：" + hw.note + "</div>" : "") +
                         "<div class='hw-row' style='margin-top:8px;'>" +
                         "<button class='btn ghost hw-toggle' data-id='" + hw.id + "'>查看名单</button>" +
                         "<button class='btn ghost hw-export' data-id='" + hw.id + "'>导出成绩</button>" +
+                        "<button class='btn ghost hw-code' data-id='" + hw.id + "'>作业码</button>" +
                         "<button class='hw-del hw-remove' data-id='" + hw.id + "'>删除</button>" +
                         "</div>" +
                         "<div class='hide' id='detail-" + hw.id + "'>" +
@@ -340,11 +575,12 @@
                         "<div class='hw-meta'><span class='hw-tag " + tagClass + "'>" + tagText + "</span>" +
                         KIND_LABEL[hw.kind] + " · 达标线 " + Math.round(rateOf(hw.minRate) * 100) + "%" +
                         (hw.kind === "theory" && hw.minTotal ? "、不少于 " + hw.minTotal + " 题" : "") +
+                        (scopeText(hw) ? " · " + scopeText(hw) : "") +
                         " · " + deadlineText(hw) + "</div>" +
                         (hw.note ? "<div class='hw-meta'>老师提示：" + hw.note + "</div>" : "") +
                         "<div class='hw-meta'>当前状态：" + result.text + "</div>" +
                         "<div class='hw-row' style='margin-top:8px;'>" +
-                        (page ? "<button class='btn hw-go' data-page='" + page + "'>去完成</button>" : "") +
+                        (page ? "<button class='btn hw-go' data-page='" + page + "' data-hw='" + hw.id + "'>去完成</button>" : "") +
                         (hw.kind === "free" && !result.ok ? "<button class='btn hw-done' data-id='" + hw.id + "'>标记完成</button>" : "") +
                         "</div></div>";
                 }).join("");
@@ -358,10 +594,28 @@
                     return;
                 }
                 var kind = el("hw-kind").value;
+                var scope = {};
+                if (kind === "theory") {
+                    var topic = el("scope-topic").value;
+                    if (topic && topic !== "all") scope.topic = topic;
+                } else if (kind === "rhythm") {
+                    var from = Math.min(Math.max(Number(el("scope-level-from").value) || 1, 1), 12);
+                    var to = Math.min(Math.max(Number(el("scope-level-to").value) || 12, 1), 12);
+                    if (from > to) {
+                        var swap = from;
+                        from = to;
+                        to = swap;
+                    }
+                    if (from > 1 || to < 12) {
+                        scope.levelFrom = from;
+                        scope.levelTo = to;
+                    }
+                }
                 var hw = {
                     id: "hw-" + Date.now(),
                     title: title,
                     kind: kind,
+                    scope: scope,
                     minRate: Math.min(100, Math.max(50, Number(el("hw-rate").value) || 90)) / 100,
                     minTotal: kind === "theory" ? (Number(el("hw-total").value) || 0) : 0,
                     due: el("hw-due").value || "",
@@ -417,20 +671,35 @@
                 }
             }
 
-            el("tab-teacher").addEventListener("click", function () {
+            function showTeacher() {
                 el("tab-teacher").classList.add("on");
                 el("tab-student").classList.remove("on");
                 el("teacher-view").classList.remove("hide");
                 el("student-view").classList.add("hide");
-            });
+                el("role-confirm").classList.add("hide");
+            }
 
-            el("tab-student").addEventListener("click", function () {
+            function showStudent() {
                 el("tab-student").classList.add("on");
                 el("tab-teacher").classList.remove("on");
                 el("student-view").classList.remove("hide");
                 el("teacher-view").classList.add("hide");
+                el("role-confirm").classList.add("hide");
                 fillWhoOptions();
                 renderStudent();
+            }
+
+            el("tab-teacher").addEventListener("click", function () {
+                el("role-confirm").classList.remove("hide");
+                el("role-confirm").scrollIntoView({ block: "nearest" });
+            });
+
+            el("tab-student").addEventListener("click", showStudent);
+
+            el("role-yes").addEventListener("click", showTeacher);
+
+            el("role-no").addEventListener("click", function () {
+                el("role-confirm").classList.add("hide");
             });
 
             el("all-btn").addEventListener("click", function () {
@@ -452,9 +721,12 @@
             });
 
             el("hw-kind").addEventListener("change", function () {
-                var isTheory = el("hw-kind").value === "theory";
+                var kind = el("hw-kind").value;
+                var isTheory = kind === "theory";
                 el("total-label").textContent = isTheory ? "题量要求" : "题量要求（本类型不适用）";
                 el("hw-total").disabled = !isTheory;
+                el("scope-theory").classList.toggle("hide", !isTheory);
+                el("scope-rhythm").classList.toggle("hide", kind !== "rhythm");
             });
 
             el("create-btn").addEventListener("click", createHomework);
@@ -468,10 +740,114 @@
                 } else if (event.target.classList.contains("hw-export")) {
                     var target = list.filter(function (hw) { return hw.id === id; })[0];
                     if (target) exportCsv(target);
+                } else if (event.target.classList.contains("hw-code")) {
+                    var coded = list.filter(function (hw) { return hw.id === id; })[0];
+                    if (coded) {
+                        el("code-text").value = encodePass(passPayload([coded]));
+                        el("code-box").classList.remove("hide");
+                        el("transfer-msg").textContent = "把这段作业码发给学生，学生在自己的设备上粘贴导入。";
+                    }
                 } else if (event.target.classList.contains("hw-remove")) {
                     write(HW_KEY, list.filter(function (hw) { return hw.id !== id; }));
                     renderTeacher();
                 }
+            });
+
+            el("export-hw").addEventListener("click", function () {
+                var list = loadHw();
+                if (!list.length) {
+                    el("transfer-msg").textContent = "还没有作业可以导出。";
+                    return;
+                }
+                downloadText("音感觉醒-作业单-" + stamp() + ".json", JSON.stringify(passPayload(list), null, 2));
+                el("transfer-msg").textContent = "已导出 " + list.length + " 条作业，把这个文件发给学生。";
+            });
+
+            el("code-copy").addEventListener("click", function () {
+                var box = el("code-text");
+                box.select();
+                var ok = false;
+                try {
+                    ok = document.execCommand("copy");
+                } catch (error) {
+                    ok = false;
+                }
+                if (!ok && navigator.clipboard) {
+                    navigator.clipboard.writeText(box.value);
+                    ok = true;
+                }
+                el("transfer-msg").textContent = ok ? "作业码已复制。" : "复制失败，请手动选中后按 Ctrl+C。";
+            });
+
+            el("import-score").addEventListener("click", function () {
+                el("score-file").click();
+            });
+
+            el("score-file").addEventListener("change", function () {
+                var file = el("score-file").files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function () {
+                    try {
+                        el("transfer-msg").textContent = applyScoreReport(JSON.parse(reader.result));
+                    } catch (error) {
+                        el("transfer-msg").textContent = "导入失败：" + error.message + "（原有数据没有改动）";
+                    }
+                    el("score-file").value = "";
+                };
+                reader.readAsText(file, "utf-8");
+            });
+
+            el("import-hw-file").addEventListener("click", function () {
+                el("hw-file").click();
+            });
+
+            el("hw-file").addEventListener("change", function () {
+                var file = el("hw-file").files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function () {
+                    try {
+                        el("import-msg").textContent = applyHomeworkPass(JSON.parse(reader.result));
+                    } catch (error) {
+                        el("import-msg").textContent = "导入失败：" + error.message + "（原有数据没有改动）";
+                    }
+                    el("hw-file").value = "";
+                };
+                reader.readAsText(file, "utf-8");
+            });
+
+            el("import-hw-code").addEventListener("click", function () {
+                try {
+                    el("import-msg").textContent = applyHomeworkPass(decodePass(el("hw-code").value));
+                    el("hw-code").value = "";
+                } catch (error) {
+                    el("import-msg").textContent = "导入失败：" + error.message + "（原有数据没有改动）";
+                }
+            });
+
+            el("export-score").addEventListener("click", function () {
+                var who = currentWho || "";
+                function mine(item) {
+                    return !who || (item.student || "本人") === who;
+                }
+                var theory = recordsOf(THEORY_KEY).filter(mine);
+                var rhythm = recordsOf(RHYTHM_KEY).filter(mine);
+                if (!theory.length && !rhythm.length) {
+                    el("import-msg").textContent = "本机还没有练习记录可以导出。";
+                    return;
+                }
+                var payload = {
+                    app: "音感觉醒",
+                    type: "score-report",
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    student: who || "本人",
+                    theory: theory,
+                    rhythm: rhythm,
+                };
+                downloadText("音感觉醒-成绩-" + (who || "本人") + "-" + stamp() + ".json", JSON.stringify(payload, null, 2));
+                el("import-msg").textContent = "成绩已导出（乐理 " + theory.length + " 条、节奏 " + rhythm.length + " 条），交给老师导入。";
             });
 
             el("who-save").addEventListener("click", function () {
@@ -489,6 +865,20 @@
             el("student-list").addEventListener("click", function (event) {
                 var page = event.target.getAttribute("data-page");
                 if (page) {
+                    var hwId = event.target.getAttribute("data-hw");
+                    var target = loadHw().filter(function (hw) { return hw.id === hwId; })[0];
+                    if (target) {
+                        write(ACTIVE_KEY, {
+                            id: target.id,
+                            title: target.title,
+                            kind: target.kind,
+                            minRate: rateOf(target.minRate),
+                            minTotal: Number(target.minTotal) || 0,
+                            scope: target.scope || {},
+                            due: target.due || "",
+                            at: Date.now(),
+                        });
+                    }
                     window.location.href = page;
                     return;
                 }
@@ -507,6 +897,7 @@
 
             renderNames();
             renderTeacher();
+            showStudent();
         })();
     </script>
     <script>

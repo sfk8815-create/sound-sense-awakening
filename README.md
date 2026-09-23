@@ -1,3 +1,5 @@
+[English](README.en.md) | **简体中文**
+
 # 音感觉醒 · 音乐能力训练与测评系统
 
 <img src="outputs/chordz-cn/icons/icon-192.png" width="96" alt="音感觉醒图标">
@@ -131,17 +133,21 @@ node tools/preflight-check.mjs
 
 © 西南大学·音乐声学实验室 · 西南大学·艺术人类学研究所 · 西南大学·中国音乐心理健康研究所
 
-作者：马荣寰 —— 邮箱 / 社交媒体账号待补充
+作者：马荣寰 —— 324737404+mading686-dotcom@users.noreply.github.com
+
+由缙云声智维护。主站 https://sfk8815-create.github.io ｜ 副站 https://acouscope.vercel.app ｜ GitHub https://github.com/sfk8815-create
 
 ### Copyright and authorship
 
 © Music Acoustics Laboratory, Southwest University · Institute of Artistic Anthropology, Southwest University · Institute of Chinese Music and Mental Health, Southwest University
 
-Author: Ma Ronghuan — email / social media account to be added
+Author: Ma Ronghuan — 324737404+mading686-dotcom@users.noreply.github.com
+
+Maintained by the 缙云声智 studio. Main site https://sfk8815-create.github.io | Mirror https://acouscope.vercel.app | GitHub https://github.com/sfk8815-create
 
 ## 许可证与致谢
 
-本项目以 MIT 许可证开源，见 [LICENSE](LICENSE)。
+本项目以 MIT 许可证开源，见 [LICENSE](LICENSE)。英文说明见 [README.en.md](README.en.md)。
 
 项目的前身是 [Chordz](https://github.com/mymindwentblvnk/chordz)（作者 Michael Eichenseer，MIT 许可证）。和弦练习、进行曲库、音高识别与乐理手册等页面的结构、样式与部分交互逻辑基于该项目改写，界面文案已全部重写为中文并做了功能扩展，原始版权声明已完整保留。其他第三方来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 

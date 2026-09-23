@@ -109,6 +109,11 @@
             <p class="tp-hint" style="margin: 0;">艺考与期中期末常考的笔试题型：音值组合、拍号节拍、音程、和弦、调号调性、音阶调式、记谱法、音乐术语。</p>
         </header>
 
+        <section class="tp-panel hide" id="hw-panel" style="border: 1px solid rgba(45, 212, 191, 0.55);">
+            <div class="tp-sub" style="margin: 0;" id="hw-text"></div>
+            <p class="tp-hint" id="hw-hint" style="margin: 6px 0 0 0;">下面的题型和题量已按作业设好，直接点「开始做作业」即可。练完回作业页会自动判定达标。</p>
+        </section>
+
         <section class="tp-panel" id="setup-panel">
             <h2>练习设置</h2>
             <div class="tp-row" style="margin-bottom: 10px;">
@@ -891,6 +896,31 @@
                 }
                 renderHistory();
             });
+
+            var activeHw = null;
+            try {
+                activeHw = JSON.parse(localStorage.getItem("legong-active-hw") || "null");
+            } catch (error) {
+                activeHw = null;
+            }
+            if (activeHw && activeHw.kind === "theory") {
+                var hwTopic = (activeHw.scope && activeHw.scope.topic) || "all";
+                if (!TYPE_NAMES[hwTopic] && hwTopic !== "all") hwTopic = "all";
+                document.getElementById("type-select").value = hwTopic;
+                if (activeHw.minTotal > 0) {
+                    state.total = activeHw.minTotal;
+                    Array.prototype.forEach.call(countButtons, function (button) {
+                        button.classList.toggle("on", parseInt(button.getAttribute("data-count"), 10) === activeHw.minTotal);
+                    });
+                }
+                var hwParts = ["题型：" + (TYPE_NAMES[hwTopic] || "综合卷")];
+                if (activeHw.minTotal > 0) hwParts.push("不少于 " + activeHw.minTotal + " 题");
+                hwParts.push("达标 " + Math.round((activeHw.minRate || 0) * 100) + "%");
+                if (activeHw.due) hwParts.push("截止 " + activeHw.due);
+                document.getElementById("hw-text").textContent = "当前作业：" + activeHw.title + " · " + hwParts.join(" · ");
+                document.getElementById("hw-panel").classList.remove("hide");
+                document.getElementById("start-btn").textContent = "开始做作业";
+            }
 
             renderHistory();
         })();

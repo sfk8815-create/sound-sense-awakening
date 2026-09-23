@@ -275,6 +275,7 @@
             </div>
             <div id="level-path" class="level-path"></div>
             <p class="hint" id="level-task" style="margin: 10px 0 0 0;"></p>
+            <p class="hint" id="homework-banner" style="display: none; margin: 8px 0 0 0; color: #2dd4bf;"></p>
         </div>
 
         <div class="panel">
@@ -1085,6 +1086,7 @@
                 signature: el("time-signature").value,
                 pattern: PATTERNS[el("pattern-select").value].label,
                 cue: el("cue-mode").value,
+                level: levelState.current,
                 accuracy,
                 avgOffset,
                 score,
@@ -1937,6 +1939,30 @@
         });
 
         applyLevel(levelState.current);
+
+        (function applyHomeworkScope() {
+            let activeHw = null;
+            try {
+                activeHw = JSON.parse(localStorage.getItem("legong-active-hw") || "null");
+            } catch (error) {
+                activeHw = null;
+            }
+            if (!activeHw || activeHw.kind !== "rhythm") return;
+            const scope = activeHw.scope || {};
+            if (scope.levelFrom) {
+                applyLevel(Math.min(Math.max(Number(scope.levelFrom) || 1, 1), LEVELS.length));
+            }
+            const banner = el("homework-banner");
+            if (!banner) return;
+            const range = scope.levelFrom
+                ? (Number(scope.levelFrom) === Number(scope.levelTo)
+                    ? `第 ${scope.levelFrom} 关`
+                    : `第 ${scope.levelFrom} 至 ${scope.levelTo} 关`)
+                : "任意关卡";
+            banner.textContent = `当前作业：${activeHw.title} · 练 ${range} · 达标 ${Math.round((activeHw.minRate || 0) * 100)}%`;
+            banner.style.display = "block";
+        })();
+
         updateCustomPanel();
         buildPattern();
         renderLevelPath();
