@@ -899,6 +899,17 @@ def build():
         doc,
         "软件中的音色与节拍声均由程序实时合成，未使用任何第三方录音、乐谱图片或版权素材。",
     )
+    add_body(doc, "版权与作者：")
+    add_body(
+        doc,
+        "© 西南大学·音乐声学实验室 · 西南大学·艺术人类学研究所 · 西南大学·中国音乐心理健康研究所",
+    )
+    add_body(doc, "作者：马荣寰 —— 324737404+mading686-dotcom@users.noreply.github.com")
+    add_body(
+        doc,
+        "本软件由缙云声智维护。主站 https://sfk8815-create.github.io ｜ "
+        "副站 https://acouscope.vercel.app ｜ GitHub https://github.com/sfk8815-create",
+    )
 
     # ---------------- 附录 ----------------
     doc.add_page_break()
