@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "面向音乐课堂的节奏、听音与乐理训练工具",
   "main": "main.js",
-  "author": "乐感工坊",
+  "author": "音感觉醒",
   "license": "MIT",
   "scripts": {
     "start": "electron .",

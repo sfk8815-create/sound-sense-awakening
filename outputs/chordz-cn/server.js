@@ -43,7 +43,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, "127.0.0.1", () => {
-  console.log(`和弦训练室已启动：http://127.0.0.1:${port}/`);
+  console.log(`音感觉醒已启动：http://127.0.0.1:${port}/`);
   console.log("关闭这个窗口即可停止服务。");
 });
 

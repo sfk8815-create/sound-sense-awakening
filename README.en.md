@@ -10,7 +10,7 @@
 
 <img src="outputs/chordz-cn/icons/icon-192.png" width="96" alt="SoundSense Awakening icon">
 
-An offline training tool for school music classrooms and basic musicianship courses. Students practise directly on a computer; the program listens to every strike through the microphone, judges whether the rhythm is accurate, and keeps practice data that can be compared and exported. Teachers can maintain a class roster, assign homework, review pass rates and generate pre/post progress reports. Everything runs on the local machine: no network, no account, no data upload.
+An offline training tool for school music classrooms and basic musicianship courses. Students practise directly on a computer; the program listens to every strike through the microphone, judges whether the rhythm is accurate, and keeps practice data that can be compared and exported. Teachers can maintain a class roster, assign homework, review pass rates and generate pre/post progress reports. Everything runs on the local machine: no account and no data upload, and the hosted version only loads the page itself from GitHub Pages, so no network is needed at runtime.
 
 License: MIT | Platform: Windows (the browser build is cross-platform) | Language: Simplified Chinese
 
@@ -82,7 +82,7 @@ work/                     Page sources, build scripts and check scripts
 work/legong-app/          Electron wrapper sources
 ```
 
-Every page of the site is a single HTML file with inline styles and logic, which makes classroom copying and projection simple. The page files under `work/` are the single source of truth; the build script turns them into the finished site.
+Every page of the site is a single HTML file with inline styles and logic, which makes classroom copying and projection simple. The page files under `work/` are the single source of truth; the build script turns them into the finished site. Those source pages keep a historical brand string which the build script replaces with the current name, so edit the sources under `work/`, not the finished files.
 
 ## Technology
 
@@ -119,7 +119,7 @@ node tools/preflight-check.mjs
 
 ## Privacy
 
-The software does not connect to the network, does not create accounts and does not upload any data. Audio captured by the microphone is analysed in memory only; it is never recorded, stored or transmitted. Practice data stays in the local browser and can be exported or cleared by the user at any time.
+The software needs no network at runtime (the hosted version only loads the page itself from GitHub Pages), creates no accounts and uploads no data. Audio captured by the microphone is analysed in memory only; it is never recorded, stored or transmitted. Practice data stays in the local browser and can be exported or cleared by the user at any time.
 
 ## Known limitations
 
