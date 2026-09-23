@@ -14,6 +14,8 @@ An offline training tool for school music classrooms and basic musicianship cour
 
 License: MIT | Platform: Windows (the browser build is cross-platform) | Language: Simplified Chinese
 
+Open the web version: https://sfk8815-create.github.io/sound-sense-awakening/
+
 ## The problem it solves
 
 Rhythm and theory training has long depended on the teacher listening to each student in turn. In a forty-minute lesson it is impossible to hear every student's rhythmic stability, and students practising at home get no objective feedback. Ordinary metronome apps only provide a reference pulse; they cannot tell a student whether the strike was early or late.
