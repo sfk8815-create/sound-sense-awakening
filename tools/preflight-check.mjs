@@ -5,6 +5,7 @@
  */
 
 import { readdir, readFile, stat } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,6 +36,44 @@ const ALLOWED_DOCS = [path.join(root, "docs")];
 const problems = [];
 const bigFiles = [];
 let scanned = 0;
+
+/** 优先用 git 列出"会被发布"的文件（跳过 .gitignore 里的构建产物与个人材料） */
+function gitFileList() {
+  try {
+    const output = execFileSync(
+      "git",
+      ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+      { cwd: root, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 },
+    );
+    const files = output.split("\0").filter(Boolean);
+    return files.length ? files : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function checkFile(rel) {
+  const full = path.join(root, rel);
+  const info = await stat(full).catch(() => null);
+  if (!info || !info.isFile()) return;
+  const sizeMb = info.size / 1024 / 1024;
+  if (sizeMb > MAX_MB) bigFiles.push(`${rel}（${sizeMb.toFixed(1)} MB）`);
+
+  const ext = path.extname(rel).toLowerCase();
+  const inDocs = ALLOWED_DOCS.some((prefix) => full.startsWith(prefix));
+  if (BLOCKED_EXT.has(ext) && !inDocs) {
+    problems.push({ file: rel, rule: "不应提交的文件类型", hint: `${ext} 文件通常属于个人材料或打包产物` });
+    return;
+  }
+  if (!TEXT_EXT.has(ext)) return;
+
+  scanned += 1;
+  const text = await readFile(full, "utf8");
+  for (const rule of RULES) {
+    const hit = text.match(rule.pattern);
+    if (hit) problems.push({ file: rel, rule: rule.name, hint: `${rule.hint}：${hit[0].slice(0, 40)}` });
+  }
+}
 
 async function walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -67,7 +106,16 @@ async function walk(dir) {
   }
 }
 
-await walk(root);
+const fileList = gitFileList();
+if (fileList) {
+  for (const rel of fileList) {
+    const normalized = rel.split("/").join(path.sep);
+    if (SKIP_FILES.has(rel.split(path.sep).join("/"))) continue;
+    await checkFile(normalized);
+  }
+} else {
+  await walk(root);
+}
 
 console.log(`已扫描文本文件 ${scanned} 个`);
 if (bigFiles.length) {
