@@ -217,7 +217,8 @@ async function main() {
   log("  提交：" + sha);
   log("  仓库：" + REPO_URL);
   log("  线上：" + PAGES_URL);
-  log("  （网页版由 GitHub 自动部署，约一两分钟后生效）");
+  log("  （线上要能打开，需先在仓库 Settings → Pages 里把 Source 设为 GitHub Actions；");
+  log("    已开启时，推送后约一两分钟自动生效）");
   log("==============================================");
 }
 
