@@ -21,7 +21,7 @@
     --accent-happy: #10b981;
     --accent-sad: #3b82f6;
     --accent-dark: #8b5cf6;
-    --accent-energetic: #f59e0b;
+    --accent-energetic: #22d3ee;
     --accent-dreamy: #ec4899;
     --accent-tense: #ef4444;
     --border-radius: 16px;
@@ -580,11 +580,11 @@ h1 {
 }
 
 .history-row.top-3 {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), var(--background));
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.15), var(--background));
 }
 
 .history-row.top-3:hover {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.25), rgba(99, 102, 241, 0.1));
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.25), rgba(99, 102, 241, 0.1));
 }
 
 .rank-cell {

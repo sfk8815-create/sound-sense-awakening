@@ -2,7 +2,8 @@
     "use strict";
 
     var STORAGE_KEY = "lg-modes";
-    var settings = { focus: false, light: false, large: false };
+    /* 默认亮色：内页与学生端是同一个界面，首次进入不该突然变成深色 */
+    var settings = { focus: false, light: true, large: false };
 
     try {
         var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -23,7 +24,18 @@
         root.classList.toggle("lg-large", settings.large);
 
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            /* 读-改-写：这个键里还存着配色方案（yx-theme.js），
+               整体覆盖会把它抹掉，所以只更新自己管的三个字段 */
+            var current = {};
+            try {
+                current = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {};
+            } catch (e) {
+                current = {};
+            }
+            current.focus = settings.focus;
+            current.light = settings.light;
+            current.large = settings.large;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
         } catch (error) {
             // 存储不可用时忽略
         }
@@ -87,6 +99,8 @@
             "<span><strong>浅色模式</strong><small>适合明亮的教室和投影环境</small></span></label>",
             '<label class="lg-mode-row"><input type="checkbox" data-mode="large">',
             "<span><strong>大屏模式</strong><small>整体放大，坐在后排也看得清</small></span></label>",
+            '<div class="lg-mode-sub">配色方案</div>',
+            '<div id="lg-palette-slot"></div>',
             '<div class="lg-mode-tip">快捷键：按 F 切换全屏</div>',
         ].join("");
 
@@ -147,6 +161,18 @@
                 toggleFullscreen();
             }
         });
+
+        /* 配色方案：色块与事件都由 yx-theme.js 提供，两个入口共用一套 */
+        try {
+            var slot = panel.querySelector("#lg-palette-slot");
+            if (slot && window.YXTheme) {
+                slot.innerHTML = window.YXTheme.swatchesHTML();
+                window.YXTheme.bind(panel);
+                window.YXTheme.syncUI();
+            }
+        } catch (error) {
+            // 主题模块缺席时静默跳过，不影响显示模式
+        }
 
         wrap.appendChild(panel);
         wrap.appendChild(modeButton);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b0f14">
+    <meta name="theme-color" content="#f2f5ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="音感觉醒">
     <title>工作台 - 音感觉醒</title>
@@ -18,9 +18,9 @@
             border-radius: 18px;
             border: 1px solid var(--surface-light);
             background:
-                radial-gradient(700px 320px at 8% 0%, rgba(15, 118, 110, 0.45), transparent 62%),
-                radial-gradient(560px 280px at 100% 10%, rgba(245, 158, 11, 0.26), transparent 60%),
-                linear-gradient(180deg, #141c24, #0e141a);
+                radial-gradient(700px 320px at 8% 0%, rgba(59, 91, 253, 0.45), transparent 62%),
+                radial-gradient(560px 280px at 100% 10%, rgba(34, 211, 238, 0.26), transparent 60%),
+                linear-gradient(180deg, #121c33, #0b1224);
         }
         .home-hero h1 { margin: 0 0 6px 0; font-size: 1.8rem; letter-spacing: 0.04em; }
         .home-hero p { margin: 0 0 16px 0; color: var(--text-secondary); font-size: 0.95rem; }
@@ -36,7 +36,7 @@
             background: var(--surface-light);
             transition: transform 0.16s ease, filter 0.16s ease;
         }
-        .home-btn.primary { background: linear-gradient(120deg, #0f766e, #14b8a6); color: #fff; }
+        .home-btn.primary { background: linear-gradient(120deg, #3b5bfd, #22d3ee); color: #fff; }
         .home-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
         .home-group { margin-bottom: 20px; }
         .home-group h2 { margin: 0 0 10px 0; font-size: 1rem; }
@@ -55,21 +55,21 @@
             color: var(--text-primary);
             transition: transform 0.16s ease, border-color 0.16s ease;
         }
-        .home-card:hover { transform: translateY(-2px); border-color: rgba(45, 212, 191, 0.55); }
+        .home-card:hover { transform: translateY(-2px); border-color: rgba(34, 211, 238, 0.55); }
         .home-card strong { display: block; font-size: 0.98rem; margin-bottom: 4px; }
         .home-card small { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.5; }
         .home-cards.main { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
         .home-cards.main .home-card {
             padding: 18px 18px;
-            border-color: rgba(45, 212, 191, 0.28);
-            background: linear-gradient(160deg, rgba(15, 118, 110, 0.22), rgba(20, 26, 33, 0.9));
+            border-color: rgba(34, 211, 238, 0.28);
+            background: linear-gradient(160deg, rgba(59, 91, 253, 0.22), rgba(20, 26, 33, 0.9));
         }
         .home-cards.main .home-card strong { font-size: 1.1rem; }
         .home-cards.main .home-card small { font-size: 0.82rem; }
         .home-card .home-tag {
             display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
             font-size: 0.68rem; font-weight: 700; vertical-align: middle;
-            background: rgba(245, 158, 11, 0.18); color: #fbbf24;
+            background: rgba(34, 211, 238, 0.18); color: #67e8f9;
         }
         .home-more {
             border: 1px solid var(--surface-light); border-radius: 14px;
@@ -82,7 +82,7 @@
             padding: 14px 16px; border-radius: 12px; background: var(--surface);
             border: 1px solid var(--surface-light); text-decoration: none; color: var(--text-primary); display: block;
         }
-        .stat-card:hover { border-color: rgba(45, 212, 191, 0.55); }
+        .stat-card:hover { border-color: rgba(34, 211, 238, 0.55); }
         .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--secondary-color); line-height: 1.2; }
         .stat-label { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
         .stat-title { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
@@ -113,9 +113,10 @@
             text-decoration: none;
             font-size: 0.86rem;
         }
-        .home-links a:hover { border-color: rgba(45, 212, 191, 0.55); }
+        .home-links a:hover { border-color: rgba(34, 211, 238, 0.55); }
     </style>
     <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="student.css">
     <link rel="icon" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <script>
@@ -123,6 +124,12 @@
             try {
                 var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
                 var root = document.documentElement;
+                if (!saved || typeof saved !== "object") saved = {};
+                /* 学生端是亮色界面：没手动选过就默认亮色，避免点进来像换了个 App */
+                if (saved.light === undefined) {
+                    saved.light = true;
+                    try { localStorage.setItem("lg-modes", JSON.stringify(saved)); } catch (e) {}
+                }
                 if (saved.light) root.classList.add("lg-light");
                 if (saved.focus) root.classList.add("lg-focus");
                 if (saved.large) root.classList.add("lg-large");
@@ -133,6 +140,25 @@
     <script src="ui-controls.js" defer></script>
     <script src="piano-tone.js"></script>
     <script src="scroll-guard.js" defer></script>
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
 </head>
 <body>
         <nav class="main-nav">
@@ -366,5 +392,11 @@
             });
         }
     </script>
+
+    <!-- 学生端外壳：顶部统一导航栏（含「← 返回学习路径」）+ 跨页过渡（不影响本页原有逻辑） -->
+    <script src="yx-cloud.js"></script>
+    <script src="yx-motion.js"></script>
+    <script src="yx-shell.js"></script>
+<script src="yx-theme.js"></script>
 </body>
 </html>

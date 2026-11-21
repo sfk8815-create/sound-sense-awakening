@@ -3,54 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#f2f5ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="音感觉醒">
     <title>音感觉醒</title>
     <link rel="manifest" href="manifest.json">
-    <script>
-        // Router: redirect to last visited page or home.html as fallback
-        (function() {
-            const LAST_PAGE_KEY = 'chordz-last-page';
-
-            try {
-                const lastPage = localStorage.getItem(LAST_PAGE_KEY);
-
-                // Redirect to last visited page, or home.html if none
-                if (lastPage && lastPage !== 'index.html' && lastPage !== '') {
-                    window.location.href = "home.html";
-                } else {
-                    window.location.href = 'home.html';
-                }
-            } catch (e) {
-                // If localStorage fails, just go to training
-                window.location.href = 'home.html';
-            }
-        })();
-    </script>
-    <link rel="stylesheet" href="theme.css">
     <link rel="icon" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    <script>
-        (function () {
-            try {
-                var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
-                var root = document.documentElement;
-                if (saved.light) root.classList.add("lg-light");
-                if (saved.focus) root.classList.add("lg-focus");
-                if (saved.large) root.classList.add("lg-large");
-            } catch (error) {}
-        })();
-    </script>
-    <script src="modes.js" defer></script>
-    <script src="ui-controls.js" defer></script>
-    <script src="piano-tone.js"></script>
-    <script src="scroll-guard.js" defer></script>
+    <style>
+        html, body { margin: 0; height: 100%; background: #f2f5ff; }
+        body {
+            display: flex; align-items: center; justify-content: center;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            color: #74819e; font-size: .95rem;
+        }
+        .boot-logo {
+            width: 92px; height: 92px; margin: 0 auto 16px; border-radius: 28px;
+            background: linear-gradient(135deg, #3b5bfd, #06b6d4);
+            display: flex; align-items: center; justify-content: center; font-size: 44px;
+            box-shadow: 0 20px 44px -18px rgba(59, 91, 253, .8);
+        }
+        .boot { text-align: center; }
+        a { color: #3b5bfd; }
+    </style>
 </head>
 <body>
-    <!-- This page immediately redirects, so body is empty -->
+    <div class="boot">
+        <div class="boot-logo">🎵</div>
+        <div>正在进入「音感觉醒」…</div>
+        <div style="margin-top:10px;font-size:.84rem">如果没有自动跳转，<a href="start.html">点这里开始</a></div>
+    </div>
     <script>
+        /* 入口统一指向学生端欢迎页 start.html（原来指向教师工作台 home.html）。
+           想直接进完整功能表，访问 home.html。 */
+        (function () {
+            var target = "start.html";
+            try {
+                var params = new URLSearchParams(location.search);
+                if (params.get("full") === "1") target = "home.html";
+            } catch (e) {}
+            location.replace(target);
+        })();
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", function () {
                 navigator.serviceWorker.register("sw.js").catch(function () {});

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="ys-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2f5ff">
+<meta name="apple-mobile-web-app-title" content="音感觉醒">
+<title>登录 / 注册 · 音感觉醒</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="student.css">
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
+</head>
+<body class="ys-body">
+
+<div class="ys-wrap">
+
+    <header class="ys-topbar">
+        <a class="ys-topbar__brand" href="start.html"><span class="dot">🎵</span>音感觉醒</a>
+        <a class="ys-chip" href="learn.html">先随便练练 →</a>
+    </header>
+
+    <section class="ys-hero" style="padding:8px 0 18px">
+        <h1 class="ys-h1" style="font-size:1.42rem">登录后，进度跟着你走</h1>
+        <p class="ys-sub">换个手机、换台电脑，星星和关卡都还在。</p>
+    </section>
+
+    <div class="ys-note ys-note--warn" id="domain-note" style="display:none;margin-bottom:14px"></div>
+
+    <section class="ys-card ys-form-card">
+        <div class="ys-tabs" role="tablist">
+            <button class="ys-tab" role="tab" data-tab="login" aria-selected="true">登录</button>
+            <button class="ys-tab" role="tab" data-tab="signup" aria-selected="false">注册</button>
+            <button class="ys-tab" role="tab" data-tab="reset" aria-selected="false">找回密码</button>
+        </div>
+
+        <div class="ys-note ys-note--err" id="msg" style="display:none;margin-bottom:14px"></div>
+
+        <!-- ============ 登录 ============ -->
+        <div data-panel="login">
+            <div id="pwd-panel">
+                <div class="ys-field">
+                    <label for="li-email">邮箱</label>
+                    <input class="ys-input" id="li-email" type="email" autocomplete="email" placeholder="you@example.com">
+                </div>
+                <div class="ys-field">
+                    <label for="li-pwd">密码</label>
+                    <input class="ys-input" id="li-pwd" type="password" autocomplete="current-password" placeholder="输入密码">
+                </div>
+                <button class="ys-btn ys-btn--primary ys-btn--lg ys-btn--block" id="btn-login-pwd">登录</button>
+                <div style="display:flex;gap:6px;margin-top:12px">
+                    <button class="ys-btn ys-btn--ghost ys-btn--sm" id="to-otp" type="button">改用邮箱验证码登录</button>
+                    <button class="ys-btn ys-btn--ghost ys-btn--sm" id="to-reset" type="button" style="margin-left:auto">忘记密码？</button>
+                </div>
+            </div>
+
+            <div id="otp-panel" style="display:none">
+                <div class="ys-field">
+                    <label for="lo-email">邮箱</label>
+                    <input class="ys-input" id="lo-email" type="email" autocomplete="email" placeholder="you@example.com">
+                </div>
+                <div class="ys-field">
+                    <label for="lo-code">邮箱验证码</label>
+                    <div style="display:flex;gap:8px">
+                        <input class="ys-input" id="lo-code" inputmode="numeric" placeholder="6 位数字">
+                        <button class="ys-btn ys-btn--sm" id="btn-otp-send" type="button" style="flex:none">获取验证码</button>
+                    </div>
+                </div>
+                <button class="ys-btn ys-btn--primary ys-btn--lg ys-btn--block" id="btn-otp-login">验证码登录</button>
+                <button class="ys-btn ys-btn--ghost ys-btn--sm" id="back-pwd" type="button" style="margin-top:10px">← 用密码登录</button>
+            </div>
+        </div>
+
+        <!-- ============ 注册 ============ -->
+        <div data-panel="signup" style="display:none">
+            <div class="ys-field">
+                <label for="su-email">邮箱</label>
+                <input class="ys-input" id="su-email" type="email" autocomplete="email" placeholder="you@example.com">
+            </div>
+            <div class="ys-field">
+                <label for="su-code">邮箱验证码</label>
+                <div style="display:flex;gap:8px">
+                    <input class="ys-input" id="su-code" inputmode="numeric" placeholder="6 位数字">
+                    <button class="ys-btn ys-btn--sm" id="btn-su-send" type="button" style="flex:none">获取验证码</button>
+                </div>
+            </div>
+            <div class="ys-field">
+                <label for="su-pwd">设置密码（至少 6 位）</label>
+                <input class="ys-input" id="su-pwd" type="password" autocomplete="new-password" placeholder="用于以后密码登录">
+            </div>
+            <button class="ys-btn ys-btn--primary ys-btn--lg ys-btn--block" id="btn-signup">注册并开始</button>
+            <p class="ys-note" style="margin-top:12px">本机已有的练习进度会在注册后一起同步到云端。</p>
+        </div>
+
+        <!-- ============ 找回密码 ============ -->
+        <div data-panel="reset" style="display:none">
+            <div class="ys-field">
+                <label for="rs-email">注册邮箱</label>
+                <input class="ys-input" id="rs-email" type="email" autocomplete="email" placeholder="you@example.com">
+            </div>
+            <div class="ys-field">
+                <label for="rs-code">邮箱验证码</label>
+                <div style="display:flex;gap:8px">
+                    <input class="ys-input" id="rs-code" inputmode="numeric" placeholder="6 位数字">
+                    <button class="ys-btn ys-btn--sm" id="btn-rs-send" type="button" style="flex:none">获取验证码</button>
+                </div>
+            </div>
+            <div class="ys-field">
+                <label for="rs-pwd">新密码（至少 6 位）</label>
+                <input class="ys-input" id="rs-pwd" type="password" autocomplete="new-password" placeholder="输入新密码">
+            </div>
+            <button class="ys-btn ys-btn--primary ys-btn--lg ys-btn--block" id="btn-reset">设置新密码</button>
+        </div>
+    </section>
+
+    <p class="ys-sub ys-center" style="font-size:.8rem">
+        登录遇到问题？先<a href="learn.html" style="color:var(--ys-primary)">不登录继续练习</a>，进度会存在本机。
+    </p>
+
+</div>
+
+<div class="ys-toast" id="toast"></div>
+
+<script src="yx-motion.js"></script>
+<script src="yx-cloud.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var t = function (msg, ok) {
+        var el = $("msg");
+        el.textContent = msg;
+        el.className = "ys-note " + (ok ? "ys-note--ok" : "ys-note--err");
+        el.style.display = "";
+        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    };
+    var toast = function (m, ms) {
+        var el = $("toast");
+        el.textContent = m; el.classList.add("show");
+        clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove("show"); }, ms || 2600);
+    };
+    var busy = function (btn, on, text) {
+        btn.disabled = !!on;
+        if (on) { btn._old = btn.textContent; btn.textContent = text || "处理中…"; }
+        else if (btn._old) { btn.textContent = btn._old; }
+    };
+    var em = function (e) {
+        var m = (e && e.message) ? e.message : "操作失败，请稍后再试";
+        if (/network|fetch|Failed to fetch|超时/i.test(m)) m = "网络不给力，请检查网络后重试";
+        if (/Invalid login|invalid_grant|credentials/i.test(m)) m = "账号或密码不正确";
+        return m;
+    };
+
+    /* ---- 环境提示：账号功能仅在正式网址下可用 ---- */
+    var host = location.hostname;
+    if (host === "127.0.0.1" || host === "localhost" || location.protocol === "file:") {
+        var n = $("domain-note");
+        n.innerHTML = "当前是<b>本地预览</b>环境，登录/注册需要联网在正式网址下使用。你可以先不登录继续练习。";
+        n.style.display = "";
+    }
+
+    /* ---- 选项卡 ---- */
+    var tabs = document.querySelectorAll(".ys-tab");
+    Array.prototype.forEach.call(tabs, function (tab) {
+        tab.addEventListener("click", function () {
+            Array.prototype.forEach.call(tabs, function (x) { x.setAttribute("aria-selected", "false"); });
+            tab.setAttribute("aria-selected", "true");
+            var name = tab.getAttribute("data-tab");
+            document.querySelectorAll("[data-panel]").forEach(function (p) {
+                p.style.display = p.getAttribute("data-panel") === name ? "" : "none";
+            });
+            $("msg").style.display = "none";
+        });
+    });
+    var goTab = function (name) {
+        document.querySelector('.ys-tab[data-tab="' + name + '"]').click();
+    };
+    $("to-reset").onclick = function () { goTab("reset"); };
+    $("to-otp").onclick = function () { $("pwd-panel").style.display = "none"; $("otp-panel").style.display = ""; };
+    $("back-pwd").onclick = function () { $("otp-panel").style.display = "none"; $("pwd-panel").style.display = ""; };
+
+    /* ---- 密码登录 ---- */
+    $("btn-login-pwd").onclick = function () {
+        var email = $("li-email").value.trim(), pwd = $("li-pwd").value;
+        if (!email || !pwd) return t("请填写邮箱和密码");
+        busy(this, true);
+        var self = this;
+        window.YX.signInWithPassword(email, pwd)
+            .then(function () { toast("登录成功，进度已同步 ☁️"); setTimeout(function () { location.href = "learn.html"; }, 700); })
+            .catch(function (e) { t(em(e)); busy(self, false); });
+    };
+
+    /* ---- 验证码登录 ---- */
+    var otpStarter = null;
+    $("btn-otp-send").onclick = function () {
+        var email = $("lo-email").value.trim();
+        if (!email) return t("请先填写邮箱");
+        var self = this; busy(self, true, "发送中…");
+        window.YX.otpStart(email)
+            .then(function (s) { otpStarter = s; toast("验证码已发到邮箱，请查收"); t("验证码已发送，10 分钟内有效", true); })
+            .catch(function (e) { t(em(e)); })
+            .then(function () { busy(self, false); self.textContent = "重新发送"; });
+    };
+    $("btn-otp-login").onclick = function () {
+        var email = $("lo-email").value.trim(), code = $("lo-code").value.trim();
+        if (!otpStarter) return t("请先点「获取验证码」");
+        if (!code) return t("请填写邮箱验证码");
+        var self = this; busy(self, true);
+        window.YX.otpComplete(otpStarter, code)
+            .then(function () { toast("登录成功 ☁️"); setTimeout(function () { location.href = "learn.html"; }, 700); })
+            .catch(function (e) { t(em(e)); busy(self, false); });
+    };
+
+    /* ---- 注册 ---- */
+    var suCtx = null;
+    $("btn-su-send").onclick = function () {
+        var email = $("su-email").value.trim();
+        if (!email) return t("请先填写邮箱");
+        var self = this; busy(self, true, "发送中…");
+        window.YX.sendOtp(email)
+            .then(function (d) { suCtx = d; t("验证码已发送，请查收邮箱", true); })
+            .catch(function (e) { t(em(e)); })
+            .then(function () { busy(self, false); self.textContent = "重新发送"; });
+    };
+    $("btn-signup").onclick = function () {
+        var email = $("su-email").value.trim(), code = $("su-code").value.trim(), pwd = $("su-pwd").value;
+        if (!suCtx) return t("请先点「获取验证码」");
+        if (!code) return t("请填写邮箱验证码");
+        if (!pwd || pwd.length < 6) return t("密码至少 6 位");
+        if (suCtx.isExistingUser) {
+            goTab("login");
+            return t("这个邮箱已经注册过了，请直接登录", true);
+        }
+        var self = this; busy(self, true);
+        window.YX.verifySignup(email, code, pwd, suCtx.isExistingUser, suCtx.verificationId)
+            .then(function () { toast("注册成功，本机进度已上传 ☁️"); setTimeout(function () { location.href = "learn.html"; }, 800); })
+            .catch(function (e) { t(em(e)); busy(self, false); });
+    };
+
+    /* ---- 找回密码 ---- */
+    var rsCtx = null;
+    $("btn-rs-send").onclick = function () {
+        var email = $("rs-email").value.trim();
+        if (!email) return t("请先填写注册邮箱");
+        var self = this; busy(self, true, "发送中…");
+        window.YX.resetPassword(email)
+            .then(function (d) { rsCtx = d; t("重置验证码已发送，请查收邮箱", true); })
+            .catch(function (e) { t(em(e)); })
+            .then(function () { busy(self, false); self.textContent = "重新发送"; });
+    };
+    $("btn-reset").onclick = function () {
+        var code = $("rs-code").value.trim(), pwd = $("rs-pwd").value;
+        if (!rsCtx) return t("请先点「获取验证码」");
+        if (!code) return t("请填写邮箱验证码");
+        if (!pwd || pwd.length < 6) return t("新密码至少 6 位");
+        var self = this; busy(self, true);
+        window.YX.finishReset(code, pwd)
+            .then(function () { toast("密码已更新，已为你登录 ☁️"); setTimeout(function () { location.href = "learn.html"; }, 800); })
+            .catch(function (e) { t(em(e)); busy(self, false); });
+    };
+
+    /* ---- 已登录直接走；同时报告云端可用性 ---- */
+    window.YX.init().then(function () {
+        var st = window.YX.status();
+        if (!st.ready) {
+            var n = $("domain-note");
+            n.className = "ys-note ys-note--err";
+            n.innerHTML = "现在<b>连不上云端账号服务</b>（可能离线）。你可以先<a href=\"learn.html\" style=\"color:var(--ys-primary)\">不登录继续练习</a>，进度会存在本机；联网后再来登录即可同步。";
+            n.style.display = "";
+            return;
+        }
+        if (window.YX.currentUser()) {
+            toast("你已经登录了，正在进入学习路径…");
+            setTimeout(function () { location.href = "learn.html"; }, 800);
+        }
+    });
+    /* 供自动化检查用：把云端就绪状态写进 DOM */
+    window.YX.init().then(function () {
+        document.documentElement.setAttribute("data-yx-ready", window.YX.status().ready ? "1" : "0");
+        document.documentElement.setAttribute("data-yx-online", window.YX.status().online ? "1" : "0");
+    });
+})();
+</script>
+<script src="yx-theme.js"></script>
+</body>
+</html>

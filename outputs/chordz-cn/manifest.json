@@ -1,11 +1,11 @@
 {
   "name": "音感觉醒 - 音乐能力训练与测评",
   "short_name": "音感觉醒",
-  "description": "练耳、乐理、节拍与节奏训练的本地音乐学习工具",
-  "start_url": "home.html",
+  "description": "打节奏、听音准、做乐理 —— 学生用手机就能练的音乐能力训练工具",
+  "start_url": "start.html",
   "display": "standalone",
-  "background_color": "#0b0f14",
-  "theme_color": "#0b0f14",
+  "background_color": "#f2f5ff",
+  "theme_color": "#3b5bfd",
   "orientation": "portrait-primary",
   "icons": [
     {

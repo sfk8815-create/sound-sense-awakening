@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="ys-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2f5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="音感觉醒">
+<title>学习路径 · 音感觉醒</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="student.css">
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
+</head>
+<body class="ys-body">
+
+<div class="ys-wrap">
+
+    <header class="ys-topbar">
+        <a class="ys-topbar__brand" href="start.html"><span class="dot">🎵</span>音感觉醒</a>
+        <span class="ys-chip ys-chip--star" id="chip-star">⭐ <b>0</b></span>
+        <span class="ys-chip ys-chip--fire" id="chip-fire">🔥 <b>0</b></span>
+        <a class="ys-avatar" id="chip-avatar" href="me.html" title="我的">🐣</a>
+    </header>
+
+    <section class="ys-card ys-hero-row ys-hero-card">
+        <div class="ys-hero-row__main" style="display:flex;align-items:center;gap:18px;min-width:0">
+            <div class="ys-ring" id="ring" style="--p:0"><div><span id="ring-num">0</span><small>% 完成</small></div></div>
+            <div style="min-width:0;flex:1">
+                <h1 class="ys-h1" id="greet" style="font-size:1.24rem;margin-bottom:4px">你好，同学</h1>
+                <p class="ys-sub" id="subline" style="margin:0;font-size:.88rem"></p>
+            </div>
+        </div>
+        <div class="ys-hero-row__gap" style="height:14px"></div>
+        <a class="ys-btn ys-btn--primary ys-btn--lg ys-btn--block" id="btn-resume" href="rhythm-training.html">▶ 继续练习</a>
+    </section>
+
+    <div class="ys-note" id="cloud-note" style="margin-bottom:16px;display:none"></div>
+
+    <div id="tiers" class="ys-tiergrid"></div>
+
+    <p class="ys-sub ys-center" style="margin-top:22px;font-size:.78rem">
+        想直接翻全部工具？<a href="home.html" style="color:var(--ys-primary)">打开完整功能表</a>
+    </p>
+
+</div>
+
+<div class="ys-toast" id="toast"></div>
+
+<script src="yx-motion.js"></script>
+<script src="yx-cloud.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var readJSON = function (k, fb) {
+        try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v === null ? fb : v; } catch (e) { return fb; }
+    };
+    var toast = function (m, ms) {
+        var el = $("toast"); el.textContent = m; el.classList.add("show");
+        clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove("show"); }, ms || 2200);
+    };
+
+    /* ================= 分级路径定义 ================= */
+    var TIERS = [
+        {
+            id: 1, name: "初级", title: "节奏启蒙", desc: "先把拍子打准",
+            nodes: [
+                { id: "n1", icon: "⏱️", title: "节拍基准", desc: "先听懂 60 拍到底有多快", href: "metronome.html", manual: true },
+                { id: "n2", icon: "🥁", title: "节奏闯关 · 第 1–4 关", desc: "四分、八分音符，跟着节拍器打准", href: "rhythm-training.html", rhythm: [1, 4] },
+                { id: "n3", icon: "🎤", title: "音高识别", desc: "对着麦克风哼一个音，看准不准", href: "find-note.html", manual: true },
+                { id: "n4", icon: "📚", title: "乐理手册 · 音与音程", desc: "随时能翻的基础知识，不用背", href: "wiki.html", manual: true }
+            ]
+        },
+        {
+            id: 2, name: "中级", title: "听音与视奏", desc: "耳朵开始工作",
+            nodes: [
+                { id: "n5", icon: "🥁", title: "节奏闯关 · 第 5–8 关", desc: "长短交替、休止符、十六分音符", href: "rhythm-training.html", rhythm: [5, 8] },
+                { id: "n6", icon: "🎼", title: "视奏训练", desc: "看着乐谱打节奏，实时判分", href: "score-training.html", score: true },
+                { id: "n7", icon: "🪜", title: "听音辨调", desc: "听两段音，判断谁高谁低", href: "find-scale.html", manual: true },
+                { id: "n8", icon: "🎓", title: "乐理考题", desc: "做一轮，正确率 80% 以上算过关", href: "theory-practice.html", theory: true },
+                { id: "n9", icon: "🎹", title: "和弦练习", desc: "在虚拟键盘上把和弦找出来", href: "training.html", manual: true }
+            ]
+        },
+        {
+            id: 3, name: "高级", title: "内化与通关", desc: "节拍长在心里",
+            nodes: [
+                { id: "n10", icon: "🥁", title: "节奏闯关 · 第 9–12 关", desc: "内化节拍 —— 不给提示也要打准", href: "rhythm-training.html", rhythm: [9, 12] },
+                { id: "n11", icon: "🎼", title: "和弦转位训练", desc: "同一个和弦的不同摆法", href: "training-chord-inversions.html", manual: true },
+                { id: "n12", icon: "📖", title: "和弦进行曲库", desc: "常见和弦走向，边听边认", href: "chord-progressions.html", manual: true },
+                { id: "n13", icon: "📊", title: "前后测报告", desc: "看看自己到底进步了多少", href: "pretest-report.html", manual: true }
+            ]
+        }
+    ];
+
+    var ALL_NODES = [];
+    TIERS.forEach(function (t) { t.nodes.forEach(function (n) { ALL_NODES.push(n); }); });
+
+    /* ================= 完成状态 ================= */
+    function evalNodes() {
+        var done = readJSON("yx-done", {}) || {};
+        var lp = readJSON("rhythm-level-progress", {}) || {};
+        var passes = lp.passes || {};
+        var theory = readJSON("theory-records", []) || [];
+        var score = readJSON("score-records", []) || [];
+
+        var theoryOK = theory.some(function (r) {
+            var a = Number(r.accuracy) || 0; if (a <= 1) a = a * 100;
+            return a >= 80;
+        });
+        var scoreOK = score.length > 0;
+
+        var state = {};
+        ALL_NODES.forEach(function (n) {
+            if (n.rhythm) {
+                var from = n.rhythm[0], to = n.rhythm[1], hit = 0, total = to - from + 1;
+                for (var i = from; i <= to; i++) { if ((Number(passes[i]) || 0) >= 1) hit++; }
+                state[n.id] = { done: hit >= total, partial: hit > 0 && hit < total, hit: hit, total: total };
+            } else if (n.theory) {
+                state[n.id] = { done: theoryOK, partial: theory.length > 0 && !theoryOK };
+            } else if (n.score) {
+                state[n.id] = { done: scoreOK, partial: false };
+            } else {
+                state[n.id] = { done: !!done[n.id], manual: true };
+            }
+        });
+        return state;
+    }
+
+    /* ================= 渲染 ================= */
+    function render() {
+        var state = evalNodes();
+        var doneCount = ALL_NODES.filter(function (n) { return state[n.id].done; }).length;
+        var pct = Math.round(doneCount / ALL_NODES.length * 100);
+
+        $("ring").style.setProperty("--p", pct);
+        $("ring-num").textContent = pct;
+
+        /* 星级 / 天数 / 头像 */
+        var s = window.YX.stats();
+        $("chip-star").innerHTML = "⭐ <b>" + s.stars + "</b>";
+        $("chip-fire").innerHTML = "🔥 <b>" + s.streak + "</b>";
+        var prof = window.YX.profile();
+        $("chip-avatar").textContent = prof.avatar;
+
+        /* 问候语 */
+        var h = new Date().getHours();
+        var hi = h < 6 ? "夜深了" : h < 11 ? "早上好" : h < 14 ? "中午好" : h < 18 ? "下午好" : "晚上好";
+        $("greet").textContent = hi + "，" + (prof.nickname || "同学");
+        var bits = [];
+        bits.push("已完成 " + doneCount + "/" + ALL_NODES.length + " 个关卡");
+        if (s.streak > 0) bits.push("连续 " + s.streak + " 天");
+        if (s.stars > 0) bits.push(s.stars + " 颗星");
+        $("subline").textContent = bits.join(" · ");
+
+        /* 继续练习：第一个没完成的节点 */
+        var next = null;
+        for (var i = 0; i < ALL_NODES.length; i++) { if (!state[ALL_NODES[i].id].done) { next = ALL_NODES[i]; break; } }
+        if (next) {
+            $("btn-resume").setAttribute("href", next.href);
+            $("btn-resume").textContent = "▶ 继续：" + next.title.replace(/ · /, " ");
+        } else {
+            $("btn-resume").setAttribute("href", "rhythm-training.html");
+            $("btn-resume").textContent = "🎉 全部完成，再刷一遍";
+        }
+
+        /* 云端提示 */
+        var cloud = $("cloud-note");
+        if (window.YX.currentUser()) {
+            cloud.className = "ys-note ys-note--ok";
+            cloud.textContent = "☁️ 已登录（" + (window.YX.displayName() || "") + "），进度会自动存到云端。";
+            cloud.style.display = "";
+        } else {
+            var st = window.YX.status();
+            cloud.className = "ys-note" + (st.ready ? "" : " ys-note--warn");
+            cloud.innerHTML = st.ready
+                ? '进度存在<b>这台设备</b>上。<a href="login.html" style="color:var(--ys-primary)">登录</a>后可换设备继续。'
+                : "当前离线，进度存在本机。联网后可登录同步。";
+            cloud.style.display = "";
+        }
+
+        /* 分阶段渲染 */
+        var tierDone = [];
+        TIERS.forEach(function (t) {
+            tierDone.push(t.nodes.filter(function (n) { return state[n.id].done; }).length);
+        });
+
+        var html = TIERS.map(function (t, ti) {
+            var d = tierDone[ti], total = t.nodes.length;
+            var locked = ti > 0 && tierDone[ti - 1] / TIERS[ti - 1].nodes.length < 0.6;
+
+            var nodes = t.nodes.map(function (n) {
+                var st = state[n.id];
+                var cls = "ys-node";
+                if (st.done) cls += " ys-node--done";
+                if (!st.done && !locked) cls += " ys-node--go";
+                if (locked) cls += " ys-node--lock";
+
+                var mark = st.done ? '<span class="ys-node__mark">✅</span>'
+                    : (st.partial && st.rhythm ? '<span class="ys-node__mark" style="font-size:.78rem;font-weight:800;color:var(--ys-primary)">' + st.hit + "/" + st.total + "</span>"
+                        : (st.manual && !locked ? '<button class="ys-btn ys-btn--sm" data-done="' + n.id + '" style="padding:6px 12px;font-size:.76rem;flex:none">标记完成</button>' : ""));
+
+                var sub = n.desc;
+                if (st.partial && st.rhythm) sub = "已过 " + st.hit + "/" + st.total + " 关 · " + n.desc;
+
+                return '<a class="' + cls + '" href="' + n.href + '">' +
+                    '<span class="ys-node__dot">' + n.icon + "</span>" +
+                    '<span class="ys-node__body"><strong>' + n.title + "</strong><small>" + sub + "</small></span>" +
+                    mark + "</a>";
+            }).join("");
+
+            var lockBar = locked
+                ? '<div class="ys-lockbar">🔒 完成「' + TIERS[ti - 1].name + '」60% 以上自动解锁。想跳过也可以直接点上面的关卡。</div>'
+                : "";
+
+            return '<section class="ys-tier ys-tier--' + (ti + 1) + '">' +
+                '<div class="ys-tier__head">' +
+                '<span class="t-name">' + t.name + "</span>" +
+                '<span class="t-desc">' + t.title + "</span>" +
+                '<span class="t-prog">' + d + "/" + total + "</span>" +
+                "</div>" +
+                '<div class="ys-tier__body">' + nodes + lockBar + "</div></section>";
+        }).join("");
+
+        $("tiers").innerHTML = html;
+
+        /* 标记完成 */
+        Array.prototype.forEach.call(document.querySelectorAll("[data-done]"), function (btn) {
+            btn.addEventListener("click", function (ev) {
+                ev.preventDefault(); ev.stopPropagation();
+                var id = this.getAttribute("data-done");
+                var map = readJSON("yx-done", {}) || {};
+                map[id] = { at: new Date().toISOString() };
+                localStorage.setItem("yx-done", JSON.stringify(map));
+                toast("已标记完成 ⭐ +1");
+                render();
+            });
+        });
+    }
+
+    render();
+    window.YX.onChange(render);
+    window.YX.init().then(render).catch(function () {});
+    window.addEventListener("pageshow", render);
+})();
+</script>
+<script src="yx-theme.js"></script>
+</body>
+</html>

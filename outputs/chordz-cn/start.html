@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="ys-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2f5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="音感觉醒">
+<title>音感觉醒 · 开始</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="student.css">
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
+</head>
+<body class="ys-body">
+
+<div class="ys-wrap">
+
+    <header class="ys-topbar">
+        <a class="ys-topbar__brand" href="start.html"><span class="dot">🎵</span>音感觉醒</a>
+        <span class="ys-chip" id="chip-user">…</span>
+    </header>
+
+    <section class="ys-hero">
+        <div class="ys-logo">🎵</div>
+        <h1 class="ys-h1">音乐，是可以练出来的</h1>
+        <p class="ys-sub">拿起手机就能练 —— 打节奏、听音准、做乐理。<br>不用注册，点一下就开始。</p>
+    </section>
+
+    <section class="ys-card" id="resume-card" style="display:none">
+        <div style="display:flex;align-items:center;gap:16px">
+            <div class="ys-ring" id="resume-ring" style="--p:0"><div><span id="resume-stars">0</span><small>颗星</small></div></div>
+            <div style="min-width:0">
+                <h2 class="ys-h2" style="margin-bottom:4px">欢迎回来 👋</h2>
+                <p class="ys-sub" id="resume-line" style="margin:0"></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="ys-card">
+        <div class="ys-cta-row">
+            <a class="ys-btn ys-btn--primary ys-btn--lg ys-btn--block" id="btn-start" href="learn.html">🚀 立即开始</a>
+            <a class="ys-btn ys-btn--block" id="btn-login" href="login.html">🔑 我已有账号 · 登录</a>
+        </div>
+        <p class="ys-note" style="margin-top:14px">
+            不登录也能完整练习，数据存在这台设备上。<b>登录后进度存到云端</b>，换手机、换电脑都能接着练。
+        </p>
+    </section>
+
+    <section class="ys-card">
+        <h2 class="ys-h2">这里能练什么</h2>
+        <div class="ys-feature-row">
+            <div class="ys-feature"><i>🥁</i><div><strong>节奏闯关</strong><small>用麦克风听你拍手或敲桌，判断准、早、晚，一关一关往上走</small></div></div>
+            <div class="ys-feature"><i>🎼</i><div><strong>视奏与听音</strong><small>看谱打节奏、听音辨调、音高识别，练的是耳朵</small></div></div>
+            <div class="ys-feature"><i>🎓</i><div><strong>乐理闯关</strong><small>把音程、和弦、调性变成选择题，做错有讲解</small></div></div>
+            <div class="ys-feature"><i>⭐</i><div><strong>攒星星</strong><small>每次练习达标就得星星，连续练习还能累计天数</small></div></div>
+        </div>
+    </section>
+
+    <p class="ys-sub ys-center" style="margin-top:22px;font-size:.8rem">
+        音感觉醒 · 音乐能力训练与测评系统<br>
+        <a href="home.html" style="color:var(--ys-muted)">教师与完整功能入口</a>
+        · <a href="https://yinjue-xingxing-63887.app.workbuddy.host/downloads/yinjue-xingxing-windows.zip?sharecode=GYHDPGLBQI" style="color:var(--ys-muted)">Windows 电脑版下载（约 100MB）</a>
+    </p>
+
+</div>
+
+<div class="ys-toast" id="toast"></div>
+
+<script src="yx-motion.js"></script>
+<script src="yx-cloud.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+
+    function toast(msg, ms) {
+        var t = $("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(t._t);
+        t._t = setTimeout(function () { t.classList.remove("show"); }, ms || 2400);
+    }
+
+    /* ---- 本机已有进度 → 显示「欢迎回来」 ---- */
+    var s = window.YX.stats();
+    if (s.stars > 0 || s.runs > 0) {
+        $("resume-card").style.display = "";
+        $("resume-stars").textContent = s.stars;
+        $("resume-ring").style.setProperty("--p", Math.min(100, Math.round(s.stars / 60 * 100)));
+        var bits = [];
+        if (s.streak > 0) bits.push("已连续练习 " + s.streak + " 天");
+        if (s.runs > 0) bits.push("累计练习 " + s.runs + " 次");
+        if (s.stars > 0) bits.push("攒下 " + s.stars + " 颗星");
+        $("resume-line").textContent = bits.join(" · ") || "继续加油";
+        $("btn-start").textContent = "▶ 继续练习";
+    }
+
+    /* ---- 账号状态 ---- */
+    window.YX.onChange(function (u) {
+        var chip = $("chip-user");
+        if (u) {
+            chip.textContent = "☁️ " + (window.YX.displayName() || "已登录");
+            chip.className = "ys-chip";
+            $("btn-login").textContent = "👤 我的 · 进度与账号";
+            $("btn-login").setAttribute("href", "me.html");
+            toast("已登录，进度会同步到云端");
+        } else {
+            var st = window.YX.status();
+            chip.textContent = st.ready ? "本机模式" : "离线模式";
+            chip.className = "ys-chip";
+        }
+    });
+
+    window.YX.init().then(function () {
+        /* 已登录 → 直接进学习路径 */
+        if (window.YX.currentUser()) {
+            var key = "yx-auto-enter";
+            try {
+                if (!sessionStorage.getItem(key)) {
+                    sessionStorage.setItem(key, "1");
+                    setTimeout(function () { location.href = "learn.html"; }, 700);
+                }
+            } catch (e) {}
+        }
+    });
+
+    /* service worker 保留了旧缓存时也能拿到新页面 */
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+            navigator.serviceWorker.register("sw.js").catch(function () {});
+        });
+    }
+})();
+</script>
+<script src="yx-theme.js"></script>
+</body>
+</html>

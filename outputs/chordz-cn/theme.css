@@ -6,16 +6,16 @@
 
 :root {
     color-scheme: dark;
-    --primary-color: #0f766e;
-    --secondary-color: #f59e0b;
-    --background: #0b0f14;
-    --surface: #141a21;
-    --surface-light: #1f2731;
-    --text-primary: #eef3f7;
-    --text-secondary: #b7c2cd;
+    --primary-color: #3b5bfd;
+    --secondary-color: #22d3ee;
+    --background: #070c18;
+    --surface: #101a2e;
+    --surface-light: #1b2745;
+    --text-primary: #e7efff;
+    --text-secondary: #a6b7d4;
     --accent-happy: #34d399;
     --accent-sad: #60a5fa;
-    --accent-energetic: #fbbf24;
+    --accent-energetic: #67e8f9;
     --accent-dreamy: #f472b6;
     --accent-tense: #f87171;
     --border-radius: 16px;
@@ -31,8 +31,8 @@ body {
     font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     background-color: var(--background);
     background-image:
-        radial-gradient(1100px 560px at 12% -12%, rgba(15, 118, 110, 0.30), transparent 62%),
-        radial-gradient(900px 480px at 96% -4%, rgba(245, 158, 11, 0.16), transparent 58%);
+        radial-gradient(1100px 560px at 12% -12%, rgba(var(--ys-primary-rgb), 0.30), transparent 62%),
+        radial-gradient(900px 480px at 96% -4%, rgba(var(--ys-cyan-rgb), 0.16), transparent 58%);
     background-attachment: fixed;
     padding: 26px 26px 26px 266px;
 }
@@ -60,7 +60,7 @@ h1, h2, h3 {
     gap: 3px;
     border-bottom: none;
     border-right: 1px solid var(--surface-light);
-    background: linear-gradient(180deg, #101a22 0%, #0b0f14 100%);
+    background: linear-gradient(180deg, #0d1628 0%, #070c18 100%);
     overflow-y: auto;
     z-index: 60;
 }
@@ -74,7 +74,7 @@ h1, h2, h3 {
     padding: 4px 10px 14px;
     margin-bottom: 6px;
     border-bottom: 1px solid var(--surface-light);
-    background: linear-gradient(120deg, #2dd4bf, #fbbf24);
+    background: linear-gradient(120deg, var(--ys-primary), var(--ys-cyan));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -106,14 +106,14 @@ h1, h2, h3 {
 .main-nav .nav-link:hover {
     background: var(--surface);
     color: var(--text-primary);
-    border-color: rgba(45, 212, 191, 0.35);
+    border-color: rgba(var(--ys-cyan-rgb), 0.35);
     transform: translateX(2px);
 }
 
 .main-nav .nav-link.active {
-    background: linear-gradient(120deg, rgba(15, 118, 110, 0.95), rgba(13, 148, 136, 0.7));
+    background: linear-gradient(120deg, rgba(var(--ys-primary-rgb), 0.95), var(--ys-primary-d));
     color: #ffffff;
-    border-color: rgba(45, 212, 191, 0.6);
+    border-color: rgba(var(--ys-cyan-rgb), 0.6);
 }
 
 /* 手机与窄屏：侧边栏改为顶部横向条 */
@@ -171,7 +171,7 @@ h1, h2, h3 {
 }
 
 .training-card:hover {
-    border-color: rgba(45, 212, 191, 0.55);
+    border-color: rgba(var(--ys-cyan-rgb), 0.55);
     transform: translateY(-2px);
 }
 
@@ -232,7 +232,7 @@ table.records th {
 }
 
 .lg-fs-btn:hover {
-    border-color: rgba(45, 212, 191, 0.65);
+    border-color: rgba(var(--ys-cyan-rgb), 0.65);
     color: #ffffff;
     transform: translateY(-2px);
 }
@@ -335,19 +335,19 @@ html.lg-large body {
 
 html.lg-light {
     color-scheme: light;
-    --background: #f5f7f9;
+    --background: #f2f5ff;
     --surface: #ffffff;
-    --surface-light: #e6ebf1;
-    --text-primary: #111827;
+    --surface-light: #e3e9f7;
+    --text-primary: #15203c;
     --text-secondary: #4b5563;
-    --primary-color: #0f766e;
-    --secondary-color: #b45309;
+    --primary-color: #3b5bfd;
+    --secondary-color: #0e7490;
 }
 
 html.lg-light body {
     background-image:
-        radial-gradient(1100px 560px at 12% -12%, rgba(15, 118, 110, 0.12), transparent 62%),
-        radial-gradient(900px 480px at 96% -4%, rgba(245, 158, 11, 0.12), transparent 58%);
+        radial-gradient(1100px 560px at 12% -12%, rgba(var(--ys-primary-rgb), 0.12), transparent 62%),
+        radial-gradient(900px 480px at 96% -4%, rgba(var(--ys-cyan-rgb), 0.12), transparent 58%);
 }
 
 html.lg-light .main-nav {
@@ -364,7 +364,7 @@ html.lg-light .main-nav .nav-link:hover {
 }
 
 html.lg-light .main-nav .nav-link.active {
-    background: linear-gradient(120deg, #0f766e, #14b8a6);
+    background: linear-gradient(120deg, var(--ys-primary), var(--ys-cyan));
     color: #ffffff;
 }
 
@@ -379,8 +379,8 @@ html.lg-light .lg-mode-panel {
 
 html.lg-light .home-hero {
     background:
-        radial-gradient(700px 320px at 8% 0%, rgba(15, 118, 110, 0.16), transparent 62%),
-        radial-gradient(560px 280px at 100% 10%, rgba(245, 158, 11, 0.16), transparent 60%),
+        radial-gradient(700px 320px at 8% 0%, rgba(var(--ys-primary-rgb), 0.16), transparent 62%),
+        radial-gradient(560px 280px at 100% 10%, rgba(var(--ys-cyan-rgb), 0.16), transparent 60%),
         linear-gradient(180deg, #ffffff, #f0f4f8);
     border-color: #dde3ea;
 }
@@ -396,12 +396,115 @@ html.lg-light .cell {
 }
 
 html.lg-light .cell.expected {
-    background: rgba(15, 118, 110, 0.35);
+    background: rgba(var(--ys-primary-rgb), 0.35);
 }
 
 html.lg-light .pad {
     color: #111827;
     background: #eef2f6;
+}
+
+/* ---- 亮色补齐：页面内联样式里为深色写死的“白色半透明”，
+        在浅底上等于看不见（分隔线、格线会整片消失）。这里统一压回深色半透明。 ---- */
+
+html.lg-light .beat-group,
+html.lg-light .custom-beat {
+    background: rgba(21, 32, 60, 0.04);
+}
+
+html.lg-light .cell,
+html.lg-light .custom-cell {
+    background: #eef2fb;
+    border-color: rgba(21, 32, 60, 0.13);
+}
+
+html.lg-light .cell.now {
+    background: rgba(var(--ys-primary-rgb), 0.24);
+}
+
+html.lg-light .cell.expected,
+html.lg-light .cell.expected {
+    background: rgba(var(--ys-primary-rgb), 0.24);
+}
+
+html.lg-light .lg-swatch {
+    border-color: rgba(21, 32, 60, 0.22);
+}
+
+html.lg-light table.records th,
+html.lg-light table.records td,
+html.lg-light table.ch-table th,
+html.lg-light table.ch-table td,
+html.lg-light table.cm-table th,
+html.lg-light table.cm-table td,
+html.lg-light table.db-table th,
+html.lg-light table.db-table td,
+html.lg-light table.ear-table th,
+html.lg-light table.ear-table td,
+html.lg-light table.hw-table th,
+html.lg-light table.hw-table td,
+html.lg-light table.pr-table th,
+html.lg-light table.pr-table td,
+html.lg-light table.st-table th,
+html.lg-light table.st-table td,
+html.lg-light .history-table td,
+html.lg-light .recent-item,
+html.lg-light .tp-wrong-item,
+html.lg-light .tp-history {
+    border-bottom-color: rgba(21, 32, 60, 0.1);
+}
+
+html.lg-light .instructions,
+html.lg-light .pitch-detector,
+html.lg-light .vk-wrap {
+    border-color: rgba(21, 32, 60, 0.08);
+}
+
+/* ---- 亮色下把内页的卡片 / 按钮对齐学生端的圆润观感 ---- */
+
+html.lg-light .panel,
+html.lg-light .training-card,
+html.lg-light .results,
+html.lg-light .controls,
+html.lg-light .card {
+    background: #ffffff;
+    border: 1px solid var(--surface-light);
+    box-shadow: 0 10px 30px -20px rgba(21, 43, 110, 0.35);
+}
+
+html.lg-light .training-card {
+    background: #ffffff;
+}
+
+html.lg-light button:not(.nav-link):not(.lg-fs-btn),
+html.lg-light .btn:not(.ghost) {
+    border: none;
+}
+
+html.lg-light select:not(.seg-source),
+html.lg-light .field input[type="number"],
+html.lg-light .field select {
+    background: #fbfcff;
+    color: var(--text-primary);
+    border-color: var(--surface-light);
+}
+
+/* ---- 这三条特异性高过 html.lg-light .xxx，必须原样对齐后再覆盖 ---- */
+
+/* 首页“核心训练”主卡：原样式是靛蓝 → 近黑渐变，亮色下整块发黑 */
+html.lg-light .home-cards.main .home-card {
+    border-color: rgba(var(--ys-primary-rgb), 0.25);
+    background: linear-gradient(160deg, #eef3ff, #ffffff);
+}
+
+/* “主打”标签：浅青字压在浅青底上，亮色下等于隐形 */
+html.lg-light .home-card .home-tag {
+    color: #0e7490;
+}
+
+/* 作业状态标签“未交”：浅黄字看不见 */
+html.lg-light .hw-tag.wait {
+    color: #a16207;
 }
 
 /* ============ 虚拟键盘 ============ */
@@ -432,15 +535,15 @@ html.lg-light .pad {
 
 .seg-item:hover {
     color: var(--text-primary);
-    border-color: rgba(45, 212, 191, 0.5);
+    border-color: rgba(var(--ys-cyan-rgb), 0.5);
     transform: translateY(-1px);
 }
 
 .seg-item.active {
-    background: linear-gradient(120deg, #0f766e, #14b8a6);
+    background: linear-gradient(120deg, var(--ys-primary), var(--ys-cyan));
     border-color: transparent;
     color: #ffffff;
-    box-shadow: 0 8px 16px -8px rgba(15, 118, 110, 0.95);
+    box-shadow: 0 8px 16px -8px rgba(var(--ys-primary-rgb), 0.95);
 }
 
 .field.wide {
@@ -462,11 +565,11 @@ html.lg-light .pad {
     font-size: 0.95rem;
     font-weight: 700;
     color: #ffffff;
-    background: linear-gradient(120deg, #0f766e, #14b8a6);
+    background: linear-gradient(120deg, var(--ys-primary), var(--ys-cyan));
     border: 1px solid transparent;
     border-radius: 12px;
     cursor: pointer;
-    box-shadow: 0 10px 18px -12px rgba(15, 118, 110, 1);
+    box-shadow: 0 10px 18px -12px rgba(var(--ys-primary-rgb), 1);
     transition: transform 0.16s ease, filter 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
 
@@ -489,7 +592,7 @@ html.lg-light .pad {
 }
 
 .btn.ghost:hover:not(:disabled) {
-    border-color: rgba(45, 212, 191, 0.6);
+    border-color: rgba(var(--ys-cyan-rgb), 0.6);
 }
 
 .lg-switch {
@@ -508,7 +611,7 @@ html.lg-light .pad {
 }
 
 .lg-switch:hover {
-    border-color: rgba(45, 212, 191, 0.5);
+    border-color: rgba(var(--ys-cyan-rgb), 0.5);
     transform: translateY(-1px);
 }
 
@@ -563,7 +666,7 @@ select:not(.seg-source) {
 }
 
 select:not(.seg-source):hover {
-    border-color: rgba(45, 212, 191, 0.5);
+    border-color: rgba(var(--ys-cyan-rgb), 0.5);
 }
 
 /* 和弦练习页的记谱方式按钮 */
@@ -577,7 +680,7 @@ select:not(.seg-source):hover {
 }
 
 #notation-toggle:hover {
-    border-color: rgba(45, 212, 191, 0.6) !important;
+    border-color: rgba(var(--ys-cyan-rgb), 0.6) !important;
 }
 
 /* 进行曲库的筛选按钮 */
@@ -594,11 +697,11 @@ select:not(.seg-source):hover {
 
 .mood-filter:hover {
     color: var(--text-primary) !important;
-    border-color: rgba(45, 212, 191, 0.5) !important;
+    border-color: rgba(var(--ys-cyan-rgb), 0.5) !important;
 }
 
 .mood-filter.active {
-    background: linear-gradient(120deg, #0f766e, #14b8a6) !important;
+    background: linear-gradient(120deg, var(--ys-primary), var(--ys-cyan)) !important;
     border-color: transparent !important;
     color: #ffffff !important;
 }
@@ -682,7 +785,7 @@ select:not(.seg-source):hover {
 }
 
 .vk-btn:hover {
-    border-color: rgba(45, 212, 191, 0.6);
+    border-color: rgba(var(--ys-cyan-rgb), 0.6);
 }
 
 .vk-keys {
@@ -707,7 +810,7 @@ select:not(.seg-source):hover {
 }
 
 .vk-white.vk-active {
-    background: linear-gradient(to bottom, #99f6e4, #5eead4);
+    background: linear-gradient(to bottom, #a5f3fc, #67e8f9);
 }
 
 .vk-black {
@@ -722,7 +825,7 @@ select:not(.seg-source):hover {
 }
 
 .vk-black.vk-active {
-    background: linear-gradient(to bottom, #0f766e, #0b5f59);
+    background: linear-gradient(to bottom, var(--ys-primary), var(--ys-primary-d));
 }
 
 .vk-hint {
@@ -751,4 +854,17 @@ select:not(.seg-source):hover {
     .vk-white {
         font-size: 0.6rem;
     }
+}
+
+/* ============ 深色下的开关：未选中的圆点压暗一档 ============
+   原来两种状态都是纯白圆点，深色面板上完全分不出开没开。 */
+
+html:not(.lg-light) .lg-switch input[type="checkbox"]::after,
+html:not(.lg-light) .lg-mode-row input[type="checkbox"]::after {
+    background: #64748b;
+}
+
+html:not(.lg-light) .lg-switch input[type="checkbox"]:checked::after,
+html:not(.lg-light) .lg-mode-row input[type="checkbox"]:checked::after {
+    background: #ffffff;
 }

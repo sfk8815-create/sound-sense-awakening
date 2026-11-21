@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b0f14">
+    <meta name="theme-color" content="#f2f5ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="音感觉醒">
     <title>视奏训练 - 音感觉醒</title>
@@ -93,6 +93,7 @@
         }
     </style>
     <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="student.css">
     <link rel="icon" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <script>
@@ -100,6 +101,12 @@
             try {
                 var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
                 var root = document.documentElement;
+                if (!saved || typeof saved !== "object") saved = {};
+                /* 学生端是亮色界面：没手动选过就默认亮色，避免点进来像换了个 App */
+                if (saved.light === undefined) {
+                    saved.light = true;
+                    try { localStorage.setItem("lg-modes", JSON.stringify(saved)); } catch (e) {}
+                }
                 if (saved.light) root.classList.add("lg-light");
                 if (saved.focus) root.classList.add("lg-focus");
                 if (saved.large) root.classList.add("lg-large");
@@ -110,6 +117,25 @@
     <script src="ui-controls.js" defer></script>
     <script src="piano-tone.js"></script>
     <script src="scroll-guard.js" defer></script>
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
 </head>
 <body>
         <nav class="main-nav">
@@ -569,7 +595,7 @@
             const width = canvas.width;
             const height = canvas.height;
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "#141a21";
+            ctx.fillStyle = "#101a2e";
             ctx.fillRect(0, 0, width, height);
 
             if (!state.notes.length) {
@@ -634,7 +660,7 @@
 
             if (elapsed > 0) {
                 const x = left + Math.min(1, (elapsed / secondsPerBeat) / beatsTotal) * chartWidth;
-                ctx.strokeStyle = "#2dd4bf";
+                ctx.strokeStyle = "#22d3ee";
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(x, top);
@@ -837,7 +863,7 @@
 
             if (elapsed > 0) {
                 const x = left + Math.min(1, (elapsed / secondsPerBeat) / beatsTotal) * chartWidth;
-                ctx.strokeStyle = "#0f766e";
+                ctx.strokeStyle = "#3b5bfd";
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(x, staffTop - 18);
@@ -1321,5 +1347,11 @@
             });
         }
     </script>
+
+    <!-- 学生端外壳：顶部统一导航栏（含「← 返回学习路径」）+ 跨页过渡（不影响本页原有逻辑） -->
+    <script src="yx-cloud.js"></script>
+    <script src="yx-motion.js"></script>
+    <script src="yx-shell.js"></script>
+<script src="yx-theme.js"></script>
 </body>
 </html>

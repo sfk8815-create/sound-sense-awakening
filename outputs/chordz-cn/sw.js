@@ -1,7 +1,17 @@
-const CACHE_NAME = "sound-sense-awakening-v1";
+const CACHE_NAME = "sound-sense-awakening-v7";
 const CORE_FILES = [
   "./",
   "index.html",
+  "start.html",
+  "learn.html",
+  "me.html",
+  "login.html",
+  "student.css",
+  "yx-theme.css",
+  "yx-theme.js",
+  "yx-cloud.js",
+  "yx-shell.js",
+  "yx-motion.js",
   "training.html",
   "rhythm-training.html",
   "metronome.html",

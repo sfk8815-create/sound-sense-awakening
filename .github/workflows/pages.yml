@@ -25,6 +25,8 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          # 站点根 = 应用目录，这样公开地址是 /start.html 而不是 /outputs/chordz-cn/start.html
+          # （商店打包工具和陌生人都需要短而稳定的 URL；站点内全是相对路径，挪根安全）
+          path: outputs/chordz-cn
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="ys-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2f5ff">
+<meta name="apple-mobile-web-app-title" content="音感觉醒">
+<title>我的 · 音感觉醒</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="student.css">
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
+</head>
+<body class="ys-body">
+
+<div class="ys-wrap">
+
+    <header class="ys-topbar">
+        <a class="ys-topbar__brand" href="start.html"><span class="dot">🎵</span>音感觉醒</a>
+        <a class="ys-chip" href="learn.html">🏠 学习路径</a>
+    </header>
+
+    <section class="ys-card">
+        <div style="display:flex;align-items:center;gap:16px">
+            <div id="big-avatar" style="width:74px;height:74px;border-radius:26px;background:linear-gradient(135deg,#e8edff,#dff6fb);display:flex;align-items:center;justify-content:center;font-size:38px;flex:none">🐣</div>
+            <div style="flex:1;min-width:0">
+                <input class="ys-input" id="nick" maxlength="12" placeholder="给自己起个名字" style="font-weight:800;font-size:1.06rem">
+                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap" id="avatars"></div>
+            </div>
+        </div>
+        <div style="height:12px"></div>
+        <button class="ys-btn ys-btn--sm" id="btn-save">保存资料</button>
+    </section>
+
+    <section class="ys-card">
+        <h2 class="ys-h2">我的成绩</h2>
+        <div class="ys-stats" style="grid-template-columns:repeat(2,1fr)">
+            <div class="ys-stat"><b id="st-star">0</b><small>⭐ 星星</small></div>
+            <div class="ys-stat"><b id="st-fire">0</b><small>🔥 连续天数</small></div>
+            <div class="ys-stat"><b id="st-days">0</b><small>📅 练过的天数</small></div>
+            <div class="ys-stat"><b id="st-runs">0</b><small>🎯 累计练习次数</small></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="ys-note" id="detail-line"></div>
+    </section>
+
+    <section class="ys-card" id="account-card">
+        <h2 class="ys-h2">账号与云端</h2>
+        <div id="account-body"></div>
+    </section>
+
+    <section class="ys-card">
+        <h2 class="ys-h2">最近练习</h2>
+        <div id="recent"></div>
+    </section>
+
+    <section class="ys-card" id="theme-card">
+        <h2 class="ys-h2">个性化</h2>
+        <p class="ys-sub" style="margin-bottom:14px">换个配色，整个界面跟着换。设置会随账号一起同步到云端。</p>
+        <div id="theme-body"></div>
+        <div class="ys-note" style="margin-top:12px">当前：<b data-theme-label>靛蓝 · 亮色</b></div>
+    </section>
+
+    <p class="ys-sub ys-center" style="font-size:.78rem">
+        <a href="start.html" style="color:var(--ys-muted)">回到首页</a> ·
+        <a href="home.html" style="color:var(--ys-muted)">完整功能表</a>
+    </p>
+
+</div>
+
+<div class="ys-toast" id="toast"></div>
+
+<script src="yx-theme.js"></script>
+<script src="yx-motion.js"></script>
+<script src="yx-cloud.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var readJSON = function (k, fb) {
+        try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v === null ? fb : v; } catch (e) { return fb; }
+    };
+    var toast = function (m, ms) {
+        var el = $("toast"); el.textContent = m; el.classList.add("show");
+        clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove("show"); }, ms || 2200);
+    };
+    function maskEmail(e) {
+        if (!e) return "";
+        var p = String(e).split("@");
+        if (p.length !== 2) return "已登录";
+        var n = p[0];
+        return (n.length <= 2 ? n[0] + "*" : n.slice(0, 2) + "***") + "@" + p[1];
+    }
+    function when(ts) {
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return "";
+        var m = d.getMonth() + 1, dd = d.getDate(), h = d.getHours(), mi = d.getMinutes();
+        return (m < 10 ? "0" + m : m) + "-" + (dd < 10 ? "0" + dd : dd) + " " + (h < 10 ? "0" + h : h) + ":" + (mi < 10 ? "0" + mi : mi);
+    }
+
+    var AVATARS = ["🐣", "🎵", "🥁", "🎹", "🎼", "🐱", "🐼", "🦊", "🚀", "⭐"];
+
+    /* ---------- 头像选择 ---------- */
+    $("avatars").innerHTML = AVATARS.map(function (a) {
+        return '<button class="ys-btn ys-btn--sm ys-avbtn" data-av="' + a + '" style="padding:5px 9px;font-size:1.02rem">' + a + "</button>";
+    }).join("");
+
+    var picked = null;
+
+    function loadProfile() {
+        var p = window.YX.profile();
+        picked = p.avatar;
+        $("nick").value = p.nickname || "";
+        $("big-avatar").textContent = p.avatar;
+        Array.prototype.forEach.call(document.querySelectorAll("[data-av]"), function (b) {
+            b.classList.toggle("is-on", b.getAttribute("data-av") === p.avatar);
+        });
+    }
+
+    document.addEventListener("click", function (ev) {
+        var b = ev.target.closest ? ev.target.closest("[data-av]") : null;
+        if (!b) return;
+        picked = b.getAttribute("data-av");
+        $("big-avatar").textContent = picked;
+        Array.prototype.forEach.call(document.querySelectorAll("[data-av]"), function (x) {
+            x.classList.remove("is-on");
+        });
+        b.classList.add("is-on");
+    });
+
+    $("btn-save").onclick = function () {
+        var name = $("nick").value.trim() || "同学";
+        window.YX.saveProfile({ nickname: name, avatar: picked || "🐣" });
+        toast("已保存 ✅");
+        render();
+    };
+
+    /* ---------- 统计 ---------- */
+    function renderStats() {
+        var s = window.YX.stats();
+        $("st-star").textContent = s.stars;
+        $("st-fire").textContent = s.streak;
+        $("st-days").textContent = s.activeDays;
+        $("st-runs").textContent = s.runs;
+        var bits = ["节奏 " + s.rhythmRuns + " 次", "乐理 " + s.theoryRuns + " 次", "视奏 " + s.scoreRuns + " 次"];
+        if (s.lastActive) bits.push("最近 " + s.lastActive);
+        $("detail-line").textContent = bits.join(" · ");
+    }
+
+    /* ---------- 最近练习 ---------- */
+    function renderRecent() {
+        var theory = readJSON("theory-records", []) || [];
+        var rhythm = readJSON("rhythm-training-records", []) || [];
+        var score = readJSON("score-records", []) || [];
+        var pct = function (v) { var n = Number(v) || 0; if (n <= 1) n *= 100; return Math.round(n) + "%"; };
+
+        var list = [];
+        theory.slice(0, 6).forEach(function (r) {
+            list.push({ at: new Date(r.at || 0).getTime() || 0, n: "🎓 乐理考题", d: pct(r.accuracy) + " · " + (r.total || 0) + " 题" });
+        });
+        rhythm.slice(0, 6).forEach(function (r) {
+            list.push({ at: Number(r.timestamp) || 0, n: "🥁 节奏闯关", d: pct(r.accuracy) + " · " + (r.pattern || "") });
+        });
+        score.slice(0, 6).forEach(function (r) {
+            list.push({ at: new Date(String(r.time || "").replace(/\//g, "-")).getTime() || 0, n: "🎼 视奏训练", d: (r.score || 0) + " 分 · " + (r.name || "") });
+        });
+        list.sort(function (a, b) { return b.at - a.at; });
+
+        $("recent").innerHTML = list.length
+            ? list.slice(0, 8).map(function (x) {
+                return '<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--ys-line);font-size:.88rem">' +
+                    "<span>" + x.n + "</span><span style='color:var(--ys-muted)'>" + x.d + " · " + when(x.at) + "</span></div>";
+            }).join("")
+            : '<p class="ys-sub" style="margin:0">还没有练习记录，去<a href="learn.html" style="color:var(--ys-primary)">学习路径</a>挑一关开始吧。</p>';
+    }
+
+    /* ---------- 账号卡片 ---------- */
+    function renderAccount() {
+        var st = window.YX.status();
+        var box = $("account-body");
+
+        if (!st.ready) {
+            box.innerHTML = '<div class="ys-note ys-note--warn">此刻<b>连不上云端</b>（可能离线或 SDK 未加载）。进度照常存在本机，不影响练习。</div>';
+            return;
+        }
+        if (!st.online) {
+            box.innerHTML =
+                '<div class="ys-note">现在是<b>本机模式</b>：数据只存在这台设备上。登录后可换设备继续。</div>' +
+                '<div style="height:12px"></div>' +
+                '<a class="ys-btn ys-btn--primary ys-btn--block ys-btn--fit" href="login.html">🔑 登录 / 注册</a>';
+            return;
+        }
+
+        var u = window.YX.currentUser() || {};
+        box.innerHTML =
+            '<div class="ys-note ys-note--ok"><b>☁️ 已登录</b> · ' + maskEmail(u.email) + "<br>练习进度会自动同步到云端。</div>" +
+            '<div style="height:12px"></div>' +
+            '<button class="ys-btn ys-btn--sm" id="btn-sync">立即同步一次</button> ' +
+            '<button class="ys-btn ys-btn--sm" id="btn-out">退出登录</button>';
+
+        $("btn-sync").onclick = function () {
+            var self = this; self.disabled = true; self.textContent = "同步中…";
+            window.YX.syncNow().then(function () {
+                toast("已同步到云端 ☁️");
+                self.disabled = false; self.textContent = "立即同步一次";
+            }).catch(function () {
+                toast("同步失败，请检查网络");
+                self.disabled = false; self.textContent = "立即同步一次";
+            });
+        };
+        $("btn-out").onclick = function () {
+            if (!confirm("退出后本机的练习记录会被清掉（已上传云端的不会丢）。确定退出？")) return;
+            window.YX.signOut().then(function () {
+                toast("已退出登录");
+                setTimeout(function () { location.href = "start.html"; }, 700);
+            });
+        };
+    }
+
+    /* ---------- 个性化设置 ---------- */
+    function renderTheme() {
+        if (!window.YXTheme) return;
+        var box = $("theme-body");
+        if (!box || box.__mounted) return;
+        box.__mounted = true;
+        /* 学生端没有左侧导航，「专注模式」是内页才有的概念 */
+        window.YXTheme.mount(box, { noFocus: true });
+    }
+
+    function render() {
+        loadProfile();
+        renderStats();
+        renderRecent();
+        renderAccount();
+        renderTheme();
+    }
+
+    render();
+    window.YX.onChange(render);
+    window.YX.init().then(render).catch(function () { renderAccount(); });
+})();
+</script>
+</body>
+</html>

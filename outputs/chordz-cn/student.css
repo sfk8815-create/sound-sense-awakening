@@ -1,0 +1,601 @@
+/* ============================================================
+   音感觉醒 · 学生端设计系统（亮色活泼）
+   只给学生端页面使用：start / login / learn / me
+   不依赖 theme.css / styles.css，独立自洽。
+   ============================================================ */
+
+:root {
+    --ys-bg: #f2f5ff;
+    --ys-bg-2: #fdfdff;
+    --ys-card: #ffffff;
+    --ys-ink: #15203c;
+    --ys-ink-2: #3d4a68;
+    --ys-muted: #74819e;
+    --ys-line: #e3e9f7;
+
+    --ys-primary: #3b5bfd;
+    --ys-primary-d: #2a44d0;
+    --ys-cyan: #06b6d4;
+    --ys-gold: #ffb020;
+    --ys-green: #22c55e;
+    --ys-purple: #8b5cf6;
+    --ys-red: #ef4444;
+
+    --ys-r-sm: 14px;
+    --ys-r: 20px;
+    --ys-r-lg: 26px;
+    --ys-shadow: 0 10px 30px -14px rgba(23, 43, 110, 0.28);
+    --ys-shadow-lg: 0 22px 48px -20px rgba(23, 43, 110, 0.36);
+}
+
+* { box-sizing: border-box; }
+
+/* 学生端页面：给 <html> 加 ys-page、<body> 加 ys-body。
+   这样本文件可安全地被旧页面引用（旧页面不加这两个类，样式不生效）。 */
+html.ys-page { background: var(--ys-bg); }
+
+body.ys-body {
+    margin: 0;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    color: var(--ys-ink);
+    background:
+        radial-gradient(900px 460px at 8% -8%, rgba(var(--ys-primary-rgb), 0.30), transparent 62%),
+        radial-gradient(760px 420px at 100% 2%, rgba(var(--ys-cyan-rgb), 0.24), transparent 60%),
+        linear-gradient(180deg, var(--ys-bg) 0%, var(--ys-bg-2) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 铺满窗口：桌面端不再收成窄栏居中，宽屏补足内边距即可 */
+.ys-wrap {
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 18px 22px 64px;
+}
+
+/* ---------------- 顶部条 ---------------- */
+
+.ys-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    margin: -18px -22px 18px;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--ys-line);
+}
+
+.ys-topbar__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 0.98rem;
+    color: var(--ys-ink);
+    text-decoration: none;
+    margin-right: auto;
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ys-topbar__brand span.dot {
+    width: 26px; height: 26px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--ys-primary), var(--ys-cyan));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px;
+}
+
+.ys-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--ys-line);
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--ys-ink-2);
+    white-space: nowrap;
+}
+.ys-chip b { color: var(--ys-ink); }
+.ys-chip--star { border-color: #ffe0a3; background: #fffaf0; color: #a16207; }
+.ys-chip--fire { border-color: #ffd6c9; background: #fff6f2; color: #c2410c; }
+
+.ys-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 19px;
+    background: linear-gradient(135deg, #e8edff, #dff6fb);
+    border: 1px solid var(--ys-line);
+    text-decoration: none;
+    flex: none;
+}
+
+/* ---------------- 通用按钮 ---------------- */
+
+.ys-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border-radius: 999px;
+    border: 1px solid var(--ys-line);
+    background: #fff;
+    color: var(--ys-ink);
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .16s ease, filter .16s ease;
+    box-shadow: 0 3px 0 rgba(23, 43, 110, 0.06);
+}
+.ys-btn:hover { filter: brightness(1.02); }
+.ys-btn:active { transform: translateY(2px); box-shadow: none; }
+.ys-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+.ys-btn--primary {
+    border: none;
+    color: #fff;
+    background: linear-gradient(135deg, var(--ys-primary), var(--ys-cyan));
+    box-shadow: 0 6px 0 var(--ys-primary-d), 0 14px 26px -12px rgba(var(--ys-primary-rgb), .7);
+}
+.ys-btn--primary:active { box-shadow: 0 2px 0 var(--ys-primary-d); }
+
+.ys-btn--gold {
+    border: none; color: #4a2c00;
+    background: linear-gradient(135deg, #ffc94d, var(--ys-gold));
+    box-shadow: 0 5px 0 #d98f00;
+}
+
+.ys-btn--lg { padding: 18px 30px; font-size: 1.12rem; }
+.ys-btn--block { display: flex; width: 100%; }
+.ys-btn--ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--ys-muted); font-weight: 600; }
+.ys-btn--ghost:hover { background: #eef2ff; }
+.ys-btn--sm { padding: 9px 16px; font-size: .88rem; }
+
+/* ---------------- 卡片 ---------------- */
+
+.ys-card {
+    background: var(--ys-card);
+    border: 1px solid var(--ys-line);
+    border-radius: var(--ys-r-lg);
+    box-shadow: var(--ys-shadow);
+    padding: 22px;
+    margin-bottom: 16px;
+}
+
+.ys-h1 { font-size: 1.72rem; margin: 0 0 8px; letter-spacing: .01em; line-height: 1.25; }
+.ys-h2 { font-size: 1.06rem; margin: 0 0 12px; }
+.ys-sub { color: var(--ys-muted); font-size: .95rem; line-height: 1.65; margin: 0; }
+.ys-center { text-align: center; }
+
+/* 首页两个主按钮：窄屏竖排，宽屏并排 */
+.ys-cta-row { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------------- 欢迎页 ---------------- */
+
+.ys-hero { text-align: center; padding: 30px 20px 10px; }
+
+.ys-logo {
+    width: 104px; height: 104px; margin: 0 auto 18px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, var(--ys-primary), var(--ys-cyan));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 50px;
+    box-shadow: 0 20px 44px -18px rgba(var(--ys-primary-rgb), .8);
+    animation: ys-float 3.4s ease-in-out infinite;
+}
+@keyframes ys-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.ys-feature {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--ys-line);
+    text-align: left;
+}
+.ys-feature:last-child { border-bottom: none; }
+.ys-feature i { font-style: normal; font-size: 1.35rem; line-height: 1.2; flex: none; }
+.ys-feature strong { display: block; font-size: .96rem; margin-bottom: 2px; }
+.ys-feature small { color: var(--ys-muted); font-size: .84rem; line-height: 1.55; }
+
+/* ---------------- 学习路径 ---------------- */
+
+.ys-tier { margin-bottom: 22px; }
+
+.ys-tier__head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px;
+    border-radius: var(--ys-r) var(--ys-r) 0 0;
+    color: #fff;
+    font-weight: 800;
+}
+/* 三级统一到品牌色系（青 → 靛蓝 → 深紫），靠明度递进区分难度，
+   不再各用一套不相干的色（原来初级绿 / 高级橙红，跟整体不搭） */
+.ys-tier--1 .ys-tier__head { background: linear-gradient(135deg, var(--ys-tier1-a), var(--ys-tier1-b)); }
+.ys-tier--2 .ys-tier__head { background: linear-gradient(135deg, var(--ys-tier2-a), var(--ys-tier2-b)); }
+.ys-tier--3 .ys-tier__head { background: linear-gradient(135deg, var(--ys-tier3-a), var(--ys-tier3-b)); }
+
+.ys-tier__head .t-name { font-size: 1.08rem; }
+.ys-tier__head .t-desc { font-size: .82rem; opacity: .92; font-weight: 600; }
+.ys-tier__head .t-prog {
+    margin-left: auto; font-size: .84rem; font-weight: 700;
+    background: rgba(255, 255, 255, .22); padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+}
+
+.ys-tier__body {
+    background: #fff;
+    border: 1px solid var(--ys-line);
+    border-top: none;
+    border-radius: 0 0 var(--ys-r) var(--ys-r);
+    padding: 16px 16px 8px;
+    box-shadow: var(--ys-shadow);
+}
+
+.ys-node {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px;
+    border-radius: var(--ys-r-sm);
+    text-decoration: none;
+    color: var(--ys-ink);
+    position: relative;
+    transition: background .14s ease;
+}
+.ys-node:hover { background: #f6f8ff; }
+.ys-node::after {
+    content: ""; position: absolute; left: 41px; top: 68px; bottom: -14px;
+    width: 2px; background: repeating-linear-gradient(180deg, var(--ys-line) 0 6px, transparent 6px 12px);
+}
+.ys-node:last-child::after { display: none; }
+
+.ys-node__dot {
+    width: 58px; height: 58px; flex: none;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 25px;
+    background: #f4f7ff;
+    border: 3px solid var(--ys-line);
+    position: relative; z-index: 1;
+}
+.ys-node--done .ys-node__dot { border-color: var(--ys-green); background: #f0fdf4; }
+.ys-node--lock .ys-node__dot { border-color: #e8ecf5; background: #f7f8fb; filter: grayscale(1); opacity: .7; }
+.ys-node--lock { pointer-events: none; }
+.ys-node--go .ys-node__dot { border-color: var(--ys-primary); background: #eef2ff; box-shadow: 0 0 0 5px rgba(var(--ys-primary-rgb), .12); }
+
+.ys-node__body { min-width: 0; flex: 1; }
+.ys-node__body strong { display: block; font-size: .98rem; margin-bottom: 3px; }
+.ys-node__body small { color: var(--ys-muted); font-size: .82rem; line-height: 1.5; display: block; }
+
+.ys-node__mark { font-size: 1.15rem; flex: none; }
+
+.ys-lockbar {
+    margin: 14px 2px 6px;
+    padding: 11px 14px;
+    border-radius: var(--ys-r-sm);
+    background: #f7f8fb;
+    color: var(--ys-muted);
+    font-size: .84rem;
+    line-height: 1.6;
+    border: 1px dashed var(--ys-line);
+}
+
+/* ---------------- 进度环 / 统计 ---------------- */
+
+.ys-ring {
+    --p: 0;
+    width: 92px; height: 92px; border-radius: 50%;
+    background: conic-gradient(var(--ys-primary) calc(var(--p) * 1%), #e9eefb 0);
+    display: flex; align-items: center; justify-content: center;
+    flex: none;
+}
+.ys-ring > div {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.16rem; line-height: 1.1;
+}
+.ys-ring small { font-size: .64rem; font-weight: 600; color: var(--ys-muted); }
+
+.ys-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ys-stat {
+    background: #f7f9ff; border: 1px solid var(--ys-line);
+    border-radius: var(--ys-r-sm); padding: 14px 12px; text-align: center;
+}
+.ys-stat b { display: block; font-size: 1.42rem; line-height: 1.2; color: var(--ys-ink); }
+.ys-stat small { color: var(--ys-muted); font-size: .78rem; }
+
+/* ---------------- 表单 ---------------- */
+
+.ys-field { margin-bottom: 14px; text-align: left; }
+.ys-field label { display: block; font-size: .84rem; font-weight: 700; color: var(--ys-ink-2); margin-bottom: 6px; }
+.ys-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--ys-r-sm);
+    border: 1.5px solid var(--ys-line);
+    background: #fbfcff;
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--ys-ink);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.ys-input:focus { border-color: var(--ys-primary); box-shadow: 0 0 0 4px rgba(var(--ys-primary-rgb), .12); }
+
+.ys-tabs {
+    display: flex; gap: 4px; padding: 4px;
+    background: #eef2fb; border-radius: 999px; margin-bottom: 18px;
+}
+.ys-tab {
+    flex: 1; text-align: center; padding: 10px 6px;
+    border-radius: 999px; font-size: .9rem; font-weight: 700;
+    color: var(--ys-muted); cursor: pointer; border: none; background: transparent;
+    font-family: inherit; transition: all .15s ease;
+}
+.ys-tab[aria-selected="true"] { background: #fff; color: var(--ys-primary); box-shadow: 0 3px 10px -4px rgba(23,43,110,.3); }
+
+.ys-note {
+    font-size: .82rem; line-height: 1.6; color: var(--ys-muted);
+    background: #f7f9ff; border: 1px solid var(--ys-line);
+    border-radius: var(--ys-r-sm); padding: 11px 13px;
+}
+.ys-note--warn { background: #fffaf0; border-color: #ffe6b3; color: #8a5a00; }
+.ys-note--ok { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.ys-note--err { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+/* ---------------- 提示条 ---------------- */
+
+.ys-toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px);
+    z-index: 90;
+    padding: 13px 20px; border-radius: 999px;
+    background: #15203c; color: #fff;
+    font-size: .9rem; font-weight: 600;
+    box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .6);
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease, transform .22s ease;
+    max-width: 88vw; text-align: center;
+}
+.ys-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ============================================================
+   内页统一外壳（yx-shell.js 注入）
+   ------------------------------------------------------------
+   旧页面原本是「左侧深色导航 + 深色内容」的教师工作台，
+   与学生端的亮色顶栏是两套东西 —— 点进去像换了个 App。
+   这里给内页补一条与学生端完全同款的顶栏（含返回入口），
+   并把配色统一到同一套亮色，让内页看起来还是同一个应用。
+   ============================================================ */
+
+/* 顶栏配色随主题切换，两个变量一次定好 */
+html.lg-light {
+    --yx-bar-bg: rgba(242, 245, 255, 0.9);
+    --yx-bar-line: #e3e9f7;
+    --yx-bar-ink: #15203c;
+    --yx-chip-bg: #ffffff;
+    --yx-chip-line: #e3e9f7;
+    --yx-chip-ink: #3d4a68;
+    --yx-chip-ink-b: #15203c;
+}
+html:not(.lg-light) {
+    --yx-bar-bg: rgba(9, 14, 28, 0.9);
+    --yx-bar-line: rgba(255, 255, 255, 0.1);
+    --yx-bar-ink: #e7efff;
+    --yx-chip-bg: rgba(255, 255, 255, 0.07);
+    --yx-chip-line: rgba(255, 255, 255, 0.13);
+    --yx-chip-ink: #c3d0e8;
+    --yx-chip-ink-b: #ffffff;
+}
+
+.yx-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 130;
+    height: 58px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 16px;
+    background: var(--yx-bar-bg);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--yx-bar-line);
+    transition: background .22s ease, border-color .22s ease;
+}
+
+/* 返回上一级：整个 App 里最主要的“出口”，做成实心大按钮，不靠找 */
+.yx-bar__back {
+    display: inline-flex; align-items: center; gap: 7px;
+    flex: none;
+    padding: 9px 17px 9px 13px;
+    border-radius: 999px;
+    font-size: .9rem; font-weight: 800;
+    text-decoration: none; color: #fff;
+    background: linear-gradient(135deg, var(--ys-primary), var(--ys-cyan));
+    box-shadow: 0 4px 0 var(--ys-primary-d), 0 12px 22px -13px rgba(var(--ys-primary-rgb), .9);
+    transition: transform .12s ease, box-shadow .16s ease, filter .16s ease;
+}
+.yx-bar__back:hover { filter: brightness(1.05); }
+.yx-bar__back:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ys-primary-d); }
+.yx-bar__back i { font-style: normal; font-size: 1.02rem; line-height: 1; }
+.yx-bar__back-short { display: none; }
+
+.yx-bar__brand {
+    display: flex; align-items: center; gap: 8px;
+    margin-right: auto;
+    min-width: 0; overflow: hidden; white-space: nowrap;
+    font-weight: 800; font-size: .96rem;
+    color: var(--yx-bar-ink); text-decoration: none;
+}
+.yx-bar__brand span.dot {
+    width: 26px; height: 26px; border-radius: 9px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    background: linear-gradient(135deg, var(--ys-primary), var(--ys-cyan));
+}
+.yx-bar__name { overflow: hidden; text-overflow: ellipsis; }
+
+/* 顶栏里的星星 / 天数 / 头像跟随主题 */
+.yx-bar .ys-chip {
+    background: var(--yx-chip-bg);
+    border-color: var(--yx-chip-line);
+    color: var(--yx-chip-ink);
+}
+.yx-bar .ys-chip b { color: var(--yx-chip-ink-b); }
+.yx-bar .ys-chip--star { background: #fffaf0; border-color: #ffe0a3; color: #a16207; }
+.yx-bar .ys-chip--fire { background: #fff6f2; border-color: #ffd6c9; color: #c2410c; }
+html:not(.lg-light) .yx-bar .ys-chip--star { background: rgba(255, 176, 32, .14); border-color: rgba(255, 176, 32, .32); color: #ffd489; }
+html:not(.lg-light) .yx-bar .ys-chip--fire { background: rgba(239, 68, 68, .15); border-color: rgba(239, 68, 68, .32); color: #ffb4a4; }
+
+.yx-bar .ys-avatar {
+    background: var(--yx-chip-bg);
+    border-color: var(--yx-chip-line);
+    width: 34px; height: 34px; font-size: 17px;
+    flex: none;
+}
+
+/* ---- 顶栏出现后，给固定导航与正文让位 ---- */
+
+html.yx-hasbar body { padding-top: 84px; }
+html.yx-hasbar .main-nav { top: 58px; }
+/* 顶栏已有品牌，侧栏不再重复 */
+html.yx-hasbar .main-nav > .nav-brand { display: none; }
+
+/* ============================================================
+   跨页过渡（yx-motion.js）
+   ------------------------------------------------------------
+   入场用纯 CSS animation：即使 JS 没跑也会正常淡入，不会卡在半透明。
+   出场才用 JS 加类触发 transition。
+   全程只用 opacity —— 给 body 加 transform 会让 position:fixed
+   的顶栏和侧栏改为相对 body 定位，直接把外壳弄塌。
+   ============================================================ */
+
+@keyframes yx-fadein {
+    from { opacity: .6; }
+    to { opacity: 1; }
+}
+
+body {
+    animation: yx-fadein .2s ease both;
+}
+
+html.yx-out body {
+    animation: none;
+    opacity: 0;
+    transition: opacity .17s ease;
+}
+
+html.yx-out {
+    pointer-events: none;
+}
+
+/* 从缓存返回时不要再重播一次入场 */
+html.yx-settled body {
+    animation: none;
+    opacity: 1;
+}
+
+@keyframes yx-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+}
+
+html:not(.yx-out) .yx-stagger {
+    animation: yx-rise .34s cubic-bezier(.22, .72, .28, 1) backwards;
+}
+
+/* ---------------- 宽屏（桌面 / 教室投屏） ---------------- */
+
+@media (min-width: 1080px) {
+    .ys-wrap { padding: 22px 30px 72px; }
+    .ys-topbar { margin: -22px -30px 20px; padding: 12px 20px; }
+
+    .ys-hero { padding: 34px 20px 14px; }
+    .ys-h1 { font-size: 2rem; }
+    .ys-logo { width: 120px; height: 120px; font-size: 58px; border-radius: 34px; }
+
+    .ys-cta-row { flex-direction: row; }
+    .ys-cta-row .ys-btn { flex: 1; }
+
+    /* 欢迎页：特性卡两列，别拉成一长条 */
+    .ys-feature-row { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+    .ys-feature-row .ys-feature:nth-last-child(2) { border-bottom: none; }
+
+    /* 学习路径：初 / 中 / 高 并排三列 */
+    .ys-tiergrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .ys-tiergrid .ys-tier { margin-bottom: 0; display: flex; flex-direction: column; }
+    .ys-tiergrid .ys-tier__body { flex: 1; }
+
+    /* 顶部进度卡：环 + 文案 + 按钮 一行排开 */
+    .ys-hero-row { display: flex; align-items: center; gap: 24px; }
+    .ys-hero-row__main { flex: 1; min-width: 0; }
+    .ys-hero-row__gap { display: none; }
+    .ys-hero-row .ys-btn--block { width: auto; flex: none; padding-left: 32px; padding-right: 32px; }
+
+    /* 登录 / 表单类卡片：太宽会难填，收在中间 */
+    .ys-form-card { max-width: 620px; margin-left: auto; margin-right: auto; }
+    .ys-btn--fit { max-width: 420px; margin-left: auto; margin-right: auto; }
+}
+
+/* ---------------- 响应式 ---------------- */
+
+@media (max-width: 900px) {
+    /* 窄屏：侧栏改成一整行横向滚动。原样式让十几个入口换行堆成四五层，
+       手机上还没看到内容就先被导航占满一屏。 */
+    html.yx-hasbar body { padding: 72px 16px 16px; }
+    html.yx-hasbar .main-nav {
+        top: 58px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    html.yx-hasbar .main-nav::-webkit-scrollbar { display: none; }
+    html.yx-hasbar .main-nav .nav-link { flex: none; white-space: nowrap; }
+}
+
+@media (max-width: 560px) {
+    .ys-wrap { padding: 12px 12px 56px; }
+    .ys-topbar { margin: -12px -12px 14px; padding: 9px 10px; }
+    .ys-h1 { font-size: 1.42rem; }
+    .ys-card { padding: 17px; border-radius: var(--ys-r); }
+    .ys-logo { width: 86px; height: 86px; font-size: 42px; border-radius: 26px; }
+    .ys-node__dot { width: 52px; height: 52px; font-size: 22px; border-width: 3px; }
+    .ys-node::after { left: 37px; top: 62px; }
+    .ys-btn--lg { padding: 16px 22px; font-size: 1.02rem; }
+    .ys-stats { gap: 8px; }
+    .ys-stat b { font-size: 1.2rem; }
+    /* 顶栏在手机上收窄，别把返回按钮挤没 */
+    .yx-bar { gap: 8px; padding: 0 10px; height: 56px; }
+    .yx-bar__back { padding: 8px 13px 8px 11px; font-size: .84rem; }
+    .yx-bar__back-full { display: none; }
+    .yx-bar__back-short { display: inline; }
+    .yx-bar .ys-chip { padding: 5px 9px; font-size: .8rem; }
+    html.yx-hasbar body { padding: 70px 12px 14px; }
+    html.yx-hasbar .main-nav { top: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ys-logo { animation: none; }
+    * { transition: none !important; }
+    body { animation: none !important; }
+    .yx-stagger { animation: none !important; }
+    html.yx-out body { opacity: 1 !important; }
+}
+
+/* 打印 / 导出 PDF：外壳不入纸 */
+@media print {
+    .yx-bar { display: none !important; }
+    html.yx-hasbar body { padding-top: 0 !important; }
+    html.yx-hasbar .main-nav { top: 0 !important; }
+}

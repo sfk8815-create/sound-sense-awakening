@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!-- RHYTHM-METRICS-V2 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#f2f5ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="音感觉醒">
@@ -184,7 +185,7 @@
         .level-chip .level-name { display: block; font-size: 0.72rem; margin-top: 2px; }
         .level-chip.current {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
+            box-shadow: 0 0 0 2px rgba(59, 91, 253, 0.25);
             color: var(--text-primary);
             background: var(--surface);
         }
@@ -250,6 +251,7 @@
         #timeline-canvas { background: var(--surface-light); border-radius: 12px; }
     </style>
     <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="student.css">
     <link rel="icon" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <script>
@@ -257,6 +259,12 @@
             try {
                 var saved = JSON.parse(localStorage.getItem("lg-modes") || "{}");
                 var root = document.documentElement;
+                if (!saved || typeof saved !== "object") saved = {};
+                /* 学生端是亮色界面：没手动选过就默认亮色，避免点进来像换了个 App */
+                if (saved.light === undefined) {
+                    saved.light = true;
+                    try { localStorage.setItem("lg-modes", JSON.stringify(saved)); } catch (e) {}
+                }
                 if (saved.light) root.classList.add("lg-light");
                 if (saved.focus) root.classList.add("lg-focus");
                 if (saved.large) root.classList.add("lg-large");
@@ -267,6 +275,25 @@
     <script src="ui-controls.js" defer></script>
     <script src="piano-tone.js"></script>
     <script src="scroll-guard.js" defer></script>
+<link rel="stylesheet" href="yx-theme.css">
+<script>
+/* 首屏就套用已保存的配色与明暗，避免先闪一下默认色 */
+(function () {
+    try {
+        var d = document.documentElement;
+        var m = JSON.parse(localStorage.getItem("lg-modes") || "{}");
+        if (!m || typeof m !== "object") m = {};
+        if (m.light === undefined) {
+            m.light = true;
+            try { localStorage.setItem("lg-modes", JSON.stringify(m)); } catch (e) {}
+        }
+        if (m.palette) d.setAttribute("data-ys-palette", m.palette);
+        d.classList.toggle("lg-light", !!m.light);
+        d.classList.toggle("ys-dark", !m.light);
+        if (m.large) d.classList.add("lg-large");
+    } catch (e) {}
+})();
+</script>
 </head>
 <body>
         <nav class="main-nav">
@@ -316,7 +343,7 @@
             </div>
             <div id="level-path" class="level-path"></div>
             <p class="hint" id="level-task" style="margin: 10px 0 0 0;"></p>
-            <p class="hint" id="homework-banner" style="display: none; margin: 8px 0 0 0; color: #2dd4bf;"></p>
+            <p class="hint" id="homework-banner" style="display: none; margin: 8px 0 0 0; color: #22d3ee;"></p>
         </div>
 
         <div class="panel">
@@ -364,7 +391,50 @@
                         <option value="countin">只在预备拍给节拍（内化节拍）</option>
                     </select>
                 </div>
+                <div class="field wide">
+                    <label>伴奏来源</label>
+                    <select id="accompany" data-segmented>
+                        <option value="click" selected>节拍器（默认）</option>
+                        <option value="music">真实乐曲（本地音频）</option>
+                    </select>
+                </div>
             </div>
+        </div>
+
+        <div class="panel" id="music-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                <strong style="font-size: 0.95rem;">🎵 真实乐曲</strong>
+                <button class="btn ghost" id="music-clear-btn" style="padding: 6px 12px; font-size: 0.8rem;">移除乐曲</button>
+            </div>
+            <div class="row">
+                <div class="field">
+                    <label>选择音频文件（mp3 / wav / m4a / ogg）</label>
+                    <input type="file" id="music-file" accept="audio/*" style="width: 100%; font-size: 0.85rem; color: var(--text-secondary);">
+                </div>
+                <div class="field">
+                    <label>自动测速：<span class="bpm-value" id="music-bpm-label">—</span></label>
+                    <button class="btn ghost" id="music-apply-bpm" style="width: 100%; padding: 9px; font-size: 0.85rem;">用这个速度替换当前 BPM</button>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+                <div class="field">
+                    <label>起点校准（毫秒）：<span id="music-shift-label">0</span></label>
+                    <input type="range" id="music-shift" min="-4000" max="4000" step="50" value="0">
+                </div>
+                <div class="field" style="flex: 1 1 100%;">
+                    <div class="buttons">
+                        <button class="btn ghost" id="music-preview-btn">▶ 试听（叠加节拍器）</button>
+                        <button class="btn ghost" id="music-preview-stop-btn">⏹ 停止试听</button>
+                    </div>
+                </div>
+            </div>
+            <p class="hint" id="music-status" style="margin-top: 8px;">
+                流程：选本地音频 → 看自动测速（不准就手动改上面的 BPM，再点「用这个速度」）→
+                点「试听」，如果「嗒」声和乐曲的拍点错开，就拖「起点校准」对齐 → 回到上面点「开始训练」。
+                真实乐曲模式下按「每一拍敲一下」统计，节奏型与节拍提示设置不生效。
+                上面的「练习小节数」决定练多久，练完这一遍乐曲会自动停下。
+                音频只在本次练习的内存里播放，不录制、不保存、不上传。
+            </p>
         </div>
 
         <div class="panel" id="custom-panel" style="display: none;">
@@ -433,6 +503,8 @@
             <div class="stats">
                 <div class="stat"><div class="num" id="stat-accuracy">-</div><div class="lbl">准确率</div></div>
                 <div class="stat"><div class="num" id="stat-offset">-</div><div class="lbl">平均偏差(ms)</div></div>
+                <div class="stat"><div class="num" id="stat-sd">-</div><div class="lbl">波动(ms)</div></div>
+                <div class="stat"><div class="num" id="stat-beat">-</div><div class="lbl">拍点对齐</div></div>
                 <div class="stat"><div class="num" id="stat-good">0</div><div class="lbl">准</div></div>
                 <div class="stat"><div class="num" id="stat-early">0</div><div class="lbl">偏早</div></div>
                 <div class="stat"><div class="num" id="stat-late">0</div><div class="lbl">偏晚</div></div>
@@ -458,7 +530,7 @@
                     <button class="btn ghost" id="next-level-btn" style="padding: 6px 12px; font-size: 0.8rem; display: none;">进入下一关</button>
                 </span>
             </div>
-            <canvas id="report-canvas" width="700" height="420" style="width: 100%; max-width: 700px; display: block; margin: 0 auto; border-radius: 12px;"></canvas>
+            <canvas id="report-canvas" width="700" height="480" style="width: 100%; max-width: 700px; display: block; margin: 0 auto; border-radius: 12px;"></canvas>
             <p class="hint" id="diagnosis-text" style="margin-top: 10px;"></p>
         </div>
 
@@ -532,6 +604,9 @@
             ["C", 45],
         ];
 
+        // 拍点对齐的提示线直接沿用既有的 B 档分数（62），不新增判定阈值。
+        const PASS_RATE = GRADE_BANDS.find(([name]) => name === "B")[1];
+
         const PATTERNS = {
             quarter: { label: "四分音符", cycle: 4, hits: [0] },
             eighth: { label: "八分音符", cycle: 4, hits: [0, 2] },
@@ -575,6 +650,12 @@
             autoLatency: 0,
             customHits: [0, 4, 8, 12],
             student: "本人",
+            // 伴奏来源：click = 节拍器；music = 跟着本地真实乐曲
+            playMode: "click",
+            musicBuffer: null,
+            musicBpm: null,
+            musicSource: null,
+            musicPreviewSource: null,
         };
 
         const el = (id) => document.getElementById(id);
@@ -606,8 +687,12 @@
             state.stepDuration = (beatSeconds * unitFactor) / STEPS_PER_BEAT;
 
             state.expected = [];
+            const musicMode = state.playMode === "music";
             for (let step = 0; step < state.totalSteps; step++) {
-                if (pattern.hits.includes(step % pattern.cycle)) {
+                if (musicMode) {
+                    // 跟着真实乐曲练的是「拍点」，目标固定为每一拍的第一下
+                    if (step % STEPS_PER_BEAT === 0) state.expected.push(step);
+                } else if (pattern.hits.includes(step % pattern.cycle)) {
                     state.expected.push(step);
                 }
             }
@@ -616,7 +701,9 @@
             renderGrid();
             resetStats();
             el("result-panel").style.display = "none";
-            el("status").textContent = `共 ${state.totalNotes} 个音，${bars} 小节`;
+            el("status").textContent = musicMode
+                ? `真实乐曲模式：共 ${bars} 小节 / ${state.totalNotes} 个拍点`
+                : `共 ${state.totalNotes} 个音，${bars} 小节`;
         }
 
         function renderGrid() {
@@ -674,6 +761,8 @@
             el("stat-late").textContent = "0";
             el("stat-missed").textContent = "0";
             el("stat-extra").textContent = "0";
+            el("stat-sd").textContent = "-";
+            el("stat-beat").textContent = "-";
             el("stat-score").textContent = "0";
             if (state.cells) {
                 for (const cell of state.cells) {
@@ -705,6 +794,9 @@
             if (step < 0 || step >= state.totalSteps) return;
             const stepInBar = step % (state.beats * STEPS_PER_BEAT);
             const barIndex = Math.floor(step / (state.beats * STEPS_PER_BEAT));
+
+            // 真实乐曲模式：乐曲本身就是提示，不再叠节拍器
+            if (state.playMode === "music") return;
 
             // 提示强度：全程发声 / 隔小节发声 / 只保留预备拍
             if (state.cueMode === "countin") return;
@@ -759,6 +851,57 @@
             const sorted = [...values].sort((a, b) => a - b);
             const middle = Math.floor(sorted.length / 2);
             return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+        }
+
+        // ==================== 波动与拍点对齐（只做评估读数，不参与评分） ====================
+        // 这两个指标供教学诊断与常模采集用；准确率、得分、评级仍走原来的算法与阈值。
+
+        function standardDeviation(values) {
+            if (!values.length) return 0;
+            const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+            const variance = values.reduce((sum, value) => sum + (value - mean) * (value - mean), 0) / values.length;
+            return Math.sqrt(variance);
+        }
+
+        // 波动 = 去掉整体偏移之后，每一次击打落点的时间标准差（越小越稳）；
+        // 顺带比较前后半段的离散度，用来看稳定性是越练越稳还是越练越散。
+        function variabilitySummary(offsets) {
+            const sd = standardDeviation(offsets);
+            if (offsets.length < 6) {
+                return { sd, drift: null, first: sd, second: sd };
+            }
+            const half = Math.floor(offsets.length / 2);
+            const first = standardDeviation(offsets.slice(0, half));
+            const second = standardDeviation(offsets.slice(half));
+            return { sd, drift: second - first, first, second };
+        }
+
+        // 拍点对齐 = 落在「每拍第一下」上的击打有多少落在 ±GOOD_MS 内。
+        // 分母是已经到点的拍点音（含漏敲），所以它同时惩罚拖拍和漏拍。
+        function beatAlignment(centerMs, cutoffSeconds) {
+            const beatSteps = state.expected.filter((step) => step % STEPS_PER_BEAT === 0);
+            const limit = typeof cutoffSeconds === "number" ? cutoffSeconds : Infinity;
+            const due = limit === Infinity
+                ? beatSteps
+                : beatSteps.filter((step) => state.startTime + step * state.stepDuration <= limit + 0.2);
+            if (!due.length) return { rate: null, median: null, total: 0, hit: 0 };
+
+            let inWindow = 0;
+            let hitCount = 0;
+            const offsets = [];
+            for (const step of due) {
+                if (!state.matched.has(step)) continue;
+                hitCount += 1;
+                const value = state.matched.get(step) - centerMs;
+                offsets.push(value);
+                if (Math.abs(value) <= GOOD_MS) inWindow += 1;
+            }
+            return {
+                rate: Math.round((inWindow / due.length) * 100),
+                median: offsets.length ? Math.round(medianOf(offsets)) : null,
+                total: due.length,
+                hit: hitCount,
+            };
         }
 
         async function startMic() {
@@ -837,6 +980,9 @@
                 : (state.autoLatency || 0);
             const adjusted = rawTime - manualLatency - deviceLatency;
 
+            // 网格开始之前的敲击（预备拍、乐曲前奏里随手打的）不计入，避免误判成多余敲击
+            if (adjusted < state.startTime - 0.2) return;
+
             const index = state.currentStep;
             let best = null;
             let bestDistance = Infinity;
@@ -896,10 +1042,17 @@
             const raw = [...state.matched.values()];
             const center = medianOf(raw);
             const offsets = raw.map((value) => value - center);
+            const orderedOffsets = state.expected
+                .filter((step) => state.matched.has(step))
+                .map((step) => state.matched.get(step) - center);
+            const liveCutoff = state.startTime + state.currentStep * state.stepDuration;
+            const liveBeat = beatAlignment(center, liveCutoff);
             const good = offsets.filter((o) => Math.abs(o) <= GOOD_MS).length;
             const ok = offsets.filter((o) => Math.abs(o) > GOOD_MS && Math.abs(o) <= OK_MS).length;
             const total = state.totalNotes || 1;
             const accuracy = Math.round(((good + ok * 0.6) / total) * 100);
+            el("stat-sd").textContent = orderedOffsets.length ? Math.round(standardDeviation(orderedOffsets)) : "-";
+            el("stat-beat").textContent = liveBeat.rate === null ? "-" : `${liveBeat.rate}%`;
             el("stat-good").textContent = good;
             el("stat-early").textContent = offsets.filter((o) => o < -GOOD_MS).length;
             el("stat-late").textContent = offsets.filter((o) => o > GOOD_MS).length;
@@ -911,6 +1064,10 @@
         async function startTraining(mode) {
             stopTraining(true);
             buildPattern();
+            if (state.playMode === "music" && !state.musicBuffer) {
+                el("status").textContent = "真实乐曲模式需要先在上面的「🎵 真实乐曲」里选一个音频文件。";
+                return;
+            }
             state.mode = mode;
             state.running = true;
             state.matched = new Map();
@@ -936,6 +1093,33 @@
             state.autoLatency = estimateAutoLatency();
             state.demoActive = false;
             const context = state.audioContext;
+
+            // 真实乐曲：乐曲自己就是提示，不数拍，直接按校准好的起点起算
+            if (state.playMode === "music" && state.musicBuffer) {
+                const shift = Number(el("music-shift").value) / 1000;
+                const musicStart = context.currentTime + 0.5;
+                const gridStart = Math.max(context.currentTime + 0.05, musicStart + shift);
+                const source = context.createBufferSource();
+                source.buffer = state.musicBuffer;
+                source.connect(context.destination);
+                state.musicSource = source;
+                source.start(musicStart, 0);
+
+                state.startTime = gridStart;
+                state.nextStepTime = gridStart;
+                state.currentStep = -1;
+                state.started = true;
+                el("status").textContent = "跟着乐曲敲击每一拍……";
+                source.onended = () => {
+                    if (state.running && state.playMode === "music") {
+                        el("status").textContent = "乐曲已播完";
+                        finishTraining();
+                    }
+                };
+                state.schedulerTimer = window.setTimeout(scheduler, 50);
+                return;
+            }
+
             const countInStart = context.currentTime + 0.2;
             const beatSeconds = state.stepDuration * STEPS_PER_BEAT;
             for (let beat = 0; beat < 4; beat++) {
@@ -974,6 +1158,15 @@
                 window.clearTimeout(state.playbackTimer);
                 state.playbackTimer = null;
             }
+            if (state.musicSource) {
+                try {
+                    state.musicSource.stop();
+                } catch (error) {
+                    // 已经停了
+                }
+                state.musicSource.onended = null;
+                state.musicSource = null;
+            }
             if (state.mediaStream) {
                 state.mediaStream.getTracks().forEach((track) => track.stop());
                 state.mediaStream = null;
@@ -1001,6 +1194,12 @@
             const center = medianOf(rawOffsets);
             state.rawMatched = new Map(state.matched);
             const offsets = rawOffsets.map((value) => value - center);
+            // 波动 / 拍点对齐：按网格顺序排好再算，顺序影响前后半段对比
+            const orderedOffsets = state.expected
+                .filter((step) => state.matched.has(step))
+                .map((step) => state.matched.get(step) - center);
+            const variability = variabilitySummary(orderedOffsets);
+            const beatInfo = beatAlignment(center, Infinity);
             const good = offsets.filter((o) => Math.abs(o) <= GOOD_MS).length;
             const ok = offsets.filter((o) => Math.abs(o) > GOOD_MS && Math.abs(o) <= OK_MS).length;
             const total = state.totalNotes || 1;
@@ -1020,6 +1219,8 @@
             el("stat-extra").textContent = state.extras;
             el("stat-accuracy").textContent = `${accuracy}%`;
             el("stat-offset").textContent = offsets.length ? avgOffset : "-";
+            el("stat-sd").textContent = orderedOffsets.length ? Math.round(variability.sd) : "-";
+            el("stat-beat").textContent = beatInfo.rate === null ? "-" : `${beatInfo.rate}%`;
             el("stat-score").textContent = score;
 
             const grade = GRADE_BANDS.reduce((result, [name, threshold]) => result || (score >= threshold ? name : null), null) ?? "D";
@@ -1035,11 +1236,19 @@
                 ? "已自动对齐你的击打习惯"
                 : `整体偏${tendency > 0 ? "晚" : "早"}约 ${Math.abs(tendency)} 毫秒，可用下方“击打延迟校准”微调`;
 
+            const stabilityText = orderedOffsets.length
+                ? `，波动 ±${Math.round(variability.sd)} 毫秒` +
+                  (beatInfo.rate === null ? "" : `，拍点对齐 ${beatInfo.rate}%`) +
+                  (variability.drift !== null && Math.abs(variability.drift) >= 12
+                      ? `（前半 ${Math.round(variability.first)} → 后半 ${Math.round(variability.second)} 毫秒，${variability.drift > 0 ? "越练越散" : "越练越稳"}）`
+                      : "")
+                : "";
+
             el("grade").textContent = grade;
             el("grade-text").textContent =
                 `准确率 ${accuracy}%` +
                 (penalty > 0 ? `，多余敲击 ${state.extras} 次扣 ${penalty} 分` : "") +
-                `，最终得分 ${score}。${gradeText}（平均偏差 ${offsets.length ? avgOffset : 0} 毫秒，${tendencyText}）`;
+                `，最终得分 ${score}。${gradeText}（平均偏差 ${offsets.length ? avgOffset : 0} 毫秒，${tendencyText}${stabilityText}）`;
             el("result-panel").style.display = "block";
             stopTraining(true);
 
@@ -1048,10 +1257,22 @@
                 extras: state.extras,
                 score,
                 tendency,
+                variability,
+                beatInfo,
             });
             el("diagnosis-text").textContent = `诊断建议：${diagnosis}`;
             el("report-panel").style.display = "block";
-            drawReportCard({ grade, accuracy, avgOffset, missed: missedSteps.length, extras: state.extras, diagnosis, offsets });
+            drawReportCard({
+                grade,
+                accuracy,
+                avgOffset,
+                missed: missedSteps.length,
+                extras: state.extras,
+                diagnosis,
+                offsets,
+                sd: Math.round(variability.sd),
+                beatRate: beatInfo.rate,
+            });
 
             const timelineItems = state.expected.map((step) => ({
                 offset: state.matched.has(step) ? state.matched.get(step) - center : null,
@@ -1071,7 +1292,7 @@
                 el("status").textContent = "训练结束";
             }
 
-            saveRecord({ accuracy, avgOffset, score });
+            saveRecord({ accuracy, avgOffset, score, sd: Math.round(variability.sd), beatRate: beatInfo.rate });
         }
 
         function playDemo() {
@@ -1117,7 +1338,7 @@
             window.requestAnimationFrame(highlight);
         }
 
-        function saveRecord({ accuracy, avgOffset, score }) {
+        function saveRecord({ accuracy, avgOffset, score, sd, beatRate }) {
             const records = loadRecords();
             records.unshift({
                 time: new Date().toLocaleString("zh-CN"),
@@ -1130,6 +1351,9 @@
                 level: levelState.current,
                 accuracy,
                 avgOffset,
+                sd,
+                beatRate,
+                accompany: state.playMode === "music" ? "乐曲" : "节拍器",
                 score,
             });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records.slice(0, 30)));
@@ -1165,9 +1389,9 @@
 
         function exportCsv() {
             const records = loadRecords();
-            const header = "练习者,时间,速度,拍号,节奏型,提示模式,准确率,平均偏差(ms),得分";
+            const header = "练习者,时间,速度,拍号,节奏型,提示模式,伴奏,准确率,平均偏差(ms),波动(ms),拍点对齐(%),得分";
             const rows = records.map(
-                (r) => `${r.student || "本人"},${r.time},${r.bpm},${r.signature},${r.pattern},${cueLabel(r.cue)},${r.accuracy},${r.avgOffset},${r.score}`
+                (r) => `${r.student || "本人"},${r.time},${r.bpm},${r.signature},${r.pattern},${cueLabel(r.cue)},${r.accompany || "节拍器"},${r.accuracy},${r.avgOffset},${r.sd === undefined || r.sd === null ? "" : r.sd},${r.beatRate === undefined || r.beatRate === null ? "" : r.beatRate},${r.score}`
             );
             const blob = new Blob(["\ufeff" + [header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
             const link = document.createElement("a");
@@ -1354,7 +1578,7 @@
         }
 
         // ==================== 诊断建议 ====================
-        function buildDiagnosis({ missed, extras, score, tendency }) {
+        function buildDiagnosis({ missed, extras, score, tendency, variability, beatInfo }) {
             const notes = [];
             const total = state.totalNotes || 1;
 
@@ -1366,6 +1590,12 @@
             }
             if (Math.abs(tendency) > 40) {
                 notes.push(`整体偏${tendency > 0 ? "晚" : "早"}约 ${Math.abs(tendency)} 毫秒，可以调整“击打延迟校准”。`);
+            }
+            if (variability && variability.sd > GOOD_MS) {
+                notes.push(`每一下的波动有 ±${Math.round(variability.sd)} 毫秒，落点还不够均匀，先降 10 到 20 BPM 再练。`);
+            }
+            if (beatInfo && beatInfo.rate !== null && beatInfo.rate < PASS_RATE) {
+                notes.push(`拍点对齐只有 ${beatInfo.rate}%，先把每拍的第一下踩准，拍内的细分音可以稍微放宽。`);
             }
 
             const beats = state.beats || 4;
@@ -1397,7 +1627,7 @@
         }
 
         // ==================== 成绩单 ====================
-        function drawReportCard({ grade, accuracy, avgOffset, missed, extras, diagnosis, offsets }) {
+        function drawReportCard({ grade, accuracy, avgOffset, missed, extras, diagnosis, offsets, sd, beatRate }) {
             const canvas = el("report-canvas");
             if (!canvas || !canvas.getContext) return;
             const ctx = canvas.getContext("2d");
@@ -1405,7 +1635,7 @@
             const height = canvas.height;
 
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "#101a22";
+            ctx.fillStyle = "#0d1628";
             ctx.fillRect(0, 0, width, height);
 
             ctx.fillStyle = "#eef3f7";
@@ -1415,22 +1645,24 @@
             ctx.fillStyle = "#9fb0bd";
             ctx.fillText(new Date().toLocaleString("zh-CN"), 32, 76);
 
-            ctx.fillStyle = "#2dd4bf";
+            ctx.fillStyle = "#22d3ee";
             ctx.font = "bold 88px 'Microsoft YaHei', sans-serif";
-            ctx.fillText(grade, 32, 176);
+            ctx.fillText(grade, 32, 172);
 
             ctx.fillStyle = "#eef3f7";
             ctx.font = "17px 'Microsoft YaHei', sans-serif";
-            ctx.fillText(`准确率 ${accuracy}%`, 170, 130);
-            ctx.fillText(`平均偏差 ${avgOffset} 毫秒`, 170, 158);
-            ctx.fillText(`漏敲 ${missed} 次 · 多余敲击 ${extras} 次`, 170, 186);
+            ctx.fillText(`准确率 ${accuracy}%`, 170, 126);
+            ctx.fillText(`平均偏差 ${avgOffset} 毫秒`, 170, 152);
+            ctx.fillText(`波动 ±${sd} 毫秒（越小越稳）`, 170, 178);
+            ctx.fillText(`拍点对齐 ${beatRate === null ? "—" : `${beatRate}%`}`, 170, 204);
+            ctx.fillText(`漏敲 ${missed} 次 · 多余敲击 ${extras} 次`, 170, 230);
             ctx.fillStyle = "#9fb0bd";
             ctx.font = "14px 'Microsoft YaHei', sans-serif";
-            ctx.fillText(`${state.bpm} BPM · ${el("time-signature").value} · ${PATTERNS[el("pattern-select").value].label} · ${cueLabel(state.cueMode)}`, 170, 214);
+            ctx.fillText(`${state.bpm} BPM · ${el("time-signature").value} · ${PATTERNS[el("pattern-select").value].label} · ${cueLabel(state.cueMode)} · ${state.playMode === "music" ? "真实乐曲" : "节拍器"}`, 170, 256);
 
             // 偏差分布
             const chartLeft = 32;
-            const chartTop = 246;
+            const chartTop = 286;
             const chartWidth = width - 64;
             const chartHeight = 96;
             ctx.strokeStyle = "#2a3642";
@@ -1451,7 +1683,7 @@
             const barWidth = chartWidth / buckets.length;
             buckets.forEach((count, index) => {
                 const barHeight = (count / maxBucket) * (chartHeight - 12);
-                ctx.fillStyle = index === 6 ? "#2dd4bf" : "#3f6f8f";
+                ctx.fillStyle = index === 6 ? "#22d3ee" : "#3f6f8f";
                 ctx.fillRect(chartLeft + index * barWidth + 2, chartTop + chartHeight - barHeight, barWidth - 4, barHeight);
             });
             ctx.fillStyle = "#9fb0bd";
@@ -1503,7 +1735,7 @@
             const records = loadRecords().slice(0, 20).reverse();
 
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "#141a21";
+            ctx.fillStyle = "#101a2e";
             ctx.fillRect(0, 0, width, height);
 
             const left = 48;
@@ -1533,8 +1765,8 @@
 
             const stepX = records.length > 1 ? chartWidth / (records.length - 1) : 0;
             const series = [
-                { key: "accuracy", color: "#2dd4bf", label: "准确率" },
-                { key: "score", color: "#f59e0b", label: "得分" },
+                { key: "accuracy", color: "#22d3ee", label: "准确率" },
+                { key: "score", color: "#22d3ee", label: "得分" },
             ];
 
             series.forEach((item) => {
@@ -1560,10 +1792,10 @@
                 });
             });
 
-            ctx.fillStyle = "#2dd4bf";
+            ctx.fillStyle = "#22d3ee";
             ctx.font = "13px 'Microsoft YaHei', sans-serif";
             ctx.fillText("准确率", left, height - 10);
-            ctx.fillStyle = "#f59e0b";
+            ctx.fillStyle = "#22d3ee";
             ctx.fillText("得分", left + 60, height - 10);
             ctx.fillStyle = "#7d8b98";
             ctx.fillText(`最近 ${records.length} 次练习（从早到晚）`, left + 130, height - 10);
@@ -1687,18 +1919,22 @@
             const map = new Map();
             records.forEach((record) => {
                 const name = record.student || "本人";
-                if (!map.has(name)) map.set(name, { count: 0, accuracy: 0, score: 0 });
+                if (!map.has(name)) map.set(name, { count: 0, accuracy: 0, score: 0, sdSum: 0, sdCount: 0 });
                 const item = map.get(name);
                 item.count += 1;
                 item.accuracy += Number(record.accuracy) || 0;
                 item.score += Number(record.score) || 0;
+                if (record.sd !== undefined && record.sd !== null && !Number.isNaN(Number(record.sd))) {
+                    item.sdSum += Number(record.sd);
+                    item.sdCount += 1;
+                }
             });
             const rows = Array.from(map.entries())
                 .map(([name, item]) =>
-                    `<tr><td>${name}</td><td>${item.count}</td><td>${Math.round(item.accuracy / item.count)}%</td><td>${Math.round(item.score / item.count)}</td></tr>`)
+                    `<tr><td>${name}</td><td>${item.count}</td><td>${Math.round(item.accuracy / item.count)}%</td><td>${Math.round(item.score / item.count)}</td><td>${item.sdCount ? Math.round(item.sdSum / item.sdCount) : "—"}</td></tr>`)
                 .join("");
             target.innerHTML =
-                '<table class="records"><thead><tr><th>练习者</th><th>练习次数</th><th>平均准确率</th><th>平均得分</th></tr></thead><tbody>' +
+                '<table class="records"><thead><tr><th>练习者</th><th>练习次数</th><th>平均准确率</th><th>平均得分</th><th>平均波动(ms)</th></tr></thead><tbody>' +
                 rows +
                 "</tbody></table>";
         }
@@ -1721,7 +1957,7 @@
             const width = canvas.width;
             const height = canvas.height;
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "#141a21";
+            ctx.fillStyle = "#101a2e";
             ctx.fillRect(0, 0, width, height);
 
             const left = 58;
@@ -1761,7 +1997,7 @@
                 }
                 const y = yFor(item.offset);
                 const absolute = Math.abs(item.offset);
-                ctx.fillStyle = absolute <= GOOD_MS ? "#2dd4bf" : absolute <= OK_MS ? "#eab308" : "#ef4444";
+                ctx.fillStyle = absolute <= GOOD_MS ? "#22d3ee" : absolute <= OK_MS ? "#eab308" : "#ef4444";
                 ctx.beginPath();
                 ctx.arc(x, y, 4.5, 0, Math.PI * 2);
                 ctx.fill();
@@ -1772,6 +2008,215 @@
             ctx.fillText("每个音的顺序（从左到右）", left, height - 8);
             ctx.fillText("✕ 表示漏敲", left + chartWidth - 90, height - 8);
         }
+
+        // ==================== 真实乐曲（跟着音乐练拍点） ====================
+        // 音频只在内存里解码播放：不录音、不写 localStorage、不上传；成绩记录里只留数字与时间戳。
+        function setMusicStatus(text) {
+            if (el("music-status")) el("music-status").textContent = text;
+        }
+
+        // 起音包络：按 fps 取帧求 RMS，再取正向一阶差分（只留敲击的上升沿）
+        function onsetEnvelope(buffer, fps, maxSeconds) {
+            const data = buffer.getChannelData(0);
+            const hop = Math.max(1, Math.round(buffer.sampleRate / fps));
+            const frameLimit = Math.min(Math.floor(data.length / hop), Math.floor(fps * maxSeconds));
+            const flux = new Float32Array(Math.max(1, frameLimit));
+            let previous = 0;
+            for (let frame = 0; frame < frameLimit; frame++) {
+                const start = frame * hop;
+                let sum = 0;
+                for (let i = 0; i < hop; i++) {
+                    const value = data[start + i] || 0;
+                    sum += value * value;
+                }
+                const rms = Math.sqrt(sum / hop);
+                const diff = rms - previous;
+                flux[frame] = diff > 0 ? diff : 0;
+                previous = rms;
+            }
+            return flux;
+        }
+
+        // 自相关测速：在 50–200 BPM 的周期范围里找最强重复间隔
+        function estimateTempo(buffer) {
+            if (!buffer || buffer.length < buffer.sampleRate) return null;
+            const fps = 100;
+            const flux = onsetEnvelope(buffer, fps, 30);
+            const n = flux.length;
+            if (n < fps * 4) return null;
+
+            let mean = 0;
+            for (let i = 0; i < n; i++) mean += flux[i];
+            mean /= n;
+            const centered = new Float32Array(n);
+            for (let i = 0; i < n; i++) centered[i] = flux[i] - mean;
+
+            const minLag = Math.round((60 / 200) * fps);
+            const maxLag = Math.round((60 / 50) * fps);
+            const scores = new Float32Array(maxLag + 1);
+            for (let lag = minLag; lag <= maxLag; lag++) {
+                let dot = 0;
+                let energyA = 0;
+                let energyB = 0;
+                for (let i = 0; i + lag < n; i++) {
+                    const a = centered[i];
+                    const b = centered[i + lag];
+                    dot += a * b;
+                    energyA += a * a;
+                    energyB += b * b;
+                }
+                scores[lag] = dot / (Math.sqrt(energyA * energyB) || 1);
+            }
+
+            const pickBest = (from, to) => {
+                let best = 0;
+                for (let lag = from; lag <= to; lag++) {
+                    if (!best || scores[lag] > scores[best]) best = lag;
+                }
+                return best;
+            };
+
+            // 优先在 75–160 BPM 这个常用区间取峰，否则 120 的曲子会被 60 的倍频周期抢走
+            const preferMin = Math.round((60 / 160) * fps);
+            const preferMax = Math.round((60 / 75) * fps);
+            const globalBest = pickBest(minLag, maxLag);
+            const preferBest = pickBest(preferMin, preferMax);
+            if (!globalBest) return null;
+            let bestLag = preferBest && scores[preferBest] >= scores[globalBest] * 0.5 ? preferBest : globalBest;
+            if (bestLag < preferMin) {
+                const doubled = bestLag * 2;
+                if (doubled <= maxLag && scores[doubled] >= scores[bestLag] * 0.9) bestLag = doubled;
+            }
+
+            // 亚帧校正：抛物线插值，避免整数帧把 144 报成 143
+            let lagRefined = bestLag;
+            if (bestLag > minLag && bestLag < maxLag) {
+                const y0 = scores[bestLag - 1];
+                const y1 = scores[bestLag];
+                const y2 = scores[bestLag + 1];
+                const denominator = y0 - 2 * y1 + y2;
+                if (Math.abs(denominator) > 1e-9) {
+                    lagRefined = bestLag + (0.5 * (y0 - y2)) / denominator;
+                }
+            }
+            const bpm = Math.round((60 * fps) / lagRefined);
+            return { bpm: Math.min(240, Math.max(40, bpm)), confidence: Math.max(0, Math.min(1, scores[bestLag])) };
+        }
+
+        async function loadMusicFile(file) {
+            if (!file) return;
+            if (!state.audioContext) startAudio();
+            stopMusicPreview();
+            setMusicStatus("正在解码音频……大文件需要几秒。");
+            try {
+                const bytes = await file.arrayBuffer();
+                const buffer = await state.audioContext.decodeAudioData(bytes.slice(0));
+                state.musicBuffer = buffer;
+                const tempo = estimateTempo(buffer);
+                state.musicBpm = tempo ? tempo.bpm : null;
+                el("music-bpm-label").textContent = tempo ? String(tempo.bpm) : "未识别";
+                setMusicStatus(
+                    `已载入 ${buffer.duration.toFixed(1)} 秒音频。` +
+                    (tempo
+                        ? `自动测速约 ${tempo.bpm} BPM（把握 ${Math.round(tempo.confidence * 100)}%）；不准就先改上面的 BPM，再点「用这个速度」。`
+                        : "这段音频没能识别出速度，请手动填写上面的 BPM。") +
+                    "接着点「试听」，如果「嗒」声和乐曲的拍点错开，就拖「起点校准」。"
+                );
+            } catch (error) {
+                state.musicBuffer = null;
+                state.musicBpm = null;
+                el("music-bpm-label").textContent = "—";
+                setMusicStatus(`解码失败：${(error && error.message) || "浏览器可能不支持这个音频格式"}。换成 mp3 或 wav 再试。`);
+            }
+        }
+
+        function stopMusicPreview() {
+            if (!state.musicPreviewSource) return;
+            try {
+                state.musicPreviewSource.stop();
+            } catch (error) {
+                // 已经停了
+            }
+            state.musicPreviewSource.onended = null;
+            state.musicPreviewSource = null;
+        }
+
+        function previewMusic() {
+            if (!state.musicBuffer) {
+                setMusicStatus("还没有选择音频文件。");
+                return;
+            }
+            if (!state.audioContext) startAudio();
+            stopMusicPreview();
+            const context = state.audioContext;
+            const shift = Number(el("music-shift").value) / 1000;
+            const bpm = Number(el("bpm-input").value) || state.bpm;
+            const beatSeconds = 60 / bpm;
+            const musicStart = context.currentTime + 0.3;
+            const gridStart = musicStart + shift;
+
+            const source = context.createBufferSource();
+            source.buffer = state.musicBuffer;
+            source.connect(context.destination);
+            source.start(musicStart, 0);
+            state.musicPreviewSource = source;
+
+            const beatCount = Math.ceil((state.musicBuffer.duration - shift) / beatSeconds) + 1;
+            for (let beat = 0; beat < beatCount; beat++) {
+                const time = gridStart + beat * beatSeconds;
+                if (time < context.currentTime) continue;
+                playClick(time, beat % 4 === 0, false);
+            }
+
+            source.onended = () => {
+                state.musicPreviewSource = null;
+                setMusicStatus("试听结束。拍点对得上就可以点「开始训练」了。");
+            };
+            setMusicStatus(`正在试听：每拍 ${Math.round(beatSeconds * 1000)} 毫秒（${bpm} BPM）。`);
+        }
+
+        el("accompany").addEventListener("change", (event) => {
+            state.playMode = event.target.value === "music" ? "music" : "click";
+            el("music-panel").style.display = state.playMode === "music" ? "block" : "none";
+            stopMusicPreview();
+            buildPattern();
+            el("status").textContent = state.playMode === "music"
+                ? "真实乐曲模式：选音频、确认速度和起点，再开始训练。"
+                : "节拍器模式：按选定的节奏型练习。";
+        });
+
+        el("music-file").addEventListener("change", (event) => {
+            loadMusicFile(event.target.files && event.target.files[0]);
+        });
+
+        el("music-apply-bpm").addEventListener("click", () => {
+            if (!state.musicBpm) {
+                setMusicStatus("还没有识别出速度，可以直接手动调上面的 BPM。");
+                return;
+            }
+            updateBpm(state.musicBpm);
+            buildPattern();
+            setMusicStatus(`已把速度设为 ${state.musicBpm} BPM，再试听一次确认。`);
+        });
+
+        el("music-shift").addEventListener("input", (event) => {
+            el("music-shift-label").textContent = event.target.value;
+        });
+
+        el("music-preview-btn").addEventListener("click", previewMusic);
+        el("music-preview-stop-btn").addEventListener("click", () => {
+            stopMusicPreview();
+            setMusicStatus("已停止试听。");
+        });
+
+        el("music-clear-btn").addEventListener("click", () => {
+            stopMusicPreview();
+            state.musicBuffer = null;
+            state.musicBpm = null;
+            el("music-bpm-label").textContent = "—";
+            el("music-file").value = "";
+            setMusicStatus("已移除乐曲。");
+        });
 
         loadLevelState();
         loadCustomPattern();
@@ -1920,7 +2365,7 @@
             const height = canvas.height;
 
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "#101a22";
+            ctx.fillStyle = "#0d1628";
             ctx.fillRect(0, 0, width, height);
 
             ctx.fillStyle = "#eef3f7";
@@ -1950,7 +2395,7 @@
             items.forEach((record, index) => {
                 const value = Math.max(0, Math.min(100, Number(record.accuracy) || 0));
                 const barHeight = (value / 100) * (chartHeight - 10);
-                ctx.fillStyle = "#2dd4bf";
+                ctx.fillStyle = "#22d3ee";
                 ctx.fillRect(chartLeft + index * barWidth + 2, chartTop + chartHeight - barHeight, barWidth - 4, barHeight);
             });
             ctx.fillStyle = "#7d8b98";
@@ -2016,5 +2461,11 @@
             });
         }
     </script>
+
+    <!-- 学生端外壳：顶部统一导航栏（含「← 返回学习路径」）+ 跨页过渡（不影响本页原有逻辑） -->
+    <script src="yx-cloud.js"></script>
+    <script src="yx-motion.js"></script>
+    <script src="yx-shell.js"></script>
+<script src="yx-theme.js"></script>
 </body>
 </html>
