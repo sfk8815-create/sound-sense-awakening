@@ -167,9 +167,37 @@
   </div>
 
   <div class="card">
-    <h2><span class="n">十</span>本地存储与权限</h2>
+    <h2><span class="n">十</span>本地存储、权限与第三方组件</h2>
     <p>应用使用浏览器本地存储保存进度与设置，用于离线可用；这不属于跨站跟踪，也不会用于广告。</p>
-    <p>应用会申请<strong>麦克风权限</strong>，仅在你点击「开始训练」并选择麦克风输入时请求。拒绝授权不影响其他功能，你仍可使用节拍器与点击输入。</p>
+    <p>应用安装包声明的全部权限如下，除此之外不申请任何权限：</p>
+    <table class="perm">
+      <thead>
+        <tr><th>权限</th><th>用途</th><th>何时申请</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>麦克风（RECORD_AUDIO）</td>
+          <td>判断你敲击或拍手的时间点，用于节奏测评</td>
+          <td>只在你在训练页主动选择「麦克风输入」时申请；拒绝不影响其他功能，仍可用节拍器与点击输入</td>
+        </tr>
+        <tr>
+          <td>网络访问（INTERNET）</td>
+          <td>在你登录后同步练习进度、加载页面</td>
+          <td>使用过程中，不涉及个人信息上传</td>
+        </tr>
+        <tr>
+          <td>网络状态（ACCESS_NETWORK_STATE）</td>
+          <td>判断当前是否有网络，决定是否走离线模式</td>
+          <td>应用运行期间</td>
+        </tr>
+        <tr>
+          <td>音频设置（MODIFY_AUDIO_SETTINGS）</td>
+          <td>保证节拍器与提示音的正常播放</td>
+          <td>应用运行期间</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>第三方 SDK：无。</strong>本应用未集成任何第三方统计、推送、广告、社交分享或崩溃上报 SDK，不存在第三方 SDK 收集个人信息的情形。云同步由开发者自建服务完成，基础设施位于中国境内。</p>
   </div>
 
   <div class="card">
