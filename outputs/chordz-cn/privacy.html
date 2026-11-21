@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私政策 · 音感觉醒</title>
+<style>
+  :root {
+    --ink: #1b2540;
+    --ink-2: #45516e;
+    --ink-3: #6b7896;
+    --line: #e3e8f4;
+    --paper: #ffffff;
+    --bg: #f4f7ff;
+    --brand: #3b5bfd;
+    --brand-soft: #eef3ff;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei",
+                 "PingFang SC", "Hiragino Sans GB", sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 40px 20px 72px; }
+  header { padding: 8px 0 26px; }
+  .kicker {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    background: var(--brand-soft); color: var(--brand);
+    font-size: 13px; font-weight: 600; letter-spacing: .02em;
+  }
+  h1 { margin: 16px 0 10px; font-size: 32px; line-height: 1.3; letter-spacing: -.01em; }
+  .meta { color: var(--ink-3); font-size: 14px; }
+  .card {
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 28px 30px; margin-bottom: 18px;
+  }
+  h2 {
+    margin: 0 0 12px; font-size: 19px; line-height: 1.5;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .n {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 9px;
+    background: var(--brand-soft); color: var(--brand);
+    font-size: 14px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  p { margin: 0 0 12px; color: var(--ink-2); }
+  p:last-child { margin-bottom: 0; }
+  ul { margin: 0 0 12px; padding-left: 22px; color: var(--ink-2); }
+  li { margin-bottom: 7px; }
+  li:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+  .hl {
+    background: var(--brand-soft); border-left: 3px solid var(--brand);
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin: 0 0 14px;
+    color: var(--ink-2);
+  }
+  .hl:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 14px; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
+  th { color: var(--ink); font-weight: 600; background: #fafbff; }
+  tr:last-child td { border-bottom: none; }
+  a { color: var(--brand); text-decoration: none; border-bottom: 1px solid rgba(59,91,253,.28); }
+  a:hover { border-bottom-color: var(--brand); }
+  footer { text-align: center; color: var(--ink-3); font-size: 13px; padding-top: 10px; }
+  @media (max-width: 560px) {
+    .wrap { padding: 26px 14px 52px; }
+    h1 { font-size: 26px; }
+    .card { padding: 22px 18px; border-radius: 14px; }
+    h2 { font-size: 17px; }
+    table { font-size: 14px; }
+    th, td { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="kicker">音感觉醒</span>
+    <h1>隐私政策</h1>
+    <div class="meta">生效日期：2026 年 11 月 21 日　·　版本 1.0</div>
+  </header>
+
+  <div class="card">
+    <h2><span class="n">一</span>这份政策管什么</h2>
+    <p>「音感觉醒」是一款音乐能力训练与测评工具，包含节奏训练、视唱练耳、乐理闯关与成绩报告。本政策说明你在使用过程中会产生哪些数据、这些数据存在哪里、谁可以看到，以及你如何删除它们。</p>
+    <p>开发者：马荣寰（个人开发者）。本应用不设公司主体，也没有广告或第三方统计 SDK。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">二</span>最要紧的三句话</h2>
+    <div class="hl">
+      <strong>不录音。</strong>麦克风只用来判断你敲击的<strong>时间点</strong>，声音在浏览器内实时算出时间戳后立即丢弃，不会保存、不会上传、不会回放。
+    </div>
+    <div class="hl">
+      <strong>不登录也能用。</strong>不注册账号时，全部数据只存在你这台设备的浏览器本地，开发者看不到任何内容。
+    </div>
+    <div class="hl">
+      <strong>不卖数据。</strong>不向任何第三方出售、出租或共享你的个人信息，也没有接入广告平台。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">三</span>具体收集哪些数据</h2>
+    <table>
+      <tr><th>数据</th><th>什么时候产生</th><th>是否必填</th></tr>
+      <tr><td>邮箱地址</td><td>注册账号或找回密码时</td><td>可选，不注册则不收集</td></tr>
+      <tr><td>昵称、头像、学段</td><td>在「我的」页面自行填写</td><td>可选</td></tr>
+      <tr><td>练习记录：项目名称、速度（BPM）、每一次击打的时间偏差（毫秒）、得分、耗时、完成时间</td><td>每次训练或测评结束时</td><td>使用即产生</td></tr>
+      <tr><td>关卡进度、星星数、累计练习时长</td><td>练习过程中</td><td>使用即产生</td></tr>
+      <tr><td>设备本地缓存</td><td>首次打开页面时</td><td>用于离线使用</td></tr>
+    </table>
+    <p><strong>不收集：</strong>音频与录音、通讯录、短信、相册、精确位置、设备唯一识别码（IMEI / IDFA / 广告 ID）、剪贴板内容、其他应用的安装列表。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">四</span>数据存在哪里</h2>
+    <ul>
+      <li><strong>未登录</strong>：全部数据保存在本机浏览器的 localStorage 中，不上传到任何服务器。</li>
+      <li><strong>已登录</strong>：练习记录与账号信息同步到 WorkBuddy 云服务（由腾讯云提供基础设施）的数据库中，用于换设备后继续练习。</li>
+      <li><strong>访问控制</strong>：数据库按行级权限（RLS）配置，每个账号<strong>只能读写自己名下的记录</strong>，其他账号无法读取。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">五</span>用在什么地方</h2>
+    <ul>
+      <li>显示你的练习成绩、进度曲线与诊断建议。</li>
+      <li>在多台设备间同步进度（仅在你登录后）。</li>
+      <li>生成你主动导出的 CSV 成绩单。</li>
+    </ul>
+    <p>除此之外不做任何用途：不做用户画像，不做广告投放，不做模型训练。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">六</span>谁会看到</h2>
+    <p>只有你和开发者（在必要运维时，且仅限技术排查）。</p>
+    <p>在<strong>课堂场景</strong>下，如果老师在同一台设备上建立学生名单，成绩会按名单上的姓名归属并可由老师导出 CSV——这是你所在课堂的组织方式决定的，不是应用在后台自动上传给老师。换用个人设备、以个人账号练习时，老师端不会收到你的数据。</p>
+    <p>除以下情形外不对外提供：你本人明确授权；法律法规要求；为保护用户人身安全所必需。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">七</span>保存多久</h2>
+    <p>账号存续期间保存。你注销账号或要求删除后，相应数据在 30 天内清除；本机数据在你清除浏览器数据或卸载应用时立即消失。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">八</span>未成年人</h2>
+    <p>本应用面向 12 岁及以上的学生设计，也用于中小学音乐课堂。我们遵循最小必要原则：不索取真实姓名、身份证号、人脸、声纹等敏感信息，不收集精确位置，不做任何形式的个性化推荐。</p>
+    <p>未满 14 周岁的使用者，请在监护人知情并同意的前提下使用；监护人可随时要求删除该使用者的全部数据。若我们发现未经监护人同意收集了未满 14 周岁使用者的信息，将尽快删除。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">九</span>你如何删除和控制自己的数据</h2>
+    <ul>
+      <li><strong>清除本机数据</strong>：应用内「数据备份」页面提供一键清除；或清除浏览器该站点的数据。</li>
+      <li><strong>退出登录</strong>：在「我的」页面退出，本机留存的数据快照可一并删除。</li>
+      <li><strong>删除云端账号及全部记录</strong>：无需在应用内操作，直接联系开发者，说明注册邮箱即可，我们会在 30 天内删除。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">十</span>本地存储与权限</h2>
+    <p>应用使用浏览器本地存储保存进度与设置，用于离线可用；这不属于跨站跟踪，也不会用于广告。</p>
+    <p>应用会申请<strong>麦克风权限</strong>，仅在你点击「开始训练」并选择麦克风输入时请求。拒绝授权不影响其他功能，你仍可使用节拍器与点击输入。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">十一</span>政策更新与联系方式</h2>
+    <p>本政策如有实质性修改，会在应用内显著位置提示，并更新页首的版本号与生效日期。</p>
+    <p>任何疑问、数据查询或删除请求，可通过以下任一方式联系：</p>
+    <ul>
+      <li>在项目仓库提交问题：<a href="https://github.com/sfk8815-create/sound-sense-awakening/issues" target="_blank" rel="noopener">github.com/sfk8815-create/sound-sense-awakening/issues</a></li>
+      <li>通过你获得本应用的渠道（课堂、教师或开发者本人）直接反馈</li>
+    </ul>
+  </div>
+
+  <footer>音感觉醒 · 音乐能力训练与测评系统</footer>
+</div>
+</body>
+</html>
