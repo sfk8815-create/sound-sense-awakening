@@ -559,9 +559,21 @@ html:not(.yx-out) .yx-stagger {
         overflow-y: hidden;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
+        /* 横向条只有在真放不下时才滚；间距收紧，让常用入口尽量都露出来 */
+        gap: 5px;
+        padding: 8px 12px 8px 10px;
+        scroll-padding-left: 10px;
+        scroll-snap-type: x proximity;
     }
     html.yx-hasbar .main-nav::-webkit-scrollbar { display: none; }
-    html.yx-hasbar .main-nav .nav-link { flex: none; white-space: nowrap; }
+    html.yx-hasbar .main-nav .nav-link {
+        flex: none;
+        white-space: nowrap;
+        padding: 7px 11px;
+        font-size: 0.9rem;
+        line-height: 1.15;
+        scroll-snap-align: start;
+    }
 }
 
 @media (max-width: 560px) {
@@ -582,7 +594,9 @@ html:not(.yx-out) .yx-stagger {
     .yx-bar__back-short { display: inline; }
     .yx-bar .ys-chip { padding: 5px 9px; font-size: .8rem; }
     html.yx-hasbar body { padding: 70px 12px 14px; }
-    html.yx-hasbar .main-nav { top: 56px; }
+    html.yx-hasbar .main-nav { top: 56px; padding: 7px 8px; gap: 4px; }
+    /* 360px 这类窄屏：入口再收一档，保证前三个页签整字露出，第四个露半截提示可滑 */
+    html.yx-hasbar .main-nav .nav-link { padding: 6px 9px; font-size: 0.82rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

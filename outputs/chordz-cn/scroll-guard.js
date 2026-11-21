@@ -116,3 +116,44 @@
         setupNavMemory();
     }
 })();
+
+/*
+ * 窄屏顶部导航：当前页的页签必须看得见。
+ * 侧栏在窄屏会变成一行横向滚动，十几个入口一行放不下；
+ * 从靠后的页面点回来时横向位置还停在上次的地方，当前页签可能整个在屏外，
+ * 看起来就像“导航被切掉了一截”。这里只在当前页签完全不可见时才滚一下。
+ */
+(function () {
+    "use strict";
+
+    /*
+     * 注意这里的判空不能“一旦放得下就收工”：脚本在 defer 里跑，样式还没应用时
+     * 量出来的 scrollWidth 和 clientWidth 一样大，会被误判成“这一行放得下”，
+     * 之后就不再重试了。所以每次调用都是幂等的，布局没就绪就等下一次。
+     */
+    function revealActive() {
+        var nav = document.querySelector(".main-nav");
+        if (!nav || !nav.clientWidth) return;
+        if (nav.scrollWidth <= nav.clientWidth + 2) return;
+        var active = nav.querySelector(".nav-link.active");
+        if (!active) return;
+        var box = nav.getBoundingClientRect();
+        var me = active.getBoundingClientRect();
+        var pad = 10;
+        if (me.left >= box.left + pad && me.right <= box.right - pad) return;
+        nav.scrollLeft += me.left - box.left - pad;
+    }
+
+    function boot() {
+        revealActive();
+        requestAnimationFrame(revealActive);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot);
+    } else {
+        boot();
+    }
+    window.addEventListener("load", revealActive);
+    window.setTimeout(revealActive, 500);
+})();
