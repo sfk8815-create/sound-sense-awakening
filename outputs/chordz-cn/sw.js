@@ -1,4 +1,4 @@
-const CACHE_NAME = "sound-sense-awakening-v7";
+const CACHE_NAME = "sound-sense-awakening-v8";
 const CORE_FILES = [
   "./",
   "index.html",
